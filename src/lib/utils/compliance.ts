@@ -1,4 +1,4 @@
-// 순응도 계산 — Next.js, React Native 모두 재사용 가능
+// 달성률 계산 — Next.js, React Native 모두 재사용 가능
 
 import { Treatment, TreatmentLogs } from '@/types'
 import { formatDate, parseDate } from './date'

@@ -98,7 +98,7 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">진행 중인 치료</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">진행 중인 케어</label>
             <div className="space-y-2">
               {[
                 { key: 'treatAtropine' as const,  label: '아트로핀 점안' },

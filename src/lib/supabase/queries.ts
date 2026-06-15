@@ -66,18 +66,22 @@ export async function deleteChild(id: string): Promise<void> {
 export async function fetchChildData(childId: string) {
   const sb = createClient()
   const [examsRes, logsRes, lifeRes] = await Promise.all([
-    sb.from('eyebody_exam_records').select('*').eq('child_id', childId).order('exam_date', { ascending: false }),
+    sb.from('eyebody_exam_records').select('id,exam_date,clinic,ax_od,ax_os,sph_od,sph_os,cyl_od,cyl_os,ser_od,ser_os,note').eq('child_id', childId).order('exam_date', { ascending: false }),
     sb.from('eyebody_treatment_logs').select('log_date, atropine, dreamlens').eq('child_id', childId),
     sb.from('eyebody_activity_logs').select('log_date, outdoor_hours, phone_hours, sleep_hours').eq('child_id', childId),
   ])
 
   const exams: ExamRecord[] = (examsRes.data ?? []).map((r: any) => ({
     id: r.id, date: r.exam_date, clinic: r.clinic ?? '',
-    axOD: r.ax_od != null ? String(r.ax_od) : '',
-    axOS: r.ax_os != null ? String(r.ax_os) : '',
+    axOD:  r.ax_od  != null ? String(r.ax_od)  : '',
+    axOS:  r.ax_os  != null ? String(r.ax_os)  : '',
+    sphOD: r.sph_od != null ? String(r.sph_od) : '',
+    sphOS: r.sph_os != null ? String(r.sph_os) : '',
+    cylOD: r.cyl_od != null ? String(r.cyl_od) : '',
+    cylOS: r.cyl_os != null ? String(r.cyl_os) : '',
     serOD: r.ser_od != null ? String(r.ser_od) : '',
     serOS: r.ser_os != null ? String(r.ser_os) : '',
-    note: r.note ?? '',
+    note:  r.note ?? '',
   }))
 
   const logs: TreatmentLogs = Object.fromEntries(
@@ -111,22 +115,67 @@ export async function saveTreatmentLog(
 
 export async function saveExam(childId: string, exam: Omit<ExamRecord, 'id'>): Promise<ExamRecord> {
   const sb = createClient()
+  const sphOD = exam.sphOD ? parseFloat(exam.sphOD) : null
+  const sphOS = exam.sphOS ? parseFloat(exam.sphOS) : null
+  const cylOD = exam.cylOD ? parseFloat(exam.cylOD) : null
+  const cylOS = exam.cylOS ? parseFloat(exam.cylOS) : null
+  const serOD = sphOD != null ? sphOD + (cylOD ?? 0) / 2 : null
+  const serOS = sphOS != null ? sphOS + (cylOS ?? 0) / 2 : null
+
   const { data, error } = await sb.from('eyebody_exam_records').insert({
     child_id: childId, exam_date: exam.date, clinic: exam.clinic || null,
-    ax_od:  exam.axOD  ? parseFloat(exam.axOD)  : null,
-    ax_os:  exam.axOS  ? parseFloat(exam.axOS)  : null,
-    ser_od: exam.serOD ? parseFloat(exam.serOD) : null,
-    ser_os: exam.serOS ? parseFloat(exam.serOS) : null,
+    ax_od: exam.axOD ? parseFloat(exam.axOD) : null,
+    ax_os: exam.axOS ? parseFloat(exam.axOS) : null,
+    sph_od: sphOD, sph_os: sphOS,
+    cyl_od: cylOD, cyl_os: cylOS,
+    ser_od: serOD, ser_os: serOS,
     note: exam.note || null,
   }).select().single()
   if (error) throw error
   return {
     id: data.id, date: data.exam_date, clinic: data.clinic ?? '',
-    axOD: data.ax_od != null ? String(data.ax_od) : '',
-    axOS: data.ax_os != null ? String(data.ax_os) : '',
+    axOD:  data.ax_od  != null ? String(data.ax_od)  : '',
+    axOS:  data.ax_os  != null ? String(data.ax_os)  : '',
+    sphOD: data.sph_od != null ? String(data.sph_od) : '',
+    sphOS: data.sph_os != null ? String(data.sph_os) : '',
+    cylOD: data.cyl_od != null ? String(data.cyl_od) : '',
+    cylOS: data.cyl_os != null ? String(data.cyl_os) : '',
     serOD: data.ser_od != null ? String(data.ser_od) : '',
     serOS: data.ser_os != null ? String(data.ser_os) : '',
-    note: data.note ?? '',
+    note:  data.note ?? '',
+  }
+}
+
+export async function updateExam(id: string, exam: Omit<ExamRecord, 'id'>): Promise<ExamRecord> {
+  const sb = createClient()
+  const sphOD = exam.sphOD ? parseFloat(exam.sphOD) : null
+  const sphOS = exam.sphOS ? parseFloat(exam.sphOS) : null
+  const cylOD = exam.cylOD ? parseFloat(exam.cylOD) : null
+  const cylOS = exam.cylOS ? parseFloat(exam.cylOS) : null
+  const serOD = sphOD != null ? sphOD + (cylOD ?? 0) / 2 : null
+  const serOS = sphOS != null ? sphOS + (cylOS ?? 0) / 2 : null
+
+  const { data, error } = await sb.from('eyebody_exam_records').update({
+    exam_date: exam.date, clinic: exam.clinic || null,
+    ax_od: exam.axOD ? parseFloat(exam.axOD) : null,
+    ax_os: exam.axOS ? parseFloat(exam.axOS) : null,
+    sph_od: sphOD, sph_os: sphOS,
+    cyl_od: cylOD, cyl_os: cylOS,
+    ser_od: serOD, ser_os: serOS,
+    note: exam.note || null,
+  }).eq('id', id).select().single()
+  if (error) throw error
+  return {
+    id: data.id, date: data.exam_date, clinic: data.clinic ?? '',
+    axOD:  data.ax_od  != null ? String(data.ax_od)  : '',
+    axOS:  data.ax_os  != null ? String(data.ax_os)  : '',
+    sphOD: data.sph_od != null ? String(data.sph_od) : '',
+    sphOS: data.sph_os != null ? String(data.sph_os) : '',
+    cylOD: data.cyl_od != null ? String(data.cyl_od) : '',
+    cylOS: data.cyl_os != null ? String(data.cyl_os) : '',
+    serOD: data.ser_od != null ? String(data.ser_od) : '',
+    serOS: data.ser_os != null ? String(data.ser_os) : '',
+    note:  data.note ?? '',
   }
 }
 
@@ -140,13 +189,13 @@ export async function deleteExam(id: string): Promise<void> {
 
 export async function saveLifestyle(
   childId: string, dateStr: string,
-  data: { outdoor: number; phone: number; sleep: number }
+  data: { outdoor: number; phone: number; sleep?: number }
 ): Promise<void> {
   const sb = createClient()
   const { error } = await sb.from('eyebody_activity_logs')
     .upsert({
       child_id: childId, log_date: dateStr,
-      outdoor_hours: data.outdoor, phone_hours: data.phone, sleep_hours: data.sleep,
+      outdoor_hours: data.outdoor, phone_hours: data.phone, sleep_hours: data.sleep ?? 0,
     }, { onConflict: 'child_id,log_date' })
   if (error) throw error
 }

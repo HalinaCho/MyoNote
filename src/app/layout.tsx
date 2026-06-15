@@ -3,7 +3,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: '마이오노트',
-  description: '내 아이 근시 관리 — 치료 기록과 안축장 변화를 한 눈에',
+  description: '내 아이 근시 관리 — 케어 기록과 안축장 변화를 한 눈에',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -22,6 +22,7 @@ interface ChildContextType {
   deleteChild: (id: string) => Promise<void>
   saveTreatmentLog: (dateStr: string, atropine: boolean, dreamlens: boolean) => Promise<void>
   saveExam: (exam: Omit<ExamRecord, 'id'>) => Promise<ExamRecord>
+  updateExam: (id: string, exam: Omit<ExamRecord, 'id'>) => Promise<void>
   deleteExam: (id: string) => Promise<void>
   saveLifestyle: (dateStr: string, data: { outdoor: number; phone: number; sleep: number }) => Promise<void>
 }
@@ -111,6 +112,11 @@ export function ChildProvider({ children: node }: { children: React.ReactNode })
     return saved
   }
 
+  const updateExam = async (id: string, exam: Omit<ExamRecord, 'id'>) => {
+    const updated = await q.updateExam(id, exam)
+    setExams(prev => prev.map(e => e.id === id ? updated : e))
+  }
+
   const deleteExam = async (id: string) => {
     await q.deleteExam(id)
     setExams(prev => prev.filter(e => e.id !== id))
@@ -128,7 +134,7 @@ export function ChildProvider({ children: node }: { children: React.ReactNode })
       logs, exams, lifestyle, isLoading,
       switchChild, refreshChildren,
       addChild, updateChild, deleteChild,
-      saveTreatmentLog, saveExam, deleteExam, saveLifestyle,
+      saveTreatmentLog, saveExam, updateExam, deleteExam, saveLifestyle,
     }}>
       {node}
     </ChildContext.Provider>

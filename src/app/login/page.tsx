@@ -1,4 +1,4 @@
-import { signInWithKakao } from '@/lib/supabase/auth'
+import KakaoLoginButton from '@/components/auth/KakaoLoginButton'
 
 export default function LoginPage({
   searchParams,
@@ -21,7 +21,7 @@ export default function LoginPage({
         {/* 설명 */}
         <div className="bg-white rounded-2xl p-5 mb-6 shadow-sm border border-gray-100 space-y-3">
           {[
-            { icon: '📋', text: '치료 순응도를 매일 간편하게 기록' },
+            { icon: '📋', text: '케어 달성률을 매일 간편하게 기록' },
             { icon: '📈', text: '안축장 변화를 차트로 한눈에' },
             { icon: '👥', text: '보호자 여러 명이 함께 관리' },
           ].map(({ icon, text }) => (
@@ -33,19 +33,7 @@ export default function LoginPage({
         </div>
 
         {/* 카카오 로그인 */}
-        <form action={signInWithKakao}>
-          <button
-            type="submit"
-            className="w-full flex items-center justify-center gap-2 bg-[#FEE500] hover:bg-[#F5DC00] active:bg-[#EDD200] text-[#191919] font-semibold py-3.5 px-4 rounded-xl transition-colors text-sm"
-          >
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <path fillRule="evenodd" clipRule="evenodd"
-                d="M9 1.5C4.86 1.5 1.5 4.19 1.5 7.5c0 2.1 1.29 3.95 3.24 5.06l-.83 3.08a.19.19 0 0 0 .28.21L7.7 13.7c.42.06.85.09 1.3.09 4.14 0 7.5-2.69 7.5-6s-3.36-6-7.5-6z"
-                fill="#191919"/>
-            </svg>
-            카카오로 시작하기
-          </button>
-        </form>
+        <KakaoLoginButton />
 
         {/* 에러 메시지 */}
         <ErrorMessage searchParams={searchParams} />

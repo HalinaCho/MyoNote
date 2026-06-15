@@ -23,7 +23,7 @@ export default function ComplianceTab() {
   return (
     <div className="space-y-3">
       <div className="bg-white rounded-2xl p-4 shadow-sm">
-        <h3 className="font-bold text-gray-800 mb-3">월별 치료 순응도</h3>
+        <h3 className="font-bold text-gray-800 mb-3">월별 케어 달성률</h3>
         <Bar
           data={{
             labels: months.map(m => m.label),

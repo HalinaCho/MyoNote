@@ -6,15 +6,16 @@ import { useChild } from '@/context/ChildContext'
 import { today, formatDate } from '@/lib/utils/date'
 import { getDayStatus } from '@/lib/utils/compliance'
 import type { ExamRecord } from '@/types'
+import TimeSpinner from '@/components/lifestyle/TimeSpinner'
 
 type Tab = 'exam' | 'treatment' | 'lifestyle'
 
 export default function RecordsPage() {
-  const [tab, setTab] = useState<Tab>('exam')
+  const [tab, setTab] = useState<Tab>('treatment')
   return (
     <div>
       <div className="flex bg-white rounded-xl mb-3 p-1 shadow-sm">
-        {([['exam','검사기록'],['treatment','치료기록'],['lifestyle','생활습관']] as [Tab, string][]).map(([t, label]) => (
+        {([['treatment','캘린더'],['lifestyle','생활습관'],['exam','안과 검사']] as [Tab, string][]).map(([t, label]) => (
           <button key={t} onClick={() => setTab(t)}
             className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors
               ${tab === t ? 'bg-blue-600 text-white' : 'text-gray-500'}`}>
@@ -31,21 +32,56 @@ export default function RecordsPage() {
 
 // ── 검사기록 ──────────────────────────────────────────────────
 
+function calcSeq(sph: string, cyl: string) {
+  const s = parseFloat(sph)
+  if (isNaN(s)) return '—'
+  const c = parseFloat(cyl) || 0
+  return (-(s + c / 2)).toFixed(2)
+}
+
+const withMinus = (v: string) => v ? `-${v}` : ''
+const stripMinus = (v: string) => v.replace(/^-/, '')
+
+const EMPTY_EXAM = { date: today(), clinic: '', axOD: '', axOS: '', sphOD: '', sphOS: '', cylOD: '', cylOS: '', note: '' }
+
 function ExamTab() {
-  const { exams, saveExam, deleteExam } = useChild()
+  const { exams, saveExam, updateExam, deleteExam } = useChild()
   const [modal, setModal] = useState(false)
-  const [form, setForm] = useState({ date: today(), clinic: '', axOD: '', axOS: '', serOD: '', serOS: '', note: '' })
+  const [editing, setEditing] = useState<ExamRecord | null>(null)
+  const [form, setForm] = useState(EMPTY_EXAM)
   const [saving, setSaving] = useState(false)
+
+  const seqOD = calcSeq(form.sphOD, form.cylOD)
+  const seqOS = calcSeq(form.sphOS, form.cylOS)
+
+  const openAdd = () => { setEditing(null); setForm(EMPTY_EXAM); setModal(true) }
+  const openEdit = (e: ExamRecord) => {
+    setEditing(e)
+    setForm({ date: e.date, clinic: e.clinic, axOD: e.axOD, axOS: e.axOS,
+              sphOD: stripMinus(e.sphOD), sphOS: stripMinus(e.sphOS),
+              cylOD: stripMinus(e.cylOD), cylOS: stripMinus(e.cylOS), note: e.note })
+    setModal(true)
+  }
+  const closeModal = () => { setModal(false); setEditing(null); setForm(EMPTY_EXAM) }
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.date) { toast.error('검사일을 입력해주세요'); return }
     setSaving(true)
     try {
-      await saveExam(form)
-      toast.success('검사기록이 저장되었습니다')
-      setModal(false)
-      setForm({ date: today(), clinic: '', axOD: '', axOS: '', serOD: '', serOS: '', note: '' })
+      const signedForm = { ...form,
+        sphOD: withMinus(form.sphOD), sphOS: withMinus(form.sphOS),
+        cylOD: withMinus(form.cylOD), cylOS: withMinus(form.cylOS),
+        serOD: '', serOS: '',
+      }
+      if (editing) {
+        await updateExam(editing.id, signedForm)
+        toast.success('수정되었습니다')
+      } else {
+        await saveExam(signedForm)
+        toast.success('검사기록이 저장되었습니다')
+      }
+      closeModal()
     } catch { toast.error('저장에 실패했습니다') }
     finally { setSaving(false) }
   }
@@ -58,7 +94,7 @@ function ExamTab() {
 
   return (
     <>
-      <button onClick={() => setModal(true)}
+      <button onClick={openAdd}
         className="w-full bg-blue-600 text-white font-semibold py-3 rounded-xl mb-3 text-sm">
         + 기록 추가
       </button>
@@ -73,23 +109,36 @@ function ExamTab() {
                 <span className="font-semibold text-gray-800">{e.date}</span>
                 <div className="flex items-center gap-2">
                   {e.clinic && <span className="text-xs text-gray-400">{e.clinic}</span>}
+                  <button onClick={() => openEdit(e)} className="text-gray-300 hover:text-blue-400 text-sm">✏</button>
                   <button onClick={() => handleDelete(e)} className="text-gray-300 hover:text-red-400 text-sm">✕</button>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="space-y-1.5 text-sm">
                 {(e.axOD || e.axOS) && (
-                  <div className="col-span-2 flex justify-between bg-gray-50 rounded-lg px-3 py-2">
+                  <div className="flex justify-between bg-gray-50 rounded-lg px-3 py-2">
                     <span className="text-gray-500">안축장 (OD/OS)</span>
                     <span className="font-medium">{e.axOD||'—'} / {e.axOS||'—'} mm</span>
                   </div>
                 )}
-                {(e.serOD || e.serOS) && (
-                  <div className="col-span-2 flex justify-between bg-gray-50 rounded-lg px-3 py-2">
-                    <span className="text-gray-500">SER (OD/OS)</span>
-                    <span className="font-medium">{e.serOD||'—'} / {e.serOS||'—'} D</span>
+                {(e.sphOD || e.sphOS) && (
+                  <div className="flex justify-between bg-gray-50 rounded-lg px-3 py-2">
+                    <span className="text-gray-500">Sph (OD/OS)</span>
+                    <span className="font-medium">{e.sphOD||'—'} / {e.sphOS||'—'} D</span>
                   </div>
                 )}
-                {e.note && <div className="col-span-2 text-xs text-gray-400">{e.note}</div>}
+                {(e.cylOD || e.cylOS) && (
+                  <div className="flex justify-between bg-gray-50 rounded-lg px-3 py-2">
+                    <span className="text-gray-500">Cyl (OD/OS)</span>
+                    <span className="font-medium">{e.cylOD||'—'} / {e.cylOS||'—'} D</span>
+                  </div>
+                )}
+                {(e.serOD || e.serOS) && (
+                  <div className="flex justify-between bg-blue-50 rounded-lg px-3 py-2">
+                    <span className="text-blue-600 font-medium">SEQ (OD/OS)</span>
+                    <span className="font-bold text-blue-700">{e.serOD||'—'} / {e.serOS||'—'} D</span>
+                  </div>
+                )}
+                {e.note && <div className="text-xs text-gray-400 px-1">{e.note}</div>}
               </div>
             </div>
           ))}
@@ -98,26 +147,53 @@ function ExamTab() {
 
       {modal && (
         <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setModal(false)} />
+          <div className="absolute inset-0 bg-black/40" onClick={closeModal} />
           <div className="relative z-10 w-full max-w-[480px] bg-white rounded-t-2xl sm:rounded-2xl p-5 pb-8 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold">검사기록 추가</h2>
-              <button onClick={() => setModal(false)} className="text-gray-400 text-xl">✕</button>
+              <h2 className="text-lg font-bold">{editing ? '검사기록 수정' : '검사기록 추가'}</h2>
+              <button onClick={closeModal} className="text-gray-400 text-xl">✕</button>
             </div>
             <form onSubmit={handleSave} className="space-y-3">
-              <Field label="검사일"><input type="date" value={form.date} onChange={e => setForm(f=>({...f,date:e.target.value}))} className={INPUT}/></Field>
-              <Field label="안과"><input placeholder="병원명" value={form.clinic} onChange={e => setForm(f=>({...f,clinic:e.target.value}))} className={INPUT}/></Field>
+              <Field label="검사일"><input type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))} className={INPUT}/></Field>
+              <Field label="안과"><input placeholder="병원명" value={form.clinic} onChange={e=>setForm(f=>({...f,clinic:e.target.value}))} className={INPUT}/></Field>
               <div className="grid grid-cols-2 gap-2">
                 <Field label="안축장 우안 (mm)"><input type="number" step="0.01" placeholder="24.82" value={form.axOD} onChange={e=>setForm(f=>({...f,axOD:e.target.value}))} className={INPUT}/></Field>
                 <Field label="안축장 좌안 (mm)"><input type="number" step="0.01" placeholder="24.91" value={form.axOS} onChange={e=>setForm(f=>({...f,axOS:e.target.value}))} className={INPUT}/></Field>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <Field label="SER 우안 (D)"><input type="number" step="0.25" placeholder="-3.25" value={form.serOD} onChange={e=>setForm(f=>({...f,serOD:e.target.value}))} className={INPUT}/></Field>
-                <Field label="SER 좌안 (D)"><input type="number" step="0.25" placeholder="-3.50" value={form.serOS} onChange={e=>setForm(f=>({...f,serOS:e.target.value}))} className={INPUT}/></Field>
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700">굴절 도수 (D)</span>
+                  <span className="text-xs text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full">조절마비 검사 결과 우선</span>
+                </div>
+                {/* 헤더 행 */}
+                <div className="grid grid-cols-3 gap-2 mb-1 text-xs text-center text-gray-400 font-medium px-1">
+                  <span>Sph</span><span>Cyl</span><span>SEQ (자동)</span>
+                </div>
+                {/* 우안 */}
+                <div className="grid grid-cols-3 gap-2 items-center mb-2">
+                  <NegInput value={form.sphOD} onChange={v=>setForm(f=>({...f,sphOD:v}))} placeholder="3.00"/>
+                  <NegInput value={form.cylOD} onChange={v=>setForm(f=>({...f,cylOD:v}))} placeholder="0.50"/>
+                  <div className="h-10 flex items-center justify-center bg-blue-50 rounded-lg text-sm font-bold text-blue-700">
+                    {seqOD}
+                  </div>
+                </div>
+                {/* 좌안 */}
+                <div className="grid grid-cols-3 gap-2 items-center">
+                  <NegInput value={form.sphOS} onChange={v=>setForm(f=>({...f,sphOS:v}))} placeholder="3.00"/>
+                  <NegInput value={form.cylOS} onChange={v=>setForm(f=>({...f,cylOS:v}))} placeholder="0.50"/>
+                  <div className="h-10 flex items-center justify-center bg-blue-50 rounded-lg text-sm font-bold text-blue-700">
+                    {seqOS}
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2 mt-1 text-xs text-center text-gray-400 px-1">
+                  <span>우안</span><span>좌안</span><span></span>
+                </div>
               </div>
+
               <Field label="메모"><textarea rows={2} placeholder="특이사항 등" value={form.note} onChange={e=>setForm(f=>({...f,note:e.target.value}))} className={INPUT}/></Field>
               <button type="submit" disabled={saving} className="w-full bg-blue-600 disabled:bg-blue-300 text-white font-semibold py-3 rounded-xl">
-                {saving ? '저장 중...' : '저장'}
+                {saving ? '저장 중...' : editing ? '수정하기' : '저장'}
               </button>
             </form>
           </div>
@@ -127,7 +203,7 @@ function ExamTab() {
   )
 }
 
-// ── 치료기록 캘린더 ────────────────────────────────────────────
+// ── 케어기록 캘린더 ────────────────────────────────────────────
 
 function TreatmentTab() {
   const { logs, activeTreatments, saveTreatmentLog, activeChildId } = useChild()
@@ -219,7 +295,7 @@ function TreatmentTab() {
               <button onClick={() => setDayModal(null)} className="text-gray-400 text-xl">✕</button>
             </div>
             {activeTreatments.length === 0 ? (
-              <p className="text-sm text-gray-400">등록된 치료 항목이 없습니다.</p>
+              <p className="text-sm text-gray-400">등록된 케어 항목이 없습니다.</p>
             ) : (
               <div className="space-y-3">
                 {activeTreatments.map(t => {
@@ -247,10 +323,16 @@ function TreatmentTab() {
 
 // ── 생활습관 ──────────────────────────────────────────────────
 
+function fmtTime(h: number) {
+  const hrs = Math.floor(h)
+  const mins = Math.round((h - hrs) * 60)
+  return mins > 0 ? `${hrs}시간 ${mins}분` : `${hrs}시간`
+}
+
 function LifestyleTab() {
   const { lifestyle, saveLifestyle } = useChild()
   const [modal, setModal] = useState(false)
-  const [form, setForm] = useState({ date: today(), outdoor: '', phone: '', sleep: '' })
+  const [form, setForm] = useState({ date: today(), outdoorH: 0, outdoorM: 0, phoneH: 0, phoneM: 0 })
   const [saving, setSaving] = useState(false)
 
   const recentDays = Array.from({ length: 7 }, (_, i) => {
@@ -265,12 +347,12 @@ function LifestyleTab() {
     setSaving(true)
     try {
       await saveLifestyle(form.date, {
-        outdoor: parseFloat(form.outdoor) || 0,
-        phone:   parseFloat(form.phone)   || 0,
-        sleep:   parseFloat(form.sleep)   || 0,
+        outdoor: form.outdoorH + form.outdoorM / 60,
+        phone:   form.phoneH   + form.phoneM   / 60,
       })
       toast.success('생활습관이 저장되었습니다')
       setModal(false)
+      setForm({ date: today(), outdoorH: 0, outdoorM: 0, phoneH: 0, phoneM: 0 })
     } catch { toast.error('저장에 실패했습니다') }
     finally { setSaving(false) }
   }
@@ -284,12 +366,17 @@ function LifestyleTab() {
       <div className="space-y-2">
         {recentDays.map(({ ds, data }) => (
           <div key={ds} className="bg-white rounded-xl p-4 shadow-sm flex items-center gap-4">
-            <div className="text-sm font-semibold text-gray-500 w-20 flex-shrink-0">{ds.slice(5)}</div>
+            <div className="text-sm font-semibold text-gray-500 w-16 flex-shrink-0">{ds.slice(5)}</div>
             {data ? (
               <div className="flex gap-3 flex-1">
-                <Stat icon="🌳" val={data.outdoor} good={data.outdoor >= 2} />
-                <Stat icon="📱" val={data.phone}   good={data.phone   <= 2} />
-                <Stat icon="😴" val={data.sleep}   good={data.sleep   >= 8} />
+                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold
+                  ${data.outdoor >= 2 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-500'}`}>
+                  🌳 {fmtTime(data.outdoor)}
+                </div>
+                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold
+                  ${data.phone <= 2 ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-600'}`}>
+                  📱 {fmtTime(data.phone)}
+                </div>
               </div>
             ) : (
               <span className="text-sm text-gray-300">기록 없음</span>
@@ -302,15 +389,44 @@ function LifestyleTab() {
         <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
           <div className="absolute inset-0 bg-black/40" onClick={() => setModal(false)} />
           <div className="relative z-10 w-full max-w-[480px] bg-white rounded-t-2xl sm:rounded-2xl p-5 pb-8">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-bold">생활습관 기록</h2>
               <button onClick={() => setModal(false)} className="text-gray-400 text-xl">✕</button>
             </div>
-            <form onSubmit={handleSave} className="space-y-3">
-              <Field label="날짜"><input type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))} className={INPUT}/></Field>
-              <Field label="야외활동 시간 (h)"><input type="number" min="0" max="24" step="0.5" placeholder="예: 2.0" value={form.outdoor} onChange={e=>setForm(f=>({...f,outdoor:e.target.value}))} className={INPUT}/></Field>
-              <Field label="스마트폰 사용 시간 (h)"><input type="number" min="0" max="24" step="0.5" placeholder="예: 1.5" value={form.phone} onChange={e=>setForm(f=>({...f,phone:e.target.value}))} className={INPUT}/></Field>
-              <Field label="수면 시간 (h)"><input type="number" min="0" max="24" step="0.5" placeholder="예: 9.0" value={form.sleep} onChange={e=>setForm(f=>({...f,sleep:e.target.value}))} className={INPUT}/></Field>
+            <form onSubmit={handleSave} className="space-y-4">
+              <Field label="날짜">
+                <input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} className={INPUT} />
+              </Field>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-green-50 rounded-2xl p-4 border-2 border-green-100">
+                  <div className="flex items-center gap-1.5 mb-4">
+                    <span className="text-xl">🌳</span>
+                    <span className="text-xs font-semibold text-green-700">야외활동</span>
+                  </div>
+                  <TimeSpinner
+                    hours={form.outdoorH} minutes={form.outdoorM}
+                    onHour={v => setForm(f => ({ ...f, outdoorH: v }))}
+                    onMinute={v => setForm(f => ({ ...f, outdoorM: v }))}
+                    btnCls="bg-green-200 text-green-700 hover:bg-green-300"
+                    textCls="text-green-700"
+                  />
+                  <p className="text-xs text-green-400 mt-3 text-center">권장 2시간↑</p>
+                </div>
+                <div className="bg-amber-50 rounded-2xl p-4 border-2 border-amber-100">
+                  <div className="flex items-center gap-1.5 mb-4">
+                    <span className="text-xl">📱</span>
+                    <span className="text-xs font-semibold text-amber-700">스마트폰</span>
+                  </div>
+                  <TimeSpinner
+                    hours={form.phoneH} minutes={form.phoneM}
+                    onHour={v => setForm(f => ({ ...f, phoneH: v }))}
+                    onMinute={v => setForm(f => ({ ...f, phoneM: v }))}
+                    btnCls="bg-amber-200 text-amber-700 hover:bg-amber-300"
+                    textCls="text-amber-700"
+                  />
+                  <p className="text-xs text-amber-400 mt-3 text-center">권장 2시간↓</p>
+                </div>
+              </div>
               <button type="submit" disabled={saving} className="w-full bg-blue-600 disabled:bg-blue-300 text-white font-semibold py-3 rounded-xl">
                 {saving ? '저장 중...' : '저장'}
               </button>
@@ -325,6 +441,20 @@ function LifestyleTab() {
 // ── 공통 ──────────────────────────────────────────────────────
 
 const INPUT = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+
+function NegInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
+  return (
+    <div className="relative">
+      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500 font-medium pointer-events-none select-none">−</span>
+      <input
+        type="number" step="0.25" min="0" placeholder={placeholder}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="w-full border border-gray-200 rounded-lg pl-6 pr-2 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+    </div>
+  )
+}
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (

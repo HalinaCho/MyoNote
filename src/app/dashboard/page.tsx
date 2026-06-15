@@ -4,12 +4,18 @@ import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { useChild } from '@/context/ChildContext'
 import ChildFormModal from '@/components/child/ChildFormModal'
+import TimeSpinner from '@/components/lifestyle/TimeSpinner'
 import { today, formatDate } from '@/lib/utils/date'
 import { calcStreak, calcMonthCompliance, getDayStatus } from '@/lib/utils/compliance'
 
+const INPUT = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+
 export default function HomePage() {
-  const { activeChild, activeTreatments, logs, lifestyle, isLoading, saveTreatmentLog } = useChild()
+  const { activeChild, activeTreatments, logs, lifestyle, isLoading, saveTreatmentLog, saveLifestyle } = useChild()
   const [showAddChild, setShowAddChild] = useState(false)
+  const [showLifestyle, setShowLifestyle] = useState(false)
+  const [lifeForm, setLifeForm] = useState({ date: today(), outdoorH: 0, outdoorM: 0, phoneH: 0, phoneM: 0 })
+  const [lifeSaving, setLifeSaving] = useState(false)
   const todayStr = today()
   const todayLog = logs[todayStr] || {}
 
@@ -20,12 +26,27 @@ export default function HomePage() {
     return () => document.removeEventListener('open-add-child', handler)
   }, [])
 
+  const handleLifeSave = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLifeSaving(true)
+    try {
+      await saveLifestyle(lifeForm.date, {
+        outdoor: lifeForm.outdoorH + lifeForm.outdoorM / 60,
+        phone:   lifeForm.phoneH   + lifeForm.phoneM   / 60,
+      })
+      toast.success('생활습관이 저장되었습니다')
+      setShowLifestyle(false)
+      setLifeForm({ date: today(), outdoorH: 0, outdoorM: 0, phoneH: 0, phoneM: 0 })
+    } catch { toast.error('저장에 실패했습니다') }
+    finally { setLifeSaving(false) }
+  }
+
   const toggleTreatment = async (key: 'atropine' | 'dreamlens') => {
     const newVal = !todayLog[key]
     const atropine  = key === 'atropine'  ? newVal : !!todayLog.atropine
     const dreamlens = key === 'dreamlens' ? newVal : !!todayLog.dreamlens
     await saveTreatmentLog(todayStr, atropine, dreamlens)
-    toast.success(newVal ? '치료 완료로 표시했습니다' : '완료 취소했습니다')
+    toast.success(newVal ? '케어 완료로 표시했습니다' : '완료 취소했습니다')
   }
 
   if (isLoading) {
@@ -53,6 +74,8 @@ export default function HomePage() {
     )
   }
 
+  const fmtTime = (h: number) => { const hrs = Math.floor(h); const mins = Math.round((h - hrs) * 60); return mins > 0 ? `${hrs}시간 ${mins}분` : `${hrs}시간` }
+
   const streak  = calcStreak(logs, activeTreatments)
   const monthPct = calcMonthCompliance(logs, activeTreatments, new Date().getFullYear(), new Date().getMonth())
   const todayLife = lifestyle[todayStr]
@@ -67,10 +90,10 @@ export default function HomePage() {
 
   return (
     <>
-      {/* 오늘의 치료 */}
+      {/* 오늘의 케어 */}
       <section className="bg-white rounded-2xl p-4 mb-3 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-gray-800">오늘의 치료</h2>
+          <h2 className="font-bold text-gray-800">오늘의 케어</h2>
           <span className="text-xs text-gray-400">
             {new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })}
           </span>
@@ -78,7 +101,7 @@ export default function HomePage() {
 
         {activeTreatments.length === 0 ? (
           <p className="text-sm text-gray-400 py-2">
-            설정에서 자녀의 치료 항목을 등록해주세요.
+            설정에서 자녀의 케어 항목을 등록해주세요.
           </p>
         ) : (
           <div className="space-y-2">
@@ -110,10 +133,10 @@ export default function HomePage() {
         )}
       </section>
 
-      {/* 치료 순응도 */}
+      {/* 케어 달성률 */}
       {activeTreatments.length > 0 && (
         <section className="bg-white rounded-2xl p-4 mb-3 shadow-sm">
-          <h2 className="font-bold text-gray-800 mb-3">치료 순응도</h2>
+          <h2 className="font-bold text-gray-800 mb-3">케어 달성률</h2>
 
           <div className="flex justify-around mb-4">
             <div className="text-center">
@@ -161,14 +184,13 @@ export default function HomePage() {
         {todayLife ? (
           <div className="flex gap-3">
             {[
-              { icon: '🌳', label: '야외활동', value: todayLife.outdoor, unit: 'h', good: todayLife.outdoor >= 2 },
-              { icon: '📱', label: '스마트폰', value: todayLife.phone,   unit: 'h', good: todayLife.phone   <= 2 },
-              { icon: '😴', label: '수면',     value: todayLife.sleep,   unit: 'h', good: todayLife.sleep   >= 8 },
+              { icon: '🌳', label: '야외활동', value: todayLife.outdoor, good: todayLife.outdoor >= 2, bg: 'bg-green-50' },
+              { icon: '📱', label: '스마트폰', value: todayLife.phone,   good: todayLife.phone   <= 2, bg: 'bg-amber-50'  },
             ].map(item => (
-              <div key={item.label} className="flex-1 bg-gray-50 rounded-xl p-3 text-center">
+              <div key={item.label} className={`flex-1 ${item.bg} rounded-xl p-3 text-center`}>
                 <div className="text-xl mb-1">{item.icon}</div>
                 <div className={`text-lg font-bold ${item.good ? 'text-green-600' : 'text-red-500'}`}>
-                  {item.value}{item.unit}
+                  {fmtTime(item.value)}
                 </div>
                 <div className="text-xs text-gray-400">{item.label}</div>
               </div>
@@ -177,7 +199,7 @@ export default function HomePage() {
         ) : (
           <p className="text-sm text-gray-400 text-center py-2">
             오늘 기록이 없습니다 —{' '}
-            <span className="text-blue-500 cursor-pointer" onClick={() => document.dispatchEvent(new CustomEvent('open-lifestyle'))}>
+            <span className="text-blue-500 cursor-pointer" onClick={() => setShowLifestyle(true)}>
               기록하기
             </span>
           </p>
@@ -185,6 +207,60 @@ export default function HomePage() {
       </section>
 
       <ChildFormModal open={showAddChild} onClose={() => setShowAddChild(false)} />
+
+      {showLifestyle && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowLifestyle(false)} />
+          <div className="relative z-10 w-full max-w-[480px] bg-white rounded-t-2xl sm:rounded-2xl p-5 pb-8">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-bold">생활습관 기록</h2>
+              <button onClick={() => setShowLifestyle(false)} className="text-gray-400 text-xl">✕</button>
+            </div>
+            <form onSubmit={handleLifeSave} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">날짜</label>
+                <input type="date" value={lifeForm.date}
+                  onChange={e => setLifeForm(f => ({ ...f, date: e.target.value }))}
+                  className={INPUT} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-green-50 rounded-2xl p-4 border-2 border-green-100">
+                  <div className="flex items-center gap-1.5 mb-4">
+                    <span className="text-xl">🌳</span>
+                    <span className="text-xs font-semibold text-green-700">야외활동</span>
+                  </div>
+                  <TimeSpinner
+                    hours={lifeForm.outdoorH} minutes={lifeForm.outdoorM}
+                    onHour={v => setLifeForm(f => ({ ...f, outdoorH: v }))}
+                    onMinute={v => setLifeForm(f => ({ ...f, outdoorM: v }))}
+                    btnCls="bg-green-200 text-green-700 hover:bg-green-300"
+                    textCls="text-green-700"
+                  />
+                  <p className="text-xs text-green-400 mt-3 text-center">권장 2시간↑</p>
+                </div>
+                <div className="bg-amber-50 rounded-2xl p-4 border-2 border-amber-100">
+                  <div className="flex items-center gap-1.5 mb-4">
+                    <span className="text-xl">📱</span>
+                    <span className="text-xs font-semibold text-amber-700">스마트폰</span>
+                  </div>
+                  <TimeSpinner
+                    hours={lifeForm.phoneH} minutes={lifeForm.phoneM}
+                    onHour={v => setLifeForm(f => ({ ...f, phoneH: v }))}
+                    onMinute={v => setLifeForm(f => ({ ...f, phoneM: v }))}
+                    btnCls="bg-amber-200 text-amber-700 hover:bg-amber-300"
+                    textCls="text-amber-700"
+                  />
+                  <p className="text-xs text-amber-400 mt-3 text-center">권장 2시간↓</p>
+                </div>
+              </div>
+              <button type="submit" disabled={lifeSaving}
+                className="w-full bg-blue-600 disabled:bg-blue-300 text-white font-semibold py-3 rounded-xl">
+                {lifeSaving ? '저장 중...' : '저장'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   )
 }

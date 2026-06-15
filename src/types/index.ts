@@ -16,8 +16,12 @@ export interface ExamRecord {
   clinic: string
   axOD: string         // 안축장 우안 (mm)
   axOS: string         // 안축장 좌안 (mm)
-  serOD: string        // SER 우안 (D)
-  serOS: string        // SER 좌안 (D)
+  sphOD: string        // Sphere 우안 (D)
+  sphOS: string        // Sphere 좌안 (D)
+  cylOD: string        // Cylinder 우안 (D)
+  cylOS: string        // Cylinder 좌안 (D)
+  serOD: string        // SEQ 우안 = sph + cyl/2 (D)
+  serOS: string        // SEQ 좌안 = sph + cyl/2 (D)
   note: string
 }
 

@@ -15,7 +15,7 @@ export default function AnalyticsPage() {
   return (
     <div>
       <div className="flex bg-white rounded-xl mb-3 p-1 shadow-sm">
-        {([['axial','안축장'],['ser','SER'],['compliance','순응도']] as [Tab, string][]).map(([t, label]) => (
+        {([['axial','안축장'],['ser','굴절 도수'],['compliance','달성률']] as [Tab, string][]).map(([t, label]) => (
           <button key={t} onClick={() => setTab(t)}
             className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors
               ${tab === t ? 'bg-blue-600 text-white' : 'text-gray-500'}`}>
