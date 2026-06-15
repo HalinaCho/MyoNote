@@ -25,8 +25,11 @@ export async function updateSession(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
+  const publicPaths = ['/', '/login', '/auth/callback']
+  const isPublic = publicPaths.some(p => request.nextUrl.pathname.startsWith(p))
+
   // 비로그인 상태에서 보호된 경로 접근 시 로그인 페이지로
-  if (!user && !request.nextUrl.pathname.startsWith('/login') && request.nextUrl.pathname !== '/') {
+  if (!user && !isPublic) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)

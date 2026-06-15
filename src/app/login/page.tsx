@@ -1,0 +1,74 @@
+import { signInWithKakao } from '@/lib/supabase/auth'
+
+export default function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>
+}) {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
+      <div className="w-full max-w-sm">
+
+        {/* 로고 */}
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-600 mb-4">
+            <span className="text-2xl">👁</span>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900">마이오노트</h1>
+          <p className="mt-1 text-sm text-gray-500">내 아이 근시 관리</p>
+        </div>
+
+        {/* 설명 */}
+        <div className="bg-white rounded-2xl p-5 mb-6 shadow-sm border border-gray-100 space-y-3">
+          {[
+            { icon: '📋', text: '치료 순응도를 매일 간편하게 기록' },
+            { icon: '📈', text: '안축장 변화를 차트로 한눈에' },
+            { icon: '👥', text: '보호자 여러 명이 함께 관리' },
+          ].map(({ icon, text }) => (
+            <div key={text} className="flex items-center gap-3 text-sm text-gray-600">
+              <span className="text-base">{icon}</span>
+              <span>{text}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* 카카오 로그인 */}
+        <form action={signInWithKakao}>
+          <button
+            type="submit"
+            className="w-full flex items-center justify-center gap-2 bg-[#FEE500] hover:bg-[#F5DC00] active:bg-[#EDD200] text-[#191919] font-semibold py-3.5 px-4 rounded-xl transition-colors text-sm"
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path fillRule="evenodd" clipRule="evenodd"
+                d="M9 1.5C4.86 1.5 1.5 4.19 1.5 7.5c0 2.1 1.29 3.95 3.24 5.06l-.83 3.08a.19.19 0 0 0 .28.21L7.7 13.7c.42.06.85.09 1.3.09 4.14 0 7.5-2.69 7.5-6s-3.36-6-7.5-6z"
+                fill="#191919"/>
+            </svg>
+            카카오로 시작하기
+          </button>
+        </form>
+
+        {/* 에러 메시지 */}
+        <ErrorMessage searchParams={searchParams} />
+
+        <p className="mt-6 text-center text-xs text-gray-400">
+          로그인 시{' '}
+          <span className="underline cursor-pointer">개인정보 처리방침</span>에 동의하게 됩니다
+        </p>
+      </div>
+    </div>
+  )
+}
+
+async function ErrorMessage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>
+}) {
+  const params = await searchParams
+  if (!params.error) return null
+  return (
+    <p className="mt-3 text-center text-sm text-red-500">
+      로그인에 실패했습니다. 다시 시도해주세요.
+    </p>
+  )
+}
