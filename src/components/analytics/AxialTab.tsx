@@ -3,9 +3,6 @@
 import { useChild } from '@/context/ChildContext'
 import { Line } from 'react-chartjs-2'
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler } from 'chart.js'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faRuler } from '@fortawesome/free-solid-svg-icons'
-
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler)
 
 export default function AxialTab() {
@@ -17,7 +14,6 @@ export default function AxialTab() {
   if (sorted.length < 2) {
     return (
       <div className="bg-white rounded-2xl p-6 shadow-sm text-center text-gray-400 text-sm">
-        <FontAwesomeIcon icon={faRuler} className="text-3xl mb-2" />
         안축장 기록이 2개 이상 있어야 추세를 볼 수 있습니다.
       </div>
     )

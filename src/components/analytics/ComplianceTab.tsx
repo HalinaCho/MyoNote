@@ -25,8 +25,25 @@ export default function ComplianceTab() {
   })
 
   const data = months.map(m => calcMonthCompliance(logs, activeTreatments, m.year, m.month))
-  const avg3   = Math.round(data.slice(-3).reduce((a, b) => a + b, 0) / 3)
-  const avgAll = Math.round(data.reduce((a, b) => a + b, 0) / data.length)
+
+  const hasLogs = (year: number, month: number) => {
+    const prefix = `${year}-${String(month + 1).padStart(2, '0')}`
+    return Object.keys(logs).some(k => k.startsWith(prefix))
+  }
+
+  const avg3 = (() => {
+    const vals = months.slice(-3)
+      .map((m, i) => ({ v: data[months.length - 3 + i], active: hasLogs(m.year, m.month) }))
+      .filter(x => x.active).map(x => x.v)
+    return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0
+  })()
+
+  const avgAll = (() => {
+    const vals = months
+      .map((m, i) => ({ v: data[i], active: hasLogs(m.year, m.month) }))
+      .filter(x => x.active).map(x => x.v)
+    return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0
+  })()
 
   return (
     <div className="space-y-3">

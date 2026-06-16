@@ -8,16 +8,18 @@ import TimeSpinner from '@/components/lifestyle/TimeSpinner'
 import { today, formatDate } from '@/lib/utils/date'
 import { calcStreak, calcMonthCompliance, getDayStatus } from '@/lib/utils/compliance'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEye, faCheck, faMinus, faFire, faXmark, faTree, faMobileScreen } from '@fortawesome/free-solid-svg-icons'
+import { faEye, faCheck, faMinus, faFire, faXmark, faTree, faMobileScreen, faCalendarDays, faPen } from '@fortawesome/free-solid-svg-icons'
 import { faCircle } from '@fortawesome/free-regular-svg-icons'
 
 const INPUT = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
 
 export default function HomePage() {
-  const { activeChild, activeTreatments, logs, lifestyle, isLoading, saveTreatmentLog, saveLifestyle } = useChild()
+  const { activeChild, activeTreatments, logs, lifestyle, exams, isLoading, saveTreatmentLog, saveLifestyle, updateExam } = useChild()
   const [showAddChild, setShowAddChild] = useState(false)
   const [showLifestyle, setShowLifestyle] = useState(false)
   const [lifeForm, setLifeForm] = useState({ date: today(), outdoorH: 0, outdoorM: 0, phoneH: 0, phoneM: 0 })
+  const [editingAppt, setEditingAppt] = useState(false)
+  const [apptDate, setApptDate] = useState('')
   const [lifeSaving, setLifeSaving] = useState(false)
   const todayStr = today()
   const todayLog = logs[todayStr] || {}
@@ -36,6 +38,7 @@ export default function HomePage() {
       await saveLifestyle(lifeForm.date, {
         outdoor: lifeForm.outdoorH + lifeForm.outdoorM / 60,
         phone:   lifeForm.phoneH   + lifeForm.phoneM   / 60,
+        sleep: 0,
       })
       toast.success('생활습관이 저장되었습니다')
       setShowLifestyle(false)
@@ -82,6 +85,13 @@ export default function HomePage() {
   const streak  = calcStreak(logs, activeTreatments)
   const monthPct = calcMonthCompliance(logs, activeTreatments, new Date().getFullYear(), new Date().getMonth())
   const todayLife = lifestyle[todayStr]
+
+  const nextAppt = exams
+    .filter(e => e.nextAppointment && e.nextAppointment >= todayStr)
+    .sort((a, b) => a.nextAppointment.localeCompare(b.nextAppointment))[0]
+  const dDays = nextAppt
+    ? Math.round((new Date(nextAppt.nextAppointment).getTime() - new Date(todayStr).getTime()) / 86400000)
+    : null
 
   // 주간 스트립
   const weekDays = Array.from({ length: 7 }, (_, i) => {
@@ -208,6 +218,53 @@ export default function HomePage() {
           </p>
         )}
       </section>
+
+      {/* 다음 예약일 */}
+      {nextAppt && (
+        <section className="bg-white rounded-2xl p-4 mb-3 shadow-sm">
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2">
+              <FontAwesomeIcon icon={faCalendarDays} className="text-blue-500" />
+              <h2 className="font-bold text-gray-800">다음 병원 예약일</h2>
+            </div>
+            {!editingAppt && (
+              <button onClick={() => { setApptDate(nextAppt.nextAppointment); setEditingAppt(true) }}
+                className="text-gray-300 hover:text-blue-400 text-sm p-1">
+                <FontAwesomeIcon icon={faPen} />
+              </button>
+            )}
+          </div>
+          {editingAppt ? (
+            <div className="mt-2 flex items-center gap-2">
+              <input type="date" value={apptDate} onChange={e => setApptDate(e.target.value)}
+                className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <button onClick={async () => {
+                if (!apptDate) return
+                try {
+                  await updateExam(nextAppt.id, { ...nextAppt, nextAppointment: apptDate })
+                  toast.success('예약일이 수정되었습니다')
+                } catch { toast.error('수정에 실패했습니다') }
+                setEditingAppt(false)
+              }} className="bg-blue-600 text-white text-sm px-3 py-2 rounded-lg font-medium">
+                저장
+              </button>
+              <button onClick={() => setEditingAppt(false)}
+                className="text-gray-400 hover:text-gray-600 text-sm p-2">
+                <FontAwesomeIcon icon={faXmark} />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between mt-2">
+              <span className="text-gray-700 text-sm">{nextAppt.nextAppointment}</span>
+              <span className={`text-lg font-bold px-3 py-0.5 rounded-full
+                ${dDays === 0 ? 'bg-red-50 text-red-500' : dDays! <= 7 ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'}`}>
+                {dDays === 0 ? 'D-Day' : `D-${dDays}`}
+              </span>
+            </div>
+          )}
+          {nextAppt.clinic && !editingAppt && <p className="text-xs text-gray-400 mt-1">{nextAppt.clinic}</p>}
+        </section>
+      )}
 
       <ChildFormModal open={showAddChild} onClose={() => setShowAddChild(false)} />
 

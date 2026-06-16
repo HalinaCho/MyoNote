@@ -66,7 +66,7 @@ export async function deleteChild(id: string): Promise<void> {
 export async function fetchChildData(childId: string) {
   const sb = createClient()
   const [examsRes, logsRes, lifeRes] = await Promise.all([
-    sb.from('eyebody_exam_records').select('id,exam_date,clinic,ax_od,ax_os,sph_od,sph_os,cyl_od,cyl_os,ser_od,ser_os,note').eq('child_id', childId).order('exam_date', { ascending: false }),
+    sb.from('eyebody_exam_records').select('id,exam_date,clinic,ax_od,ax_os,sph_od,sph_os,cyl_od,cyl_os,ser_od,ser_os,note,next_appointment').eq('child_id', childId).order('exam_date', { ascending: false }),
     sb.from('eyebody_treatment_logs').select('log_date, atropine, dreamlens').eq('child_id', childId),
     sb.from('eyebody_activity_logs').select('log_date, outdoor_hours, phone_hours, sleep_hours').eq('child_id', childId),
   ])
@@ -82,6 +82,7 @@ export async function fetchChildData(childId: string) {
     serOD: r.ser_od != null ? String(r.ser_od) : '',
     serOS: r.ser_os != null ? String(r.ser_os) : '',
     note:  r.note ?? '',
+    nextAppointment: r.next_appointment ?? '',
   }))
 
   const logs: TreatmentLogs = Object.fromEntries(
@@ -130,6 +131,7 @@ export async function saveExam(childId: string, exam: Omit<ExamRecord, 'id'>): P
     cyl_od: cylOD, cyl_os: cylOS,
     ser_od: serOD, ser_os: serOS,
     note: exam.note || null,
+    next_appointment: exam.nextAppointment || null,
   }).select().single()
   if (error) throw error
   return {
@@ -143,6 +145,7 @@ export async function saveExam(childId: string, exam: Omit<ExamRecord, 'id'>): P
     serOD: data.ser_od != null ? String(data.ser_od) : '',
     serOS: data.ser_os != null ? String(data.ser_os) : '',
     note:  data.note ?? '',
+    nextAppointment: data.next_appointment ?? '',
   }
 }
 
@@ -163,6 +166,7 @@ export async function updateExam(id: string, exam: Omit<ExamRecord, 'id'>): Prom
     cyl_od: cylOD, cyl_os: cylOS,
     ser_od: serOD, ser_os: serOS,
     note: exam.note || null,
+    next_appointment: exam.nextAppointment || null,
   }).eq('id', id).select().single()
   if (error) throw error
   return {
@@ -176,6 +180,7 @@ export async function updateExam(id: string, exam: Omit<ExamRecord, 'id'>): Prom
     serOD: data.ser_od != null ? String(data.ser_od) : '',
     serOS: data.ser_os != null ? String(data.ser_os) : '',
     note:  data.note ?? '',
+    nextAppointment: data.next_appointment ?? '',
   }
 }
 

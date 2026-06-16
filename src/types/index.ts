@@ -23,6 +23,7 @@ export interface ExamRecord {
   serOD: string        // SEQ 우안 = sph + cyl/2 (D)
   serOS: string        // SEQ 좌안 = sph + cyl/2 (D)
   note: string
+  nextAppointment: string  // 다음 예약일 'YYYY-MM-DD'
 }
 
 // ── 치료 로그 ─────────────────────────────────────────────────

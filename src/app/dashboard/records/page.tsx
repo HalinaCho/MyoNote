@@ -8,7 +8,7 @@ import { getDayStatus } from '@/lib/utils/compliance'
 import type { ExamRecord } from '@/types'
 import TimeSpinner from '@/components/lifestyle/TimeSpinner'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPen, faXmark, faCheck, faMinus, faTree, faMobileScreen, faTrashCan, faCircleInfo } from '@fortawesome/free-solid-svg-icons'
+import { faPen, faXmark, faCheck, faMinus, faTree, faMobileScreen, faTrashCan, faCircleInfo, faCalendarDays } from '@fortawesome/free-solid-svg-icons'
 
 type Tab = 'exam' | 'treatment' | 'lifestyle'
 
@@ -44,7 +44,7 @@ function calcSeq(sph: string, cyl: string) {
 const withMinus = (v: string) => v ? `-${v}` : ''
 const stripMinus = (v: string) => v.replace(/^-/, '')
 
-const EMPTY_EXAM = { date: today(), clinic: '', axOD: '', axOS: '', sphOD: '', sphOS: '', cylOD: '', cylOS: '', note: '' }
+const EMPTY_EXAM = { date: today(), clinic: '', axOD: '', axOS: '', sphOD: '', sphOS: '', cylOD: '', cylOS: '', note: '', nextAppointment: '' }
 
 function ExamTab() {
   const { exams, saveExam, updateExam, deleteExam } = useChild()
@@ -52,16 +52,18 @@ function ExamTab() {
   const [editing, setEditing] = useState<ExamRecord | null>(null)
   const [form, setForm] = useState(EMPTY_EXAM)
   const [saving, setSaving] = useState(false)
+  const [showCRInfo, setShowCRInfo] = useState(false)
 
   const seqOD = calcSeq(form.sphOD, form.cylOD)
   const seqOS = calcSeq(form.sphOS, form.cylOS)
 
-  const openAdd = () => { setEditing(null); setForm(EMPTY_EXAM); setModal(true) }
+  const openAdd = () => { setEditing(null); setForm({ ...EMPTY_EXAM, clinic: exams[0]?.clinic ?? '' }); setModal(true) }
   const openEdit = (e: ExamRecord) => {
     setEditing(e)
     setForm({ date: e.date, clinic: e.clinic, axOD: e.axOD, axOS: e.axOS,
               sphOD: stripMinus(e.sphOD), sphOS: stripMinus(e.sphOS),
-              cylOD: stripMinus(e.cylOD), cylOS: stripMinus(e.cylOS), note: e.note })
+              cylOD: stripMinus(e.cylOD), cylOS: stripMinus(e.cylOS),
+              note: e.note, nextAppointment: e.nextAppointment ?? '' })
     setModal(true)
   }
   const closeModal = () => { setModal(false); setEditing(null); setForm(EMPTY_EXAM) }
@@ -141,6 +143,12 @@ function ExamTab() {
                   </div>
                 )}
                 {e.note && <div className="text-xs text-gray-400 px-1">{e.note}</div>}
+                {e.nextAppointment && (
+                  <div className="flex items-center gap-1.5 text-xs text-blue-500 px-1 mt-0.5">
+                    <FontAwesomeIcon icon={faCalendarDays} />
+                    <span>다음 예약: {e.nextAppointment}</span>
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -166,14 +174,27 @@ function ExamTab() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-gray-700">굴절 도수 (D)</span>
-                  <span className="text-xs text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full">조절마비 검사 결과 우선</span>
+                  <button type="button" onClick={() => setShowCRInfo(v => !v)}
+                    className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full transition-colors
+                      ${showCRInfo ? 'bg-blue-500 text-white' : 'bg-blue-50 text-blue-500 hover:bg-blue-100'}`}>
+                    <FontAwesomeIcon icon={faCircleInfo} />
+                    조절마비(CR)검사 결과 우선
+                  </button>
                 </div>
+                {showCRInfo && (
+                  <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 mb-3 text-xs space-y-1.5 text-blue-900">
+                    <p className="font-semibold">조절마비검사(CR검사)란?</p>
+                    <p>CR(Cycloplegic Refraction)은 조절마비 안약을 점안해 눈의 조절 기능을 일시적으로 풀어준 상태에서 굴절이상을 측정하는 검사입니다.</p>
+                    <p>어린이는 조절력이 강해 일반 검사만으로는 실제 근시 도수가 낮게 측정될 수 있습니다. CR검사 결과가 실제 굴절 상태를 더 정확하게 반영하므로, 입력 시 CR검사 수치를 우선 입력해주세요.</p>
+                  </div>
+                )}
                 {/* 헤더 행 */}
-                <div className="grid grid-cols-3 gap-2 mb-1 text-xs text-center text-gray-400 font-medium px-1">
-                  <span>Sph</span><span>Cyl</span><span>SEQ (자동)</span>
+                <div className="grid gap-2 mb-1 text-xs text-center text-gray-400 font-medium px-1" style={{gridTemplateColumns:'4.5rem 1fr 1fr 1fr'}}>
+                  <span></span><span>Sph</span><span>Cyl</span><span>SEQ (자동)</span>
                 </div>
                 {/* 우안 */}
-                <div className="grid grid-cols-3 gap-2 items-center mb-2">
+                <div className="grid gap-2 items-center mb-2" style={{gridTemplateColumns:'4.5rem 1fr 1fr 1fr'}}>
+                  <span className="text-xs text-center text-gray-500 font-medium">우안(OD)</span>
                   <NegInput value={form.sphOD} onChange={v=>setForm(f=>({...f,sphOD:v}))} placeholder="3.00"/>
                   <NegInput value={form.cylOD} onChange={v=>setForm(f=>({...f,cylOD:v}))} placeholder="0.50"/>
                   <div className="h-10 flex items-center justify-center bg-blue-50 rounded-lg text-sm font-bold text-blue-700">
@@ -181,19 +202,18 @@ function ExamTab() {
                   </div>
                 </div>
                 {/* 좌안 */}
-                <div className="grid grid-cols-3 gap-2 items-center">
+                <div className="grid gap-2 items-center" style={{gridTemplateColumns:'4.5rem 1fr 1fr 1fr'}}>
+                  <span className="text-xs text-center text-gray-500 font-medium">좌안(OS)</span>
                   <NegInput value={form.sphOS} onChange={v=>setForm(f=>({...f,sphOS:v}))} placeholder="3.00"/>
                   <NegInput value={form.cylOS} onChange={v=>setForm(f=>({...f,cylOS:v}))} placeholder="0.50"/>
                   <div className="h-10 flex items-center justify-center bg-blue-50 rounded-lg text-sm font-bold text-blue-700">
                     {seqOS}
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-2 mt-1 text-xs text-center text-gray-400 px-1">
-                  <span>우안</span><span>좌안</span><span></span>
-                </div>
               </div>
 
               <Field label="메모"><textarea rows={2} placeholder="특이사항 등" value={form.note} onChange={e=>setForm(f=>({...f,note:e.target.value}))} className={INPUT}/></Field>
+              <Field label="다음 예약일"><input type="date" value={form.nextAppointment} onChange={e=>setForm(f=>({...f,nextAppointment:e.target.value}))} className={INPUT}/></Field>
               <button type="submit" disabled={saving} className="w-full bg-blue-600 disabled:bg-blue-300 text-white font-semibold py-3 rounded-xl">
                 {saving ? '저장 중...' : editing ? '수정하기' : '저장'}
               </button>
@@ -387,7 +407,7 @@ function LifestyleTab() {
 
   return (
     <>
-      <button onClick={openAdd} className="w-full bg-blue-600 text-white font-semibold py-3 rounded-xl mb-3 text-sm">
+      <button onClick={() => openAdd()} className="w-full bg-blue-600 text-white font-semibold py-3 rounded-xl mb-3 text-sm">
         + 기록 추가
       </button>
 

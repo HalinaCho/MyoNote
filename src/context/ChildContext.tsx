@@ -106,16 +106,19 @@ export function ChildProvider({ children: node }: { children: React.ReactNode })
     await q.saveTreatmentLog(activeChildId, dateStr, atropine, dreamlens)
   }
 
+  const sortExams = (list: ExamRecord[]) =>
+    [...list].sort((a, b) => b.date.localeCompare(a.date))
+
   const saveExam = async (exam: Omit<ExamRecord, 'id'>) => {
     if (!activeChildId) throw new Error('자녀를 선택해주세요')
     const saved = await q.saveExam(activeChildId, exam)
-    setExams(prev => [saved, ...prev])
+    setExams(prev => sortExams([saved, ...prev]))
     return saved
   }
 
   const updateExam = async (id: string, exam: Omit<ExamRecord, 'id'>) => {
     const updated = await q.updateExam(id, exam)
-    setExams(prev => prev.map(e => e.id === id ? updated : e))
+    setExams(prev => sortExams(prev.map(e => e.id === id ? updated : e)))
   }
 
   const deleteExam = async (id: string) => {
