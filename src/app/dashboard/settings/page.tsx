@@ -65,7 +65,7 @@ export default function SettingsPage() {
       {/* 현재 자녀 프로필 */}
       {activeChild && (
         <section className="bg-white rounded-2xl p-4 mb-3 shadow-sm flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center text-2xl">
+          <div className="w-12 h-12 rounded-full bg-white border-2 border-[#10bcad] flex items-center justify-center text-2xl">
             {activeChild.gender === 'F' ? '👧' : '👦'}
           </div>
           <div className="flex-1">
@@ -87,10 +87,13 @@ export default function SettingsPage() {
 
         {children.map(c => (
           <div key={c.id} className="flex items-center gap-3 px-4 py-3 border-t border-gray-50">
-            <span className="text-xl">{c.gender === 'F' ? '👧' : '👦'}</span>
+            <div className={`w-10 h-10 rounded-full bg-white border-2 flex items-center justify-center text-lg flex-shrink-0
+              ${c.id === activeChildId ? 'border-[#10bcad]' : 'border-gray-200'}`}>
+              {c.gender === 'F' ? '👧' : '👦'}
+            </div>
             <div className="flex-1">
               <div className="text-sm font-semibold text-gray-800">{c.name}
-                {c.id === activeChildId && <span className="ml-2 text-xs bg-teal-100 text-teal-600 px-1.5 py-0.5 rounded-full">현재</span>}
+                {c.id === activeChildId && <span className="ml-2 text-xs bg-white border border-[#10bcad] text-[#10bcad] px-1.5 py-0.5 rounded-full">현재</span>}
               </div>
               <div className="text-xs text-gray-400">{calcAgeLabel(c.birth)}</div>
             </div>

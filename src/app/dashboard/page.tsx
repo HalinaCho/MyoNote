@@ -236,10 +236,7 @@ export default function HomePage() {
       {nextAppt && (
         <section className="bg-white rounded-2xl p-4 mb-3 shadow-sm">
           <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center gap-2">
-              <FontAwesomeIcon icon={faCalendarDays} className="text-[#10bcad]" />
-              <h2 className="font-bold text-gray-800">다음 병원 예약일</h2>
-            </div>
+            <h2 className="font-bold text-gray-800">다음 병원 예약일</h2>
             {!editingAppt && (
               <button onClick={() => { setApptDate(nextAppt.nextAppointment); setEditingAppt(true) }}
                 className="text-gray-300 hover:text-gray-500 text-sm p-1 transition-colors">
@@ -268,7 +265,10 @@ export default function HomePage() {
             </div>
           ) : (
             <div className="flex items-center justify-between mt-2">
-              <span className="text-gray-700 text-sm font-medium">{nextAppt.nextAppointment}</span>
+              <span className="flex items-center gap-1.5 text-gray-700 text-sm font-medium">
+                <FontAwesomeIcon icon={faCalendarDays} className="text-gray-400 text-xs" />
+                {nextAppt.nextAppointment}
+              </span>
               <span className={`text-base font-bold px-3 py-1 rounded-full
                 ${dDays === 0 ? 'bg-rose-50 text-rose-400'
                   : dDays! <= 7 ? 'bg-[#fde68a]/40 text-amber-600'
