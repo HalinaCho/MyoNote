@@ -200,6 +200,13 @@ export async function saveLifestyle(
   if (error) throw error
 }
 
+export async function deleteLifestyle(childId: string, dateStr: string): Promise<void> {
+  const sb = createClient()
+  const { error } = await sb.from('eyebody_activity_logs')
+    .delete().eq('child_id', childId).eq('log_date', dateStr)
+  if (error) throw error
+}
+
 // ── 초대 코드 ─────────────────────────────────────────────────
 
 export async function createInviteCode(role: 'editor' | 'viewer' = 'editor'): Promise<string> {

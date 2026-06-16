@@ -3,6 +3,8 @@
 import { useChild } from '@/context/ChildContext'
 import { Line } from 'react-chartjs-2'
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend } from 'chart.js'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faGlasses, faCircleInfo } from '@fortawesome/free-solid-svg-icons'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend)
 
@@ -13,17 +15,17 @@ export default function SerTab() {
   if (sorted.length < 2) {
     return (
       <div className="bg-white rounded-2xl p-6 shadow-sm text-center text-gray-400 text-sm">
-        <div className="text-3xl mb-2">👓</div>
+        <FontAwesomeIcon icon={faGlasses} className="text-3xl mb-2" />
         검사기록이 2개 이상 있어야 추세를 볼 수 있습니다.
       </div>
     )
   }
 
-  const labels = sorted.map(e => e.date.slice(0, 7))
+  const labels = sorted.map(e => e.date.slice(2, 7).replace('-', '.'))
   return (
     <div className="space-y-3">
       <div className="bg-white rounded-2xl p-4 shadow-sm">
-        <h3 className="font-bold text-gray-800 mb-3">굴절값(SER) 변화</h3>
+        <h3 className="font-bold text-gray-800 mb-3">굴절값(SEQ) 변화</h3>
         <Line
           data={{
             labels,
@@ -43,8 +45,8 @@ export default function SerTab() {
         />
       </div>
       <div className="bg-blue-50 rounded-2xl p-4 text-sm text-blue-700">
-        <div className="font-semibold mb-1">ℹ SER 해석 가이드</div>
-        <div className="text-xs leading-relaxed">SER은 근시 정도를 나타내는 굴절값입니다. 음수가 클수록 근시가 강합니다. 연간 −0.50D 이상 진행 시 전문의 상담을 권장합니다.</div>
+        <div className="font-semibold mb-1 flex items-center gap-1.5"><FontAwesomeIcon icon={faCircleInfo} /> SEQ 해석 가이드</div>
+        <div className="text-xs leading-relaxed">SEQ는 근시 정도를 나타내는 굴절값입니다. 음수가 클수록 근시가 강합니다. 연간 −0.50D 이상 진행 시 전문의 상담을 권장합니다.</div>
       </div>
     </div>
   )

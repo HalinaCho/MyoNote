@@ -9,6 +9,8 @@ import { calcAgeLabel } from '@/lib/utils/date'
 import type { Child } from '@/types'
 import { createClient } from '@/lib/supabase/client'
 import * as q from '@/lib/supabase/queries'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faPen, faTrashCan, faPlus, faUserGroup, faKey, faRightFromBracket, faXmark, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 
 export default function SettingsPage() {
   const { children, activeChildId, activeChild, deleteChild, refreshChildren } = useChild()
@@ -92,9 +94,9 @@ export default function SettingsPage() {
               </div>
               <div className="text-xs text-gray-400">{calcAgeLabel(c.birth)}</div>
             </div>
-            <button onClick={() => setChildModal({ open: true, editing: c })} className="text-gray-400 hover:text-gray-600 p-1">✏️</button>
+            <button onClick={() => setChildModal({ open: true, editing: c })} className="text-gray-400 hover:text-gray-600 p-1"><FontAwesomeIcon icon={faPen} /></button>
             {children.length > 1 && (
-              <button onClick={() => handleDeleteChild(c)} className="text-gray-400 hover:text-red-500 p-1">🗑</button>
+              <button onClick={() => handleDeleteChild(c)} className="text-gray-400 hover:text-red-500 p-1"><FontAwesomeIcon icon={faTrashCan} /></button>
             )}
           </div>
         ))}
@@ -103,7 +105,7 @@ export default function SettingsPage() {
           onClick={() => setChildModal({ open: true, editing: null })}
           className="w-full flex items-center gap-3 px-4 py-3 border-t border-gray-50 text-blue-600 text-sm font-medium"
         >
-          <span>➕</span> 자녀 추가
+          <FontAwesomeIcon icon={faPlus} /> 자녀 추가
         </button>
       </section>
 
@@ -111,10 +113,10 @@ export default function SettingsPage() {
       <section className="bg-white rounded-2xl overflow-hidden mb-3 shadow-sm">
         <div className="px-4 pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">보호자</div>
         <button onClick={() => setInviteModal(true)} className="w-full flex items-center gap-3 px-4 py-3 border-t border-gray-50 text-sm text-gray-700 hover:bg-gray-50">
-          <span>👥</span> <span className="flex-1 text-left">보호자 초대</span> <span className="text-gray-300">›</span>
+          <FontAwesomeIcon icon={faUserGroup} className="w-4" /> <span className="flex-1 text-left">보호자 초대</span> <FontAwesomeIcon icon={faChevronRight} className="text-gray-300 text-xs" />
         </button>
         <button onClick={() => setJoinModal(true)} className="w-full flex items-center gap-3 px-4 py-3 border-t border-gray-50 text-sm text-gray-700 hover:bg-gray-50">
-          <span>🔑</span> <span className="flex-1 text-left">코드로 참여하기</span> <span className="text-gray-300">›</span>
+          <FontAwesomeIcon icon={faKey} className="w-4" /> <span className="flex-1 text-left">코드로 참여하기</span> <FontAwesomeIcon icon={faChevronRight} className="text-gray-300 text-xs" />
         </button>
       </section>
 
@@ -123,7 +125,7 @@ export default function SettingsPage() {
         <div className="px-4 pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">계정</div>
         <form action={signOut}>
           <button type="submit" className="w-full flex items-center gap-3 px-4 py-3 border-t border-gray-50 text-sm text-red-500 hover:bg-red-50">
-            <span>🚪</span> 로그아웃
+            <FontAwesomeIcon icon={faRightFromBracket} className="w-4" /> 로그아웃
           </button>
         </form>
       </section>
@@ -144,7 +146,7 @@ export default function SettingsPage() {
           <div className="relative z-10 w-full max-w-[480px] bg-white rounded-t-2xl sm:rounded-2xl p-5 pb-8">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold">보호자 초대</h2>
-              <button onClick={() => { setInviteModal(false); setInviteCode('') }} className="text-gray-400 text-xl">✕</button>
+              <button onClick={() => { setInviteModal(false); setInviteCode('') }} className="text-gray-400 text-xl"><FontAwesomeIcon icon={faXmark} /></button>
             </div>
             <p className="text-sm text-gray-500 mb-4">코드를 생성해 상대방에게 공유하세요. 내 계정의 모든 자녀가 공유됩니다.</p>
             {inviteCode ? (
@@ -175,7 +177,7 @@ export default function SettingsPage() {
           <div className="relative z-10 w-full max-w-[480px] bg-white rounded-t-2xl sm:rounded-2xl p-5 pb-8">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold">코드로 참여하기</h2>
-              <button onClick={() => setJoinModal(false)} className="text-gray-400 text-xl">✕</button>
+              <button onClick={() => setJoinModal(false)} className="text-gray-400 text-xl"><FontAwesomeIcon icon={faXmark} /></button>
             </div>
             <label className="block text-sm font-medium text-gray-700 mb-1">초대 코드</label>
             <input

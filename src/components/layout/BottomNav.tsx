@@ -2,12 +2,15 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faHouse, faClipboardList, faChartColumn, faGear } from '@fortawesome/free-solid-svg-icons'
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 
-const TABS = [
-  { href: '/dashboard',            label: '홈',  icon: '🏠' },
-  { href: '/dashboard/records',    label: '기록', icon: '📋' },
-  { href: '/dashboard/analytics',  label: '분석', icon: '📊' },
-  { href: '/dashboard/settings',   label: '설정', icon: '⚙️' },
+const TABS: { href: string; label: string; icon: IconDefinition }[] = [
+  { href: '/dashboard',           label: '홈',  icon: faHouse },
+  { href: '/dashboard/records',   label: '기록', icon: faClipboardList },
+  { href: '/dashboard/analytics', label: '분석', icon: faChartColumn },
+  { href: '/dashboard/settings',  label: '설정', icon: faGear },
 ]
 
 export default function BottomNav() {
@@ -25,7 +28,7 @@ export default function BottomNav() {
               className={`flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-xs transition-colors
                 ${active ? 'text-blue-600' : 'text-gray-400'}`}
             >
-              <span className="text-xl leading-none">{icon}</span>
+              <FontAwesomeIcon icon={icon} className="text-xl leading-none" />
               <span className={`font-medium ${active ? 'font-semibold' : ''}`}>{label}</span>
             </Link>
           )

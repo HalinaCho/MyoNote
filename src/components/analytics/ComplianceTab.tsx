@@ -10,6 +10,14 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 export default function ComplianceTab() {
   const { logs, activeTreatments } = useChild()
 
+  if (!activeTreatments.length) {
+    return (
+      <div className="bg-white rounded-2xl p-6 shadow-sm text-center text-gray-400 text-sm">
+        설정에서 자녀의 케어 항목을 등록해주세요.
+      </div>
+    )
+  }
+
   const months = Array.from({ length: 6 }, (_, i) => {
     const d = new Date()
     d.setMonth(d.getMonth() - (5 - i))
@@ -29,7 +37,7 @@ export default function ComplianceTab() {
             labels: months.map(m => m.label),
             datasets: [{
               data,
-              backgroundColor: data.map(v => v >= 90 ? '#10B981' : v >= 70 ? '#3B82F6' : '#F59E0B'),
+              backgroundColor: data.map(v => v >= 90 ? '#10B981' : v >= 70 ? '#F59E0B' : '#EF4444'),
               borderRadius: 6,
             }],
           }}
@@ -46,13 +54,14 @@ export default function ComplianceTab() {
 
       <div className="grid grid-cols-3 gap-2">
         {[
-          { label: '이번 달',    value: `${data[data.length - 1]}%` },
-          { label: '3개월 평균', value: `${avg3}%` },
-          { label: '6개월 평균', value: `${avgAll}%` },
-        ].map(({ label, value }) => (
+          { label: '이번 달', value: `${data[data.length - 1]}%`, current: true },
+          { label: '3개월 평균', value: `${avg3}%`, current: false },
+          { label: '6개월 평균', value: `${avgAll}%`, current: false },
+        ].map(({ label, value, current }) => (
           <div key={label} className="bg-white rounded-xl p-3 text-center shadow-sm">
             <div className="text-xl font-bold text-gray-800">{value}</div>
             <div className="text-xs text-gray-400 mt-0.5">{label}</div>
+            {current && <div className="text-xs text-blue-400 mt-0.5">진행 중</div>}
           </div>
         ))}
       </div>

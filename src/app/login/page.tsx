@@ -1,4 +1,6 @@
 import KakaoLoginButton from '@/components/auth/KakaoLoginButton'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faEye, faClipboardList, faChartLine, faUserGroup } from '@fortawesome/free-solid-svg-icons'
 
 export default function LoginPage({
   searchParams,
@@ -12,7 +14,7 @@ export default function LoginPage({
         {/* 로고 */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-600 mb-4">
-            <span className="text-2xl">👁</span>
+            <FontAwesomeIcon icon={faEye} className="text-2xl text-white" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">마이오노트</h1>
           <p className="mt-1 text-sm text-gray-500">내 아이 근시 관리</p>
@@ -21,12 +23,12 @@ export default function LoginPage({
         {/* 설명 */}
         <div className="bg-white rounded-2xl p-5 mb-6 shadow-sm border border-gray-100 space-y-3">
           {[
-            { icon: '📋', text: '케어 달성률을 매일 간편하게 기록' },
-            { icon: '📈', text: '안축장 변화를 차트로 한눈에' },
-            { icon: '👥', text: '보호자 여러 명이 함께 관리' },
+            { icon: faClipboardList, text: '케어 달성률을 매일 간편하게 기록' },
+            { icon: faChartLine,     text: '안축장 변화를 차트로 한눈에' },
+            { icon: faUserGroup,     text: '보호자 여러 명이 함께 관리' },
           ].map(({ icon, text }) => (
             <div key={text} className="flex items-center gap-3 text-sm text-gray-600">
-              <span className="text-base">{icon}</span>
+              <FontAwesomeIcon icon={icon} className="text-base text-blue-500 w-4" />
               <span>{text}</span>
             </div>
           ))}

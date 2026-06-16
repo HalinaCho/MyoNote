@@ -25,6 +25,7 @@ interface ChildContextType {
   updateExam: (id: string, exam: Omit<ExamRecord, 'id'>) => Promise<void>
   deleteExam: (id: string) => Promise<void>
   saveLifestyle: (dateStr: string, data: { outdoor: number; phone: number; sleep: number }) => Promise<void>
+  deleteLifestyle: (dateStr: string) => Promise<void>
 }
 
 const ChildContext = createContext<ChildContextType | null>(null)
@@ -128,13 +129,19 @@ export function ChildProvider({ children: node }: { children: React.ReactNode })
     await q.saveLifestyle(activeChildId, dateStr, data)
   }
 
+  const deleteLifestyle = async (dateStr: string) => {
+    if (!activeChildId) return
+    await q.deleteLifestyle(activeChildId, dateStr)
+    setLifestyle(prev => { const next = { ...prev }; delete next[dateStr]; return next })
+  }
+
   return (
     <ChildContext.Provider value={{
       children, activeChildId, activeChild, activeTreatments,
       logs, exams, lifestyle, isLoading,
       switchChild, refreshChildren,
       addChild, updateChild, deleteChild,
-      saveTreatmentLog, saveExam, updateExam, deleteExam, saveLifestyle,
+      saveTreatmentLog, saveExam, updateExam, deleteExam, saveLifestyle, deleteLifestyle,
     }}>
       {node}
     </ChildContext.Provider>

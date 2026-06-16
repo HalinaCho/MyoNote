@@ -7,6 +7,9 @@ import ChildFormModal from '@/components/child/ChildFormModal'
 import TimeSpinner from '@/components/lifestyle/TimeSpinner'
 import { today, formatDate } from '@/lib/utils/date'
 import { calcStreak, calcMonthCompliance, getDayStatus } from '@/lib/utils/compliance'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faEye, faCheck, faMinus, faFire, faXmark, faTree, faMobileScreen } from '@fortawesome/free-solid-svg-icons'
+import { faCircle } from '@fortawesome/free-regular-svg-icons'
 
 const INPUT = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
 
@@ -57,7 +60,7 @@ export default function HomePage() {
     return (
       <>
         <div className="flex flex-col items-center justify-center h-64 gap-4 text-center">
-          <div className="text-5xl">👁</div>
+          <FontAwesomeIcon icon={faEye} className="text-5xl text-blue-200" />
           <div>
             <p className="font-semibold text-gray-700">아직 등록된 자녀가 없습니다</p>
             <p className="text-sm text-gray-400 mt-1">자녀를 추가해 근시 관리를 시작하세요</p>
@@ -116,7 +119,7 @@ export default function HomePage() {
                 >
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0
                     ${done ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-400'}`}>
-                    {done ? '✓' : '○'}
+                    <FontAwesomeIcon icon={done ? faCheck : faCircle} />
                   </div>
                   <div className="flex-1">
                     <div className={`text-sm font-semibold ${done ? 'text-green-700' : 'text-gray-700'}`}>{t.name}</div>
@@ -143,7 +146,7 @@ export default function HomePage() {
               <div className={`text-2xl font-bold ${streak >= 7 ? 'text-green-600' : 'text-gray-800'}`}>
                 {streak}일
               </div>
-              <div className="text-xs text-gray-400 mt-0.5">🔥 연속 달성</div>
+              <div className="text-xs text-gray-400 mt-0.5 flex items-center justify-center gap-1"><FontAwesomeIcon icon={faFire} className="text-orange-400" /> 연속 달성</div>
             </div>
             <div className="w-px bg-gray-100" />
             <div className="text-center">
@@ -162,9 +165,9 @@ export default function HomePage() {
                   <span className="text-xs text-gray-400">{DAY_KO[d.getDay()]}</span>
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${dotColor}
                     ${isToday ? 'ring-2 ring-blue-400 ring-offset-1' : ''}`}>
-                    {status === 'done' ? <span className="text-white text-xs">✓</span>
-                      : status === 'partial' ? <span className="text-white text-xs">△</span>
-                      : status === 'future' ? '' : ''}
+                    {status === 'done' ? <FontAwesomeIcon icon={faCheck} className="text-white text-xs" />
+                      : status === 'partial' ? <FontAwesomeIcon icon={faMinus} className="text-white text-xs" />
+                      : null}
                   </div>
                   <span className={`text-xs ${isToday ? 'font-bold text-blue-600' : 'text-gray-500'}`}>
                     {d.getDate()}
@@ -184,12 +187,12 @@ export default function HomePage() {
         {todayLife ? (
           <div className="flex gap-3">
             {[
-              { icon: '🌳', label: '야외활동', value: todayLife.outdoor, good: todayLife.outdoor >= 2, bg: 'bg-green-50' },
-              { icon: '📱', label: '스마트폰', value: todayLife.phone,   good: todayLife.phone   <= 2, bg: 'bg-amber-50'  },
+              { icon: faTree,         label: '야외활동', value: todayLife.outdoor, color: todayLife.outdoor >= 2 ? 'text-green-600' : todayLife.outdoor > 0 ? 'text-amber-500' : 'text-red-500', bg: 'bg-green-50' },
+              { icon: faMobileScreen, label: '스마트폰', value: todayLife.phone,   color: todayLife.phone <= 2 ? 'text-green-600' : todayLife.phone <= 4 ? 'text-amber-500' : 'text-red-500',   bg: 'bg-amber-50'  },
             ].map(item => (
               <div key={item.label} className={`flex-1 ${item.bg} rounded-xl p-3 text-center`}>
-                <div className="text-xl mb-1">{item.icon}</div>
-                <div className={`text-lg font-bold ${item.good ? 'text-green-600' : 'text-red-500'}`}>
+                <FontAwesomeIcon icon={item.icon} className="text-xl mb-1" />
+                <div className={`text-lg font-bold ${item.color}`}>
                   {fmtTime(item.value)}
                 </div>
                 <div className="text-xs text-gray-400">{item.label}</div>
@@ -214,7 +217,7 @@ export default function HomePage() {
           <div className="relative z-10 w-full max-w-[480px] bg-white rounded-t-2xl sm:rounded-2xl p-5 pb-8">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-bold">생활습관 기록</h2>
-              <button onClick={() => setShowLifestyle(false)} className="text-gray-400 text-xl">✕</button>
+              <button onClick={() => setShowLifestyle(false)} className="text-gray-400 text-xl"><FontAwesomeIcon icon={faXmark} /></button>
             </div>
             <form onSubmit={handleLifeSave} className="space-y-4">
               <div>
@@ -226,7 +229,7 @@ export default function HomePage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-green-50 rounded-2xl p-4 border-2 border-green-100">
                   <div className="flex items-center gap-1.5 mb-4">
-                    <span className="text-xl">🌳</span>
+                    <FontAwesomeIcon icon={faTree} className="text-xl text-green-600" />
                     <span className="text-xs font-semibold text-green-700">야외활동</span>
                   </div>
                   <TimeSpinner
@@ -240,7 +243,7 @@ export default function HomePage() {
                 </div>
                 <div className="bg-amber-50 rounded-2xl p-4 border-2 border-amber-100">
                   <div className="flex items-center gap-1.5 mb-4">
-                    <span className="text-xl">📱</span>
+                    <FontAwesomeIcon icon={faMobileScreen} className="text-xl text-amber-600" />
                     <span className="text-xs font-semibold text-amber-700">스마트폰</span>
                   </div>
                   <TimeSpinner

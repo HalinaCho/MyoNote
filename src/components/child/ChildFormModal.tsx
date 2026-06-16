@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { useChild } from '@/context/ChildContext'
 import type { Child } from '@/types'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faXmark } from '@fortawesome/free-solid-svg-icons'
 
 interface Props {
   open: boolean
@@ -55,7 +57,7 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
       <div className="relative z-10 w-full max-w-[480px] bg-white rounded-t-2xl sm:rounded-2xl p-5 pb-8">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold">{editing ? '자녀 수정' : '자녀 추가'}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none"><FontAwesomeIcon icon={faXmark} /></button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { useChild } from '@/context/ChildContext'
 import { calcAgeLabel } from '@/lib/utils/date'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronUp, faChevronDown, faCheck, faPlus } from '@fortawesome/free-solid-svg-icons'
 
 export default function Header() {
   const { children, activeChild, activeChildId, switchChild } = useChild()
@@ -25,7 +27,7 @@ export default function Header() {
           ) : (
             <span className="text-gray-400">자녀 선택</span>
           )}
-          <span className="text-gray-400 text-xs">{open ? '▲' : '▾'}</span>
+          <FontAwesomeIcon icon={open ? faChevronUp : faChevronDown} className="text-gray-400 text-xs" />
         </button>
       </div>
 
@@ -45,7 +47,7 @@ export default function Header() {
                   <div className="font-semibold">{c.name}</div>
                   <div className="text-xs text-gray-400">{calcAgeLabel(c.birth)}</div>
                 </div>
-                {c.id === activeChildId && <span className="ml-auto text-blue-600 text-xs">✓</span>}
+                {c.id === activeChildId && <FontAwesomeIcon icon={faCheck} className="ml-auto text-blue-600 text-xs" />}
               </button>
             ))}
             <div className="border-t border-gray-100" />
@@ -53,7 +55,7 @@ export default function Header() {
               onClick={() => { setOpen(false); document.dispatchEvent(new CustomEvent('open-add-child')) }}
               className="w-full flex items-center gap-3 px-4 py-3 text-sm text-blue-600 hover:bg-blue-50 transition-colors"
             >
-              <span>➕</span> 자녀 추가
+              <FontAwesomeIcon icon={faPlus} /> 자녀 추가
             </button>
           </div>
         </>

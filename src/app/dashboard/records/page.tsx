@@ -7,6 +7,8 @@ import { today, formatDate } from '@/lib/utils/date'
 import { getDayStatus } from '@/lib/utils/compliance'
 import type { ExamRecord } from '@/types'
 import TimeSpinner from '@/components/lifestyle/TimeSpinner'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faPen, faXmark, faCheck, faMinus, faTree, faMobileScreen, faTrashCan, faCircleInfo } from '@fortawesome/free-solid-svg-icons'
 
 type Tab = 'exam' | 'treatment' | 'lifestyle'
 
@@ -109,8 +111,8 @@ function ExamTab() {
                 <span className="font-semibold text-gray-800">{e.date}</span>
                 <div className="flex items-center gap-2">
                   {e.clinic && <span className="text-xs text-gray-400">{e.clinic}</span>}
-                  <button onClick={() => openEdit(e)} className="text-gray-300 hover:text-blue-400 text-sm">✏</button>
-                  <button onClick={() => handleDelete(e)} className="text-gray-300 hover:text-red-400 text-sm">✕</button>
+                  <button onClick={() => openEdit(e)} className="text-gray-300 hover:text-blue-400 text-sm"><FontAwesomeIcon icon={faPen} /></button>
+                  <button onClick={() => handleDelete(e)} className="text-gray-300 hover:text-red-400 text-sm"><FontAwesomeIcon icon={faXmark} /></button>
                 </div>
               </div>
               <div className="space-y-1.5 text-sm">
@@ -151,7 +153,7 @@ function ExamTab() {
           <div className="relative z-10 w-full max-w-[480px] bg-white rounded-t-2xl sm:rounded-2xl p-5 pb-8 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold">{editing ? '검사기록 수정' : '검사기록 추가'}</h2>
-              <button onClick={closeModal} className="text-gray-400 text-xl">✕</button>
+              <button onClick={closeModal} className="text-gray-400 text-xl"><FontAwesomeIcon icon={faXmark} /></button>
             </div>
             <form onSubmit={handleSave} className="space-y-3">
               <Field label="검사일"><input type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))} className={INPUT}/></Field>
@@ -268,7 +270,7 @@ function TreatmentTab() {
                   ${bg} ${isToday ? 'ring-2 ring-blue-400' : ''} ${clickable ? 'hover:opacity-80 active:scale-95' : ''}`}>
                 <span>{d}</span>
                 <span className="text-xs leading-none">
-                  {status === 'done' ? '✓' : status === 'partial' ? '△' : status === 'missed' ? '✕' : ''}
+                  {status === 'done' ? <FontAwesomeIcon icon={faCheck} /> : status === 'partial' ? <FontAwesomeIcon icon={faMinus} /> : status === 'missed' ? <FontAwesomeIcon icon={faXmark} /> : null}
                 </span>
               </button>
             )
@@ -292,7 +294,7 @@ function TreatmentTab() {
           <div className="relative z-10 w-full max-w-[480px] bg-white rounded-t-2xl sm:rounded-2xl p-5 pb-8">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-bold text-gray-800">{dayModal}</h2>
-              <button onClick={() => setDayModal(null)} className="text-gray-400 text-xl">✕</button>
+              <button onClick={() => setDayModal(null)} className="text-gray-400 text-xl"><FontAwesomeIcon icon={faXmark} /></button>
             </div>
             {activeTreatments.length === 0 ? (
               <p className="text-sm text-gray-400">등록된 케어 항목이 없습니다.</p>
@@ -330,8 +332,10 @@ function fmtTime(h: number) {
 }
 
 function LifestyleTab() {
-  const { lifestyle, saveLifestyle } = useChild()
+  const { lifestyle, saveLifestyle, deleteLifestyle } = useChild()
   const [modal, setModal] = useState(false)
+  const [editingDate, setEditingDate] = useState<string | null>(null)
+  const [showInfo, setShowInfo] = useState(false)
   const [form, setForm] = useState({ date: today(), outdoorH: 0, outdoorM: 0, phoneH: 0, phoneM: 0 })
   const [saving, setSaving] = useState(false)
 
@@ -341,6 +345,30 @@ function LifestyleTab() {
     return { ds, data: lifestyle[ds] }
   })
 
+  const openAdd = (date?: string) => {
+    setEditingDate(null)
+    setForm({ date: date ?? today(), outdoorH: 0, outdoorM: 0, phoneH: 0, phoneM: 0 })
+    setModal(true)
+  }
+
+  const openEdit = (ds: string, data: { outdoor: number; phone: number }) => {
+    setEditingDate(ds)
+    const outdoorH = Math.floor(data.outdoor)
+    const outdoorM = Math.round((data.outdoor - outdoorH) * 60)
+    const phoneH = Math.floor(data.phone)
+    const phoneM = Math.round((data.phone - phoneH) * 60)
+    setForm({ date: ds, outdoorH, outdoorM, phoneH, phoneM })
+    setModal(true)
+  }
+
+  const closeModal = () => { setModal(false); setEditingDate(null) }
+
+  const handleDelete = async (ds: string) => {
+    if (!confirm('이 기록을 삭제하시겠습니까?')) return
+    try { await deleteLifestyle(ds); toast.success('삭제됐습니다') }
+    catch { toast.error('삭제에 실패했습니다') }
+  }
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.date) { toast.error('날짜를 입력해주세요'); return }
@@ -349,37 +377,81 @@ function LifestyleTab() {
       await saveLifestyle(form.date, {
         outdoor: form.outdoorH + form.outdoorM / 60,
         phone:   form.phoneH   + form.phoneM   / 60,
+        sleep: 0,
       })
-      toast.success('생활습관이 저장되었습니다')
-      setModal(false)
-      setForm({ date: today(), outdoorH: 0, outdoorM: 0, phoneH: 0, phoneM: 0 })
+      toast.success(editingDate ? '수정되었습니다' : '생활습관이 저장되었습니다')
+      closeModal()
     } catch { toast.error('저장에 실패했습니다') }
     finally { setSaving(false) }
   }
 
   return (
     <>
-      <button onClick={() => setModal(true)} className="w-full bg-blue-600 text-white font-semibold py-3 rounded-xl mb-3 text-sm">
+      <button onClick={openAdd} className="w-full bg-blue-600 text-white font-semibold py-3 rounded-xl mb-3 text-sm">
         + 기록 추가
       </button>
 
+      <div className="flex items-center justify-between mb-2 px-1">
+        <span className="text-xs text-gray-400 font-medium">최근 7일</span>
+        <button onClick={() => setShowInfo(v => !v)}
+          className={`text-sm transition-colors ${showInfo ? 'text-blue-500' : 'text-gray-300 hover:text-gray-400'}`}>
+          <FontAwesomeIcon icon={faCircleInfo} />
+        </button>
+      </div>
+
+      {showInfo && (
+        <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 mb-3 text-xs space-y-2">
+          <p className="font-semibold text-blue-700">색상 기준</p>
+          <div className="flex items-center gap-2 text-gray-600">
+            <FontAwesomeIcon icon={faTree} className="text-green-600 w-3.5 flex-shrink-0" />
+            <span className="font-medium">야외활동</span>
+            <span className="ml-auto flex gap-2">
+              <span><span className="font-semibold text-green-600">초록</span> 2h↑</span>
+              <span><span className="font-semibold text-amber-500">노랑</span> 0~2h</span>
+              <span><span className="font-semibold text-red-500">빨강</span> 0h</span>
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-gray-600">
+            <FontAwesomeIcon icon={faMobileScreen} className="text-amber-600 w-3.5 flex-shrink-0" />
+            <span className="font-medium">스마트폰</span>
+            <span className="ml-auto flex gap-2">
+              <span><span className="font-semibold text-green-600">초록</span> 2h↓</span>
+              <span><span className="font-semibold text-amber-500">노랑</span> 2~4h</span>
+              <span><span className="font-semibold text-red-500">빨강</span> 4h↑</span>
+            </span>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-2">
         {recentDays.map(({ ds, data }) => (
-          <div key={ds} className="bg-white rounded-xl p-4 shadow-sm flex items-center gap-4">
+          <div key={ds} className="bg-white rounded-xl shadow-sm flex items-center gap-4 px-4 h-14">
             <div className="text-sm font-semibold text-gray-500 w-16 flex-shrink-0">{ds.slice(5)}</div>
             {data ? (
-              <div className="flex gap-3 flex-1">
-                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold
-                  ${data.outdoor >= 2 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-500'}`}>
-                  🌳 {fmtTime(data.outdoor)}
+              <>
+                <div className="flex gap-2 flex-1 min-w-0">
+                  <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-semibold
+                    ${data.outdoor >= 2 ? 'bg-green-50 text-green-700' : data.outdoor > 0 ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-500'}`}>
+                    <FontAwesomeIcon icon={faTree} /> {fmtTime(data.outdoor)}
+                  </div>
+                  <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-semibold
+                    ${data.phone <= 2 ? 'bg-green-50 text-green-700' : data.phone <= 4 ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-500'}`}>
+                    <FontAwesomeIcon icon={faMobileScreen} /> {fmtTime(data.phone)}
+                  </div>
                 </div>
-                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold
-                  ${data.phone <= 2 ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-600'}`}>
-                  📱 {fmtTime(data.phone)}
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <button onClick={() => openEdit(ds, data)} className="text-gray-300 hover:text-blue-400 p-1.5">
+                    <FontAwesomeIcon icon={faPen} />
+                  </button>
+                  <button onClick={() => handleDelete(ds)} className="text-gray-300 hover:text-red-400 p-1.5">
+                    <FontAwesomeIcon icon={faTrashCan} />
+                  </button>
                 </div>
-              </div>
+              </>
             ) : (
-              <span className="text-sm text-gray-300">기록 없음</span>
+              <button onClick={() => openAdd(ds)} className="flex-1 text-left text-sm text-gray-300 hover:text-blue-400 active:text-blue-500">
+                + 기록 추가
+              </button>
             )}
           </div>
         ))}
@@ -387,11 +459,11 @@ function LifestyleTab() {
 
       {modal && (
         <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setModal(false)} />
+          <div className="absolute inset-0 bg-black/40" onClick={closeModal} />
           <div className="relative z-10 w-full max-w-[480px] bg-white rounded-t-2xl sm:rounded-2xl p-5 pb-8">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-bold">생활습관 기록</h2>
-              <button onClick={() => setModal(false)} className="text-gray-400 text-xl">✕</button>
+              <h2 className="text-lg font-bold">{editingDate ? '생활습관 수정' : '생활습관 기록'}</h2>
+              <button onClick={closeModal} className="text-gray-400 text-xl"><FontAwesomeIcon icon={faXmark} /></button>
             </div>
             <form onSubmit={handleSave} className="space-y-4">
               <Field label="날짜">
@@ -400,7 +472,7 @@ function LifestyleTab() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-green-50 rounded-2xl p-4 border-2 border-green-100">
                   <div className="flex items-center gap-1.5 mb-4">
-                    <span className="text-xl">🌳</span>
+                    <FontAwesomeIcon icon={faTree} className="text-xl text-green-600" />
                     <span className="text-xs font-semibold text-green-700">야외활동</span>
                   </div>
                   <TimeSpinner
@@ -414,7 +486,7 @@ function LifestyleTab() {
                 </div>
                 <div className="bg-amber-50 rounded-2xl p-4 border-2 border-amber-100">
                   <div className="flex items-center gap-1.5 mb-4">
-                    <span className="text-xl">📱</span>
+                    <FontAwesomeIcon icon={faMobileScreen} className="text-xl text-amber-600" />
                     <span className="text-xs font-semibold text-amber-700">스마트폰</span>
                   </div>
                   <TimeSpinner
@@ -428,7 +500,7 @@ function LifestyleTab() {
                 </div>
               </div>
               <button type="submit" disabled={saving} className="w-full bg-blue-600 disabled:bg-blue-300 text-white font-semibold py-3 rounded-xl">
-                {saving ? '저장 중...' : '저장'}
+                {saving ? '저장 중...' : editingDate ? '수정하기' : '저장'}
               </button>
             </form>
           </div>
