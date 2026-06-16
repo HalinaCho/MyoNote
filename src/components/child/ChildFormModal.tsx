@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
@@ -64,7 +64,7 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">이름</label>
             <input
-              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
               placeholder="자녀 이름"
               value={form.name}
               onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
@@ -75,7 +75,7 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
             <label className="block text-sm font-medium text-gray-700 mb-1">생년월일</label>
             <input
               type="date"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
               value={form.birth}
               onChange={e => setForm(f => ({ ...f, birth: e.target.value }))}
             />
@@ -90,7 +90,7 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
                   onClick={() => setForm(f => ({ ...f, gender: g }))}
                   className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors
                     ${form.gender === g
-                      ? 'bg-blue-600 text-white border-blue-600'
+                      ? 'bg-teal-600 text-white border-teal-600'
                       : 'bg-white text-gray-600 border-gray-200'}`}
                 >
                   {g === 'M' ? '👦 남자' : '👧 여자'}
@@ -111,7 +111,7 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
                     type="checkbox"
                     checked={form[key]}
                     onChange={e => setForm(f => ({ ...f, [key]: e.target.checked }))}
-                    className="w-4 h-4 rounded accent-blue-600"
+                    className="w-4 h-4 rounded accent-teal-600"
                   />
                   <span className="text-sm text-gray-700">{label}</span>
                 </label>
@@ -121,7 +121,7 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
 
           <button
             type="submit" disabled={saving}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold py-3 rounded-xl transition-colors"
+            className="w-full bg-teal-600 hover:bg-teal-700 disabled:bg-teal-300 text-white font-semibold py-3 rounded-xl transition-colors"
           >
             {saving ? '저장 중...' : (editing ? '수정하기' : '추가하기')}
           </button>

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import toast from 'react-hot-toast'
@@ -8,7 +8,7 @@ import { getDayStatus } from '@/lib/utils/compliance'
 import type { ExamRecord } from '@/types'
 import TimeSpinner from '@/components/lifestyle/TimeSpinner'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPen, faXmark, faCheck, faMinus, faTree, faMobileScreen, faTrashCan, faCircleInfo, faCalendarDays } from '@fortawesome/free-solid-svg-icons'
+import { faPen, faXmark, faCheck, faMinus, faTree, faMobileScreen, faTrashCan, faCircleInfo, faCalendarDays, faPlus } from '@fortawesome/free-solid-svg-icons'
 
 type Tab = 'exam' | 'treatment' | 'lifestyle'
 
@@ -20,7 +20,7 @@ export default function RecordsPage() {
         {([['treatment','캘린더'],['lifestyle','생활습관'],['exam','안과 검사']] as [Tab, string][]).map(([t, label]) => (
           <button key={t} onClick={() => setTab(t)}
             className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors
-              ${tab === t ? 'bg-blue-600 text-white' : 'text-gray-500'}`}>
+              ${tab === t ? 'bg-teal-600 text-white' : 'text-gray-500'}`}>
             {label}
           </button>
         ))}
@@ -98,11 +98,6 @@ function ExamTab() {
 
   return (
     <>
-      <button onClick={openAdd}
-        className="w-full bg-blue-600 text-white font-semibold py-3 rounded-xl mb-3 text-sm">
-        + 기록 추가
-      </button>
-
       {exams.length === 0 ? (
         <div className="text-center text-gray-400 py-12 text-sm">검사기록이 없습니다.</div>
       ) : (
@@ -113,8 +108,8 @@ function ExamTab() {
                 <span className="font-semibold text-gray-800">{e.date}</span>
                 <div className="flex items-center gap-2">
                   {e.clinic && <span className="text-xs text-gray-400">{e.clinic}</span>}
-                  <button onClick={() => openEdit(e)} className="text-gray-300 hover:text-blue-400 text-sm"><FontAwesomeIcon icon={faPen} /></button>
-                  <button onClick={() => handleDelete(e)} className="text-gray-300 hover:text-red-400 text-sm"><FontAwesomeIcon icon={faXmark} /></button>
+                  <button onClick={() => openEdit(e)} className="text-gray-300 hover:text-teal-400 text-sm"><FontAwesomeIcon icon={faPen} /></button>
+                  <button onClick={() => handleDelete(e)} className="text-gray-300 hover:text-rose-400 text-sm"><FontAwesomeIcon icon={faXmark} /></button>
                 </div>
               </div>
               <div className="space-y-1.5 text-sm">
@@ -137,14 +132,14 @@ function ExamTab() {
                   </div>
                 )}
                 {(e.serOD || e.serOS) && (
-                  <div className="flex justify-between bg-blue-50 rounded-lg px-3 py-2">
-                    <span className="text-blue-600 font-medium">SEQ (OD/OS)</span>
-                    <span className="font-bold text-blue-700">{e.serOD||'—'} / {e.serOS||'—'} D</span>
+                  <div className="flex justify-between bg-teal-50 rounded-lg px-3 py-2">
+                    <span className="text-teal-600 font-medium">SEQ (OD/OS)</span>
+                    <span className="font-bold text-teal-700">{e.serOD||'—'} / {e.serOS||'—'} D</span>
                   </div>
                 )}
                 {e.note && <div className="text-xs text-gray-400 px-1">{e.note}</div>}
                 {e.nextAppointment && (
-                  <div className="flex items-center gap-1.5 text-xs text-blue-500 px-1 mt-0.5">
+                  <div className="flex items-center gap-1.5 text-xs text-teal-500 px-1 mt-0.5">
                     <FontAwesomeIcon icon={faCalendarDays} />
                     <span>다음 예약: {e.nextAppointment}</span>
                   </div>
@@ -154,6 +149,13 @@ function ExamTab() {
           ))}
         </div>
       )}
+
+      {/* FAB */}
+      <button onClick={() => openAdd()}
+        className="fixed bottom-24 z-30 w-14 h-14 bg-teal-600 hover:bg-teal-500 text-white rounded-full shadow-lg flex items-center justify-center transition-colors active:scale-95"
+        style={{ right: 'max(1rem, calc((100vw - 480px) / 2 + 1rem))' }}>
+        <FontAwesomeIcon icon={faPlus} className="text-xl" />
+      </button>
 
       {modal && (
         <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
@@ -176,13 +178,13 @@ function ExamTab() {
                   <span className="text-sm font-medium text-gray-700">굴절 도수 (D)</span>
                   <button type="button" onClick={() => setShowCRInfo(v => !v)}
                     className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full transition-colors
-                      ${showCRInfo ? 'bg-blue-500 text-white' : 'bg-blue-50 text-blue-500 hover:bg-blue-100'}`}>
+                      ${showCRInfo ? 'bg-teal-500 text-white' : 'bg-teal-50 text-teal-500 hover:bg-teal-100'}`}>
                     <FontAwesomeIcon icon={faCircleInfo} />
                     조절마비(CR)검사 결과 우선
                   </button>
                 </div>
                 {showCRInfo && (
-                  <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 mb-3 text-xs space-y-1.5 text-blue-900">
+                  <div className="bg-teal-50 border border-teal-100 rounded-xl p-3 mb-3 text-xs space-y-1.5 text-teal-900">
                     <p className="font-semibold">조절마비검사(CR검사)란?</p>
                     <p>CR(Cycloplegic Refraction)은 조절마비 안약을 점안해 눈의 조절 기능을 일시적으로 풀어준 상태에서 굴절이상을 측정하는 검사입니다.</p>
                     <p>어린이는 조절력이 강해 일반 검사만으로는 실제 근시 도수가 낮게 측정될 수 있습니다. CR검사 결과가 실제 굴절 상태를 더 정확하게 반영하므로, 입력 시 CR검사 수치를 우선 입력해주세요.</p>
@@ -197,7 +199,7 @@ function ExamTab() {
                   <span className="text-xs text-center text-gray-500 font-medium">우안(OD)</span>
                   <NegInput value={form.sphOD} onChange={v=>setForm(f=>({...f,sphOD:v}))} placeholder="3.00"/>
                   <NegInput value={form.cylOD} onChange={v=>setForm(f=>({...f,cylOD:v}))} placeholder="0.50"/>
-                  <div className="h-10 flex items-center justify-center bg-blue-50 rounded-lg text-sm font-bold text-blue-700">
+                  <div className="h-10 flex items-center justify-center bg-teal-50 rounded-lg text-sm font-bold text-teal-700">
                     {seqOD}
                   </div>
                 </div>
@@ -206,7 +208,7 @@ function ExamTab() {
                   <span className="text-xs text-center text-gray-500 font-medium">좌안(OS)</span>
                   <NegInput value={form.sphOS} onChange={v=>setForm(f=>({...f,sphOS:v}))} placeholder="3.00"/>
                   <NegInput value={form.cylOS} onChange={v=>setForm(f=>({...f,cylOS:v}))} placeholder="0.50"/>
-                  <div className="h-10 flex items-center justify-center bg-blue-50 rounded-lg text-sm font-bold text-blue-700">
+                  <div className="h-10 flex items-center justify-center bg-teal-50 rounded-lg text-sm font-bold text-teal-700">
                     {seqOS}
                   </div>
                 </div>
@@ -214,7 +216,7 @@ function ExamTab() {
 
               <Field label="메모"><textarea rows={2} placeholder="특이사항 등" value={form.note} onChange={e=>setForm(f=>({...f,note:e.target.value}))} className={INPUT}/></Field>
               <Field label="다음 예약일"><input type="date" value={form.nextAppointment} onChange={e=>setForm(f=>({...f,nextAppointment:e.target.value}))} className={INPUT}/></Field>
-              <button type="submit" disabled={saving} className="w-full bg-blue-600 disabled:bg-blue-300 text-white font-semibold py-3 rounded-xl">
+              <button type="submit" disabled={saving} className="w-full bg-teal-600 disabled:bg-teal-300 text-white font-semibold py-3 rounded-xl">
                 {saving ? '저장 중...' : editing ? '수정하기' : '저장'}
               </button>
             </form>
@@ -279,15 +281,15 @@ function TreatmentTab() {
             const status = getDayStatus(logs, activeTreatments, ds)
             const isToday = ds === todayStr
             const clickable = status !== 'future'
-            const bg = status === 'done' ? 'bg-green-100 text-green-700'
-              : status === 'partial' ? 'bg-yellow-100 text-yellow-700'
-              : status === 'missed'  ? 'bg-red-100 text-red-600'
+            const bg = status === 'done' ? 'bg-teal-100 text-teal-700'
+              : status === 'partial' ? 'bg-amber-100 text-amber-700'
+              : status === 'missed'  ? 'bg-rose-100 text-rose-600'
               : 'bg-gray-50 text-gray-300'
             return (
               <button key={ds} disabled={!clickable}
                 onClick={() => clickable && setDayModal(ds)}
                 className={`aspect-square flex flex-col items-center justify-center rounded-lg text-xs font-medium transition-colors
-                  ${bg} ${isToday ? 'ring-2 ring-blue-400' : ''} ${clickable ? 'hover:opacity-80 active:scale-95' : ''}`}>
+                  ${bg} ${isToday ? 'ring-2 ring-teal-400' : ''} ${clickable ? 'hover:opacity-80 active:scale-95' : ''}`}>
                 <span>{d}</span>
                 <span className="text-xs leading-none">
                   {status === 'done' ? <FontAwesomeIcon icon={faCheck} /> : status === 'partial' ? <FontAwesomeIcon icon={faMinus} /> : status === 'missed' ? <FontAwesomeIcon icon={faXmark} /> : null}
@@ -299,7 +301,7 @@ function TreatmentTab() {
 
         {/* 범례 */}
         <div className="flex gap-3 mt-3 justify-center text-xs text-gray-500">
-          {[['bg-green-100','완료'],['bg-yellow-100','부분'],['bg-red-100','미완료'],['bg-gray-50','예정']].map(([c,l])=>(
+          {[['bg-teal-100','완료'],['bg-amber-100','부분'],['bg-rose-100','미완료'],['bg-gray-50','예정']].map(([c,l])=>(
             <span key={l} className="flex items-center gap-1">
               <span className={`w-3 h-3 rounded-sm ${c}`}/>{l}
             </span>
@@ -327,7 +329,7 @@ function TreatmentTab() {
                       <span className="text-sm font-medium text-gray-700">{t.name}</span>
                       <div className="relative">
                         <input type="checkbox" checked={done} onChange={e => handleToggle(dayModal, t.key, e.target.checked)} className="sr-only peer" />
-                        <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 transition-colors" />
+                        <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-teal-600 transition-colors" />
                         <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform peer-checked:translate-x-5" />
                       </div>
                     </label>
@@ -335,7 +337,7 @@ function TreatmentTab() {
                 })}
               </div>
             )}
-            <button onClick={() => setDayModal(null)} className="w-full mt-4 bg-blue-600 text-white font-semibold py-3 rounded-xl text-sm">확인</button>
+            <button onClick={() => setDayModal(null)} className="w-full mt-4 bg-teal-600 text-white font-semibold py-3 rounded-xl text-sm">확인</button>
           </div>
         </div>
       )}
@@ -407,37 +409,33 @@ function LifestyleTab() {
 
   return (
     <>
-      <button onClick={() => openAdd()} className="w-full bg-blue-600 text-white font-semibold py-3 rounded-xl mb-3 text-sm">
-        + 기록 추가
-      </button>
-
       <div className="flex items-center justify-between mb-2 px-1">
         <span className="text-xs text-gray-400 font-medium">최근 7일</span>
         <button onClick={() => setShowInfo(v => !v)}
-          className={`text-sm transition-colors ${showInfo ? 'text-blue-500' : 'text-gray-300 hover:text-gray-400'}`}>
+          className={`text-sm transition-colors ${showInfo ? 'text-teal-500' : 'text-gray-300 hover:text-gray-400'}`}>
           <FontAwesomeIcon icon={faCircleInfo} />
         </button>
       </div>
 
       {showInfo && (
-        <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 mb-3 text-xs space-y-2">
-          <p className="font-semibold text-blue-700">색상 기준</p>
+        <div className="bg-teal-50 border border-teal-100 rounded-xl p-3 mb-3 text-xs space-y-2">
+          <p className="font-semibold text-teal-700">색상 기준</p>
           <div className="flex items-center gap-2 text-gray-600">
-            <FontAwesomeIcon icon={faTree} className="text-green-600 w-3.5 flex-shrink-0" />
+            <FontAwesomeIcon icon={faTree} className="text-teal-600 w-3.5 flex-shrink-0" />
             <span className="font-medium">야외활동</span>
             <span className="ml-auto flex gap-2">
-              <span><span className="font-semibold text-green-600">초록</span> 2h↑</span>
+              <span><span className="font-semibold text-teal-600">초록</span> 2h↑</span>
               <span><span className="font-semibold text-amber-500">노랑</span> 0~2h</span>
-              <span><span className="font-semibold text-red-500">빨강</span> 0h</span>
+              <span><span className="font-semibold text-rose-500">빨강</span> 0h</span>
             </span>
           </div>
           <div className="flex items-center gap-2 text-gray-600">
             <FontAwesomeIcon icon={faMobileScreen} className="text-amber-600 w-3.5 flex-shrink-0" />
             <span className="font-medium">스마트폰</span>
             <span className="ml-auto flex gap-2">
-              <span><span className="font-semibold text-green-600">초록</span> 2h↓</span>
+              <span><span className="font-semibold text-teal-600">초록</span> 2h↓</span>
               <span><span className="font-semibold text-amber-500">노랑</span> 2~4h</span>
-              <span><span className="font-semibold text-red-500">빨강</span> 4h↑</span>
+              <span><span className="font-semibold text-rose-500">빨강</span> 4h↑</span>
             </span>
           </div>
         </div>
@@ -445,37 +443,46 @@ function LifestyleTab() {
 
       <div className="space-y-2">
         {recentDays.map(({ ds, data }) => (
-          <div key={ds} className="bg-white rounded-xl shadow-sm flex items-center gap-4 px-4 h-14">
-            <div className="text-sm font-semibold text-gray-500 w-16 flex-shrink-0">{ds.slice(5)}</div>
+          <div key={ds} className="bg-white rounded-xl shadow-sm flex items-center gap-2 px-3 py-2.5">
+            <div className="text-sm font-semibold text-gray-500 w-11 flex-shrink-0">{ds.slice(5)}</div>
             {data ? (
               <>
-                <div className="flex gap-2 flex-1 min-w-0">
-                  <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-semibold
-                    ${data.outdoor >= 2 ? 'bg-green-50 text-green-700' : data.outdoor > 0 ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-500'}`}>
-                    <FontAwesomeIcon icon={faTree} /> {fmtTime(data.outdoor)}
+                <div className="flex gap-1.5 flex-1 min-w-0">
+                  <div className={`flex-1 min-w-0 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-xs font-semibold
+                    ${data.outdoor >= 2 ? 'bg-teal-50 text-teal-700' : data.outdoor > 0 ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-500'}`}>
+                    <FontAwesomeIcon icon={faTree} className="flex-shrink-0 text-xs" />
+                    <span className="truncate">{fmtTime(data.outdoor)}</span>
                   </div>
-                  <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-semibold
-                    ${data.phone <= 2 ? 'bg-green-50 text-green-700' : data.phone <= 4 ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-500'}`}>
-                    <FontAwesomeIcon icon={faMobileScreen} /> {fmtTime(data.phone)}
+                  <div className={`flex-1 min-w-0 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-xs font-semibold
+                    ${data.phone <= 2 ? 'bg-teal-50 text-teal-700' : data.phone <= 4 ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-500'}`}>
+                    <FontAwesomeIcon icon={faMobileScreen} className="flex-shrink-0 text-xs" />
+                    <span className="truncate">{fmtTime(data.phone)}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  <button onClick={() => openEdit(ds, data)} className="text-gray-300 hover:text-blue-400 p-1.5">
+                <div className="flex items-center flex-shrink-0">
+                  <button onClick={() => openEdit(ds, data)} className="text-gray-300 hover:text-teal-400 p-1.5">
                     <FontAwesomeIcon icon={faPen} />
                   </button>
-                  <button onClick={() => handleDelete(ds)} className="text-gray-300 hover:text-red-400 p-1.5">
+                  <button onClick={() => handleDelete(ds)} className="text-gray-300 hover:text-rose-400 p-1.5">
                     <FontAwesomeIcon icon={faTrashCan} />
                   </button>
                 </div>
               </>
             ) : (
-              <button onClick={() => openAdd(ds)} className="flex-1 text-left text-sm text-gray-300 hover:text-blue-400 active:text-blue-500">
+              <button onClick={() => openAdd(ds)} className="flex-1 text-left text-sm text-gray-300 hover:text-teal-400 active:text-teal-500">
                 + 기록 추가
               </button>
             )}
           </div>
         ))}
       </div>
+
+      {/* FAB */}
+      <button onClick={() => openAdd()}
+        className="fixed bottom-24 z-30 w-14 h-14 bg-teal-600 hover:bg-teal-500 text-white rounded-full shadow-lg flex items-center justify-center transition-colors active:scale-95"
+        style={{ right: 'max(1rem, calc((100vw - 480px) / 2 + 1rem))' }}>
+        <FontAwesomeIcon icon={faPlus} className="text-xl" />
+      </button>
 
       {modal && (
         <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
@@ -490,19 +497,19 @@ function LifestyleTab() {
                 <input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} className={INPUT} />
               </Field>
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-green-50 rounded-2xl p-4 border-2 border-green-100">
+                <div className="bg-teal-50 rounded-2xl p-4 border-2 border-teal-100">
                   <div className="flex items-center gap-1.5 mb-4">
-                    <FontAwesomeIcon icon={faTree} className="text-xl text-green-600" />
-                    <span className="text-xs font-semibold text-green-700">야외활동</span>
+                    <FontAwesomeIcon icon={faTree} className="text-xl text-teal-600" />
+                    <span className="text-xs font-semibold text-teal-700">야외활동</span>
                   </div>
                   <TimeSpinner
                     hours={form.outdoorH} minutes={form.outdoorM}
                     onHour={v => setForm(f => ({ ...f, outdoorH: v }))}
                     onMinute={v => setForm(f => ({ ...f, outdoorM: v }))}
-                    btnCls="bg-green-200 text-green-700 hover:bg-green-300"
-                    textCls="text-green-700"
+                    btnCls="bg-teal-200 text-teal-700 hover:bg-teal-300"
+                    textCls="text-teal-700"
                   />
-                  <p className="text-xs text-green-400 mt-3 text-center">권장 2시간↑</p>
+                  <p className="text-xs text-teal-400 mt-3 text-center">권장 2시간↑</p>
                 </div>
                 <div className="bg-amber-50 rounded-2xl p-4 border-2 border-amber-100">
                   <div className="flex items-center gap-1.5 mb-4">
@@ -519,7 +526,7 @@ function LifestyleTab() {
                   <p className="text-xs text-amber-400 mt-3 text-center">권장 2시간↓</p>
                 </div>
               </div>
-              <button type="submit" disabled={saving} className="w-full bg-blue-600 disabled:bg-blue-300 text-white font-semibold py-3 rounded-xl">
+              <button type="submit" disabled={saving} className="w-full bg-teal-600 disabled:bg-teal-300 text-white font-semibold py-3 rounded-xl">
                 {saving ? '저장 중...' : editingDate ? '수정하기' : '저장'}
               </button>
             </form>
@@ -532,7 +539,7 @@ function LifestyleTab() {
 
 // ── 공통 ──────────────────────────────────────────────────────
 
-const INPUT = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+const INPUT = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500'
 
 function NegInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
   return (
@@ -542,7 +549,7 @@ function NegInput({ value, onChange, placeholder }: { value: string; onChange: (
         type="number" step="0.25" min="0" placeholder={placeholder}
         value={value}
         onChange={e => onChange(e.target.value)}
-        className="w-full border border-gray-200 rounded-lg pl-6 pr-2 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full border border-gray-200 rounded-lg pl-6 pr-2 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
       />
     </div>
   )
@@ -561,7 +568,7 @@ function Stat({ icon, val, good }: { icon: string; val: number; good: boolean })
   return (
     <div className="flex items-center gap-1 text-sm">
       <span>{icon}</span>
-      <span className={`font-semibold ${good ? 'text-green-600' : 'text-red-500'}`}>{val}h</span>
+      <span className={`font-semibold ${good ? 'text-teal-600' : 'text-rose-500'}`}>{val}h</span>
     </div>
   )
 }

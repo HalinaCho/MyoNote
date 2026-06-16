@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useChild } from '@/context/ChildContext'
 import { Bar } from 'react-chartjs-2'
@@ -54,7 +54,7 @@ export default function ComplianceTab() {
             labels: months.map(m => m.label),
             datasets: [{
               data,
-              backgroundColor: data.map(v => v >= 90 ? '#10B981' : v >= 70 ? '#F59E0B' : '#EF4444'),
+              backgroundColor: data.map(v => v >= 90 ? '#10bcad' : v >= 70 ? '#fde68a' : '#fda4af'),
               borderRadius: 6,
             }],
           }}
@@ -78,7 +78,7 @@ export default function ComplianceTab() {
           <div key={label} className="bg-white rounded-xl p-3 text-center shadow-sm">
             <div className="text-xl font-bold text-gray-800">{value}</div>
             <div className="text-xs text-gray-400 mt-0.5">{label}</div>
-            {current && <div className="text-xs text-blue-400 mt-0.5">진행 중</div>}
+            {current && <div className="text-xs text-teal-400 mt-0.5">진행 중</div>}
           </div>
         ))}
       </div>

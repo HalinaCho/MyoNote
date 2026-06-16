@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { useChild } from '@/context/ChildContext'
@@ -18,7 +18,7 @@ export default function AnalyticsPage() {
         {([['axial','안축장'],['ser','굴절 도수'],['compliance','달성률']] as [Tab, string][]).map(([t, label]) => (
           <button key={t} onClick={() => setTab(t)}
             className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors
-              ${tab === t ? 'bg-blue-600 text-white' : 'text-gray-500'}`}>
+              ${tab === t ? 'bg-teal-600 text-white' : 'text-gray-500'}`}>
             {label}
           </button>
         ))}

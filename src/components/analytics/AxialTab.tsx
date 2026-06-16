@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useChild } from '@/context/ChildContext'
 import { Line } from 'react-chartjs-2'
@@ -31,8 +31,8 @@ export default function AxialTab() {
           data={{
             labels,
             datasets: [
-              { label: '우안(OD)', data: odData, borderColor: '#3B82F6', backgroundColor: 'rgba(59,130,246,.1)', tension: 0.4, fill: true, pointRadius: 4 },
-              { label: '좌안(OS)', data: osData, borderColor: '#F97316', backgroundColor: 'rgba(249,115,22,.06)', tension: 0.4, fill: true, pointRadius: 4 },
+              { label: '우안(OD)', data: odData, borderColor: '#0D9488', backgroundColor: 'rgba(13,148,136,.1)', tension: 0.4, fill: true, pointRadius: 4 },
+              { label: '좌안(OS)', data: osData, borderColor: '#9CA3AF', backgroundColor: 'rgba(156,163,175,.08)', tension: 0.4, fill: true, pointRadius: 4 },
             ],
           }}
           options={{
@@ -77,9 +77,9 @@ function GrowthRateCard({ exams }: { exams: { date: string; axOD: string; axOS: 
   const growthOS = linearSlope(xs, osData)
 
   const badge = (g: number) =>
-    Math.abs(g) < 0.2  ? { label: '안정', cls: 'bg-green-100 text-green-700' }
-    : Math.abs(g) < 0.35 ? { label: '주의', cls: 'bg-yellow-100 text-yellow-700' }
-    : { label: '진행', cls: 'bg-red-100 text-red-700' }
+    Math.abs(g) < 0.2  ? { label: '안정', cls: 'bg-teal-100 text-teal-700' }
+    : Math.abs(g) < 0.35 ? { label: '주의', cls: 'bg-amber-100 text-amber-700' }
+    : { label: '진행', cls: 'bg-rose-100 text-rose-700' }
 
   return (
     <div className="bg-white rounded-2xl p-4 shadow-sm">
@@ -102,9 +102,9 @@ function GrowthRateCard({ exams }: { exams: { date: string; axOD: string; axOS: 
         )
       })}
       <div className="flex gap-3 mt-3 text-xs text-gray-400">
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500"/>안정 &lt;0.20</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-400"/>주의 0.20–0.35</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400"/>진행 &gt;0.35</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-teal-500"/>안정 &lt;0.20</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400"/>주의 0.20–0.35</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-400"/>진행 &gt;0.35</span>
       </div>
     </div>
   )

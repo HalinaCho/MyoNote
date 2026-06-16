@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import toast from 'react-hot-toast'
@@ -65,7 +65,7 @@ export default function SettingsPage() {
       {/* 현재 자녀 프로필 */}
       {activeChild && (
         <section className="bg-white rounded-2xl p-4 mb-3 shadow-sm flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-2xl">
+          <div className="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center text-2xl">
             {activeChild.gender === 'F' ? '👧' : '👦'}
           </div>
           <div className="flex-1">
@@ -74,7 +74,7 @@ export default function SettingsPage() {
           </div>
           <button
             onClick={() => setChildModal({ open: true, editing: activeChild })}
-            className="text-sm text-blue-600 font-medium px-3 py-1.5 rounded-lg bg-blue-50"
+            className="text-sm text-teal-600 font-medium px-3 py-1.5 rounded-lg bg-teal-50"
           >
             편집
           </button>
@@ -90,20 +90,20 @@ export default function SettingsPage() {
             <span className="text-xl">{c.gender === 'F' ? '👧' : '👦'}</span>
             <div className="flex-1">
               <div className="text-sm font-semibold text-gray-800">{c.name}
-                {c.id === activeChildId && <span className="ml-2 text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full">현재</span>}
+                {c.id === activeChildId && <span className="ml-2 text-xs bg-teal-100 text-teal-600 px-1.5 py-0.5 rounded-full">현재</span>}
               </div>
               <div className="text-xs text-gray-400">{calcAgeLabel(c.birth)}</div>
             </div>
             <button onClick={() => setChildModal({ open: true, editing: c })} className="text-gray-400 hover:text-gray-600 p-1"><FontAwesomeIcon icon={faPen} /></button>
             {children.length > 1 && (
-              <button onClick={() => handleDeleteChild(c)} className="text-gray-400 hover:text-red-500 p-1"><FontAwesomeIcon icon={faTrashCan} /></button>
+              <button onClick={() => handleDeleteChild(c)} className="text-gray-400 hover:text-rose-500 p-1"><FontAwesomeIcon icon={faTrashCan} /></button>
             )}
           </div>
         ))}
 
         <button
           onClick={() => setChildModal({ open: true, editing: null })}
-          className="w-full flex items-center gap-3 px-4 py-3 border-t border-gray-50 text-blue-600 text-sm font-medium"
+          className="w-full flex items-center gap-3 px-4 py-3 border-t border-gray-50 text-teal-600 text-sm font-medium"
         >
           <FontAwesomeIcon icon={faPlus} /> 자녀 추가
         </button>
@@ -124,7 +124,7 @@ export default function SettingsPage() {
       <section className="bg-white rounded-2xl overflow-hidden mb-3 shadow-sm">
         <div className="px-4 pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">계정</div>
         <form action={signOut}>
-          <button type="submit" className="w-full flex items-center gap-3 px-4 py-3 border-t border-gray-50 text-sm text-red-500 hover:bg-red-50">
+          <button type="submit" className="w-full flex items-center gap-3 px-4 py-3 border-t border-gray-50 text-sm text-rose-500 hover:bg-rose-50">
             <FontAwesomeIcon icon={faRightFromBracket} className="w-4" /> 로그아웃
           </button>
         </form>
@@ -150,17 +150,17 @@ export default function SettingsPage() {
             </div>
             <p className="text-sm text-gray-500 mb-4">코드를 생성해 상대방에게 공유하세요. 내 계정의 모든 자녀가 공유됩니다.</p>
             {inviteCode ? (
-              <div className="bg-blue-50 rounded-xl p-4 flex items-center justify-between mb-4">
-                <span className="text-2xl font-bold tracking-widest text-blue-700">{inviteCode}</span>
+              <div className="bg-teal-50 rounded-xl p-4 flex items-center justify-between mb-4">
+                <span className="text-2xl font-bold tracking-widest text-teal-700">{inviteCode}</span>
                 <button
                   onClick={() => { navigator.clipboard.writeText(inviteCode); toast.success('복사됐습니다') }}
-                  className="text-sm text-blue-600 font-medium ml-3"
+                  className="text-sm text-teal-600 font-medium ml-3"
                 >복사</button>
               </div>
             ) : (
               <button
                 onClick={handleGenerateInvite} disabled={generating}
-                className="w-full bg-blue-600 disabled:bg-blue-300 text-white font-semibold py-3 rounded-xl mb-4"
+                className="w-full bg-teal-600 disabled:bg-teal-300 text-white font-semibold py-3 rounded-xl mb-4"
               >
                 {generating ? '생성 중...' : '코드 생성'}
               </button>
@@ -181,13 +181,13 @@ export default function SettingsPage() {
             </div>
             <label className="block text-sm font-medium text-gray-700 mb-1">초대 코드</label>
             <input
-              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-center text-lg tracking-widest font-bold uppercase focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-center text-lg tracking-widest font-bold uppercase focus:outline-none focus:ring-2 focus:ring-teal-500 mb-4"
               placeholder="AB12CD"
               maxLength={6}
               value={joinCode}
               onChange={e => setJoinCode(e.target.value.toUpperCase())}
             />
-            <button onClick={handleJoin} className="w-full bg-blue-600 text-white font-semibold py-3 rounded-xl">
+            <button onClick={handleJoin} className="w-full bg-teal-600 text-white font-semibold py-3 rounded-xl">
               참여하기
             </button>
           </div>

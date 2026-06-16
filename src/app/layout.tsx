@@ -1,4 +1,7 @@
 import type { Metadata, Viewport } from 'next'
+import { config } from '@fortawesome/fontawesome-svg-core'
+import '@fortawesome/fontawesome-svg-core/styles.css'
+config.autoAddCss = false
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -17,7 +20,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko" className="h-full">
-      <body className="min-h-full bg-gray-50 text-gray-900 antialiased">{children}</body>
+      <body className="min-h-full bg-[#edf7f6] text-[#134e4a] antialiased">{children}</body>
     </html>
   )
 }

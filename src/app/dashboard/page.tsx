@@ -11,7 +11,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEye, faCheck, faMinus, faFire, faXmark, faTree, faMobileScreen, faCalendarDays, faPen } from '@fortawesome/free-solid-svg-icons'
 import { faCircle } from '@fortawesome/free-regular-svg-icons'
 
-const INPUT = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+const INPUT = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400'
 
 export default function HomePage() {
   const { activeChild, activeTreatments, logs, lifestyle, exams, isLoading, saveTreatmentLog, saveLifestyle, updateExam } = useChild()
@@ -24,7 +24,6 @@ export default function HomePage() {
   const todayStr = today()
   const todayLog = logs[todayStr] || {}
 
-  // 헤더에서 "자녀 추가" 클릭 시 모달 열기
   useEffect(() => {
     const handler = () => setShowAddChild(true)
     document.addEventListener('open-add-child', handler)
@@ -63,15 +62,13 @@ export default function HomePage() {
     return (
       <>
         <div className="flex flex-col items-center justify-center h-64 gap-4 text-center">
-          <FontAwesomeIcon icon={faEye} className="text-5xl text-blue-200" />
+          <FontAwesomeIcon icon={faEye} className="text-5xl text-teal-200" />
           <div>
             <p className="font-semibold text-gray-700">아직 등록된 자녀가 없습니다</p>
             <p className="text-sm text-gray-400 mt-1">자녀를 추가해 근시 관리를 시작하세요</p>
           </div>
-          <button
-            onClick={() => setShowAddChild(true)}
-            className="bg-blue-600 text-white font-semibold px-6 py-2.5 rounded-xl text-sm"
-          >
+          <button onClick={() => setShowAddChild(true)}
+            className="bg-teal-600 text-white font-semibold px-6 py-2.5 rounded-xl text-sm">
             자녀 추가하기
           </button>
         </div>
@@ -80,9 +77,13 @@ export default function HomePage() {
     )
   }
 
-  const fmtTime = (h: number) => { const hrs = Math.floor(h); const mins = Math.round((h - hrs) * 60); return mins > 0 ? `${hrs}시간 ${mins}분` : `${hrs}시간` }
+  const fmtTime = (h: number) => {
+    const hrs = Math.floor(h)
+    const mins = Math.round((h - hrs) * 60)
+    return mins > 0 ? `${hrs}시간 ${mins}분` : `${hrs}시간`
+  }
 
-  const streak  = calcStreak(logs, activeTreatments)
+  const streak   = calcStreak(logs, activeTreatments)
   const monthPct = calcMonthCompliance(logs, activeTreatments, new Date().getFullYear(), new Date().getMonth())
   const todayLife = lifestyle[todayStr]
 
@@ -93,7 +94,6 @@ export default function HomePage() {
     ? Math.round((new Date(nextAppt.nextAppointment).getTime() - new Date(todayStr).getTime()) / 86400000)
     : null
 
-  // 주간 스트립
   const weekDays = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(); d.setDate(d.getDate() - (6 - i))
     const ds = formatDate(d)
@@ -103,7 +103,7 @@ export default function HomePage() {
 
   return (
     <>
-      {/* 오늘의 케어 */}
+      {/* ── 오늘의 케어 ── */}
       <section className="bg-white rounded-2xl p-4 mb-3 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-bold text-gray-800">오늘의 케어</h2>
@@ -113,30 +113,25 @@ export default function HomePage() {
         </div>
 
         {activeTreatments.length === 0 ? (
-          <p className="text-sm text-gray-400 py-2">
-            설정에서 자녀의 케어 항목을 등록해주세요.
-          </p>
+          <p className="text-sm text-gray-400 py-2">설정에서 자녀의 케어 항목을 등록해주세요.</p>
         ) : (
           <div className="space-y-2">
             {activeTreatments.map(t => {
               const done = !!todayLog[t.key]
               return (
-                <button
-                  key={t.key}
-                  onClick={() => toggleTreatment(t.key)}
+                <button key={t.key} onClick={() => toggleTreatment(t.key)}
                   className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left
-                    ${done ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-white'}`}
-                >
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0
-                    ${done ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-400'}`}>
+                    ${done ? 'border-[#10bcad]/30 bg-teal-50' : 'border-gray-100 bg-gray-50/60 hover:border-teal-100'}`}>
+                  <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm flex-shrink-0
+                    ${done ? 'bg-[#10bcad] text-white' : 'bg-white border-2 border-gray-200 text-gray-300'}`}>
                     <FontAwesomeIcon icon={done ? faCheck : faCircle} />
                   </div>
                   <div className="flex-1">
-                    <div className={`text-sm font-semibold ${done ? 'text-green-700' : 'text-gray-700'}`}>{t.name}</div>
+                    <div className={`text-sm font-semibold ${done ? 'text-gray-800' : 'text-gray-600'}`}>{t.name}</div>
                     <div className="text-xs text-gray-400">{t.time}</div>
                   </div>
-                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full
-                    ${done ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full
+                    ${done ? 'bg-[#10bcad]/15 text-teal-700' : 'bg-gray-100 text-gray-400'}`}>
                     {done ? '완료' : '미완료'}
                   </span>
                 </button>
@@ -146,21 +141,25 @@ export default function HomePage() {
         )}
       </section>
 
-      {/* 케어 달성률 */}
+      {/* ── 케어 달성률 ── */}
       {activeTreatments.length > 0 && (
         <section className="bg-white rounded-2xl p-4 mb-3 shadow-sm">
           <h2 className="font-bold text-gray-800 mb-3">케어 달성률</h2>
 
           <div className="flex justify-around mb-4">
             <div className="text-center">
-              <div className={`text-2xl font-bold ${streak >= 7 ? 'text-green-600' : 'text-gray-800'}`}>
+              <div className={`text-2xl font-bold ${streak >= 7 ? 'text-[#10bcad]' : 'text-gray-800'}`}>
                 {streak}일
               </div>
-              <div className="text-xs text-gray-400 mt-0.5 flex items-center justify-center gap-1"><FontAwesomeIcon icon={faFire} className="text-orange-400" /> 연속 달성</div>
+              <div className="text-xs text-gray-400 mt-0.5 flex items-center justify-center gap-1">
+                <FontAwesomeIcon icon={faFire} className="text-amber-400" /> 연속 달성
+              </div>
             </div>
             <div className="w-px bg-gray-100" />
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-800">{monthPct}%</div>
+              <div className={`text-2xl font-bold ${monthPct >= 90 ? 'text-[#10bcad]' : monthPct >= 70 ? 'text-amber-500' : 'text-gray-800'}`}>
+                {monthPct}%
+              </div>
               <div className="text-xs text-gray-400 mt-0.5">이번 달</div>
             </div>
           </div>
@@ -169,17 +168,21 @@ export default function HomePage() {
           <div className="flex gap-1">
             {weekDays.map(({ d, ds, status }) => {
               const isToday = ds === todayStr
-              const dotColor = status === 'done' ? 'bg-green-500' : status === 'partial' ? 'bg-yellow-400' : status === 'missed' ? 'bg-red-400' : 'bg-gray-100'
+              const dotBg =
+                status === 'done'    ? 'bg-[#10bcad]' :
+                status === 'partial' ? 'bg-[#fde68a]' :
+                status === 'missed'  ? 'bg-[#fda4af]' : 'bg-gray-100'
               return (
                 <div key={ds} className="flex-1 flex flex-col items-center gap-1">
                   <span className="text-xs text-gray-400">{DAY_KO[d.getDay()]}</span>
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${dotColor}
-                    ${isToday ? 'ring-2 ring-blue-400 ring-offset-1' : ''}`}>
-                    {status === 'done' ? <FontAwesomeIcon icon={faCheck} className="text-white text-xs" />
-                      : status === 'partial' ? <FontAwesomeIcon icon={faMinus} className="text-white text-xs" />
-                      : null}
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${dotBg}
+                    ${isToday ? 'ring-2 ring-[#10bcad] ring-offset-1' : ''}`}>
+                    {status === 'done'    ? <FontAwesomeIcon icon={faCheck}  className="text-white text-xs" />
+                    : status === 'partial' ? <FontAwesomeIcon icon={faMinus}  className="text-amber-700 text-xs" />
+                    : status === 'missed'  ? <FontAwesomeIcon icon={faXmark}  className="text-rose-500 text-xs" />
+                    : null}
                   </div>
-                  <span className={`text-xs ${isToday ? 'font-bold text-blue-600' : 'text-gray-500'}`}>
+                  <span className={`text-xs ${isToday ? 'font-bold text-[#10bcad]' : 'text-gray-500'}`}>
                     {d.getDate()}
                   </span>
                 </div>
@@ -189,47 +192,57 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* 오늘의 생활습관 */}
+      {/* ── 오늘의 생활습관 ── */}
       <section className="bg-white rounded-2xl p-4 mb-3 shadow-sm">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-gray-800">오늘의 생활습관</h2>
-        </div>
+        <h2 className="font-bold text-gray-800 mb-3">오늘의 생활습관</h2>
         {todayLife ? (
           <div className="flex gap-3">
             {[
-              { icon: faTree,         label: '야외활동', value: todayLife.outdoor, color: todayLife.outdoor >= 2 ? 'text-green-600' : todayLife.outdoor > 0 ? 'text-amber-500' : 'text-red-500', bg: 'bg-green-50' },
-              { icon: faMobileScreen, label: '스마트폰', value: todayLife.phone,   color: todayLife.phone <= 2 ? 'text-green-600' : todayLife.phone <= 4 ? 'text-amber-500' : 'text-red-500',   bg: 'bg-amber-50'  },
-            ].map(item => (
-              <div key={item.label} className={`flex-1 ${item.bg} rounded-xl p-3 text-center`}>
-                <FontAwesomeIcon icon={item.icon} className="text-xl mb-1" />
-                <div className={`text-lg font-bold ${item.color}`}>
-                  {fmtTime(item.value)}
+              {
+                icon: faTree, label: '야외활동', value: todayLife.outdoor,
+                good: todayLife.outdoor >= 2, warn: todayLife.outdoor > 0,
+              },
+              {
+                icon: faMobileScreen, label: '스마트폰', value: todayLife.phone,
+                good: todayLife.phone <= 2, warn: todayLife.phone <= 4,
+              },
+            ].map(item => {
+              const state = item.good ? 'good' : item.warn ? 'warn' : 'bad'
+              const palette = {
+                good: { bg: 'bg-teal-50',  icon: 'text-[#10bcad]', val: 'text-gray-800', label: 'text-gray-500' },
+                warn: { bg: 'bg-amber-50', icon: 'text-amber-500', val: 'text-gray-800', label: 'text-gray-500' },
+                bad:  { bg: 'bg-rose-50',  icon: 'text-rose-400',  val: 'text-gray-800', label: 'text-gray-500' },
+              }[state]
+              return (
+                <div key={item.label} className={`flex-1 ${palette.bg} rounded-xl p-3 text-center`}>
+                  <FontAwesomeIcon icon={item.icon} className={`text-xl mb-1 ${palette.icon}`} />
+                  <div className={`text-base font-bold ${palette.val}`}>{fmtTime(item.value)}</div>
+                  <div className={`text-xs mt-0.5 ${palette.label}`}>{item.label}</div>
                 </div>
-                <div className="text-xs text-gray-400">{item.label}</div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         ) : (
           <p className="text-sm text-gray-400 text-center py-2">
             오늘 기록이 없습니다 —{' '}
-            <span className="text-blue-500 cursor-pointer" onClick={() => setShowLifestyle(true)}>
+            <span className="text-[#10bcad] cursor-pointer font-medium" onClick={() => setShowLifestyle(true)}>
               기록하기
             </span>
           </p>
         )}
       </section>
 
-      {/* 다음 예약일 */}
+      {/* ── 다음 예약일 ── */}
       {nextAppt && (
         <section className="bg-white rounded-2xl p-4 mb-3 shadow-sm">
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-2">
-              <FontAwesomeIcon icon={faCalendarDays} className="text-blue-500" />
+              <FontAwesomeIcon icon={faCalendarDays} className="text-[#10bcad]" />
               <h2 className="font-bold text-gray-800">다음 병원 예약일</h2>
             </div>
             {!editingAppt && (
               <button onClick={() => { setApptDate(nextAppt.nextAppointment); setEditingAppt(true) }}
-                className="text-gray-300 hover:text-blue-400 text-sm p-1">
+                className="text-gray-300 hover:text-gray-500 text-sm p-1 transition-colors">
                 <FontAwesomeIcon icon={faPen} />
               </button>
             )}
@@ -237,7 +250,7 @@ export default function HomePage() {
           {editingAppt ? (
             <div className="mt-2 flex items-center gap-2">
               <input type="date" value={apptDate} onChange={e => setApptDate(e.target.value)}
-                className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400" />
               <button onClick={async () => {
                 if (!apptDate) return
                 try {
@@ -245,7 +258,7 @@ export default function HomePage() {
                   toast.success('예약일이 수정되었습니다')
                 } catch { toast.error('수정에 실패했습니다') }
                 setEditingAppt(false)
-              }} className="bg-blue-600 text-white text-sm px-3 py-2 rounded-lg font-medium">
+              }} className="bg-teal-600 text-white text-sm px-3 py-2 rounded-lg font-medium">
                 저장
               </button>
               <button onClick={() => setEditingAppt(false)}
@@ -255,14 +268,17 @@ export default function HomePage() {
             </div>
           ) : (
             <div className="flex items-center justify-between mt-2">
-              <span className="text-gray-700 text-sm">{nextAppt.nextAppointment}</span>
-              <span className={`text-lg font-bold px-3 py-0.5 rounded-full
-                ${dDays === 0 ? 'bg-red-50 text-red-500' : dDays! <= 7 ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'}`}>
+              <span className="text-gray-700 text-sm font-medium">{nextAppt.nextAppointment}</span>
+              <span className={`text-base font-bold px-3 py-1 rounded-full
+                ${dDays === 0 ? 'bg-rose-50 text-rose-400'
+                  : dDays! <= 7 ? 'bg-[#fde68a]/40 text-amber-600'
+                  : 'bg-teal-50 text-[#10bcad]'}`}>
                 {dDays === 0 ? 'D-Day' : `D-${dDays}`}
               </span>
             </div>
           )}
-          {nextAppt.clinic && !editingAppt && <p className="text-xs text-gray-400 mt-1">{nextAppt.clinic}</p>}
+          {nextAppt.clinic && !editingAppt &&
+            <p className="text-xs text-gray-400 mt-1">{nextAppt.clinic}</p>}
         </section>
       )}
 
@@ -270,10 +286,10 @@ export default function HomePage() {
 
       {showLifestyle && (
         <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setShowLifestyle(false)} />
+          <div className="absolute inset-0 bg-black/30" onClick={() => setShowLifestyle(false)} />
           <div className="relative z-10 w-full max-w-[480px] bg-white rounded-t-2xl sm:rounded-2xl p-5 pb-8">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-bold">생활습관 기록</h2>
+              <h2 className="text-lg font-bold text-gray-800">생활습관 기록</h2>
               <button onClick={() => setShowLifestyle(false)} className="text-gray-400 text-xl"><FontAwesomeIcon icon={faXmark} /></button>
             </div>
             <form onSubmit={handleLifeSave} className="space-y-4">
@@ -284,37 +300,37 @@ export default function HomePage() {
                   className={INPUT} />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-green-50 rounded-2xl p-4 border-2 border-green-100">
+                <div className="bg-teal-50 rounded-2xl p-4 border-2 border-teal-100">
                   <div className="flex items-center gap-1.5 mb-4">
-                    <FontAwesomeIcon icon={faTree} className="text-xl text-green-600" />
-                    <span className="text-xs font-semibold text-green-700">야외활동</span>
+                    <FontAwesomeIcon icon={faTree} className="text-xl text-[#10bcad]" />
+                    <span className="text-xs font-semibold text-gray-700">야외활동</span>
                   </div>
                   <TimeSpinner
                     hours={lifeForm.outdoorH} minutes={lifeForm.outdoorM}
                     onHour={v => setLifeForm(f => ({ ...f, outdoorH: v }))}
                     onMinute={v => setLifeForm(f => ({ ...f, outdoorM: v }))}
-                    btnCls="bg-green-200 text-green-700 hover:bg-green-300"
-                    textCls="text-green-700"
+                    btnCls="bg-teal-100 text-teal-700 hover:bg-teal-200"
+                    textCls="text-gray-700"
                   />
-                  <p className="text-xs text-green-400 mt-3 text-center">권장 2시간↑</p>
+                  <p className="text-xs text-gray-400 mt-3 text-center">권장 2시간↑</p>
                 </div>
                 <div className="bg-amber-50 rounded-2xl p-4 border-2 border-amber-100">
                   <div className="flex items-center gap-1.5 mb-4">
-                    <FontAwesomeIcon icon={faMobileScreen} className="text-xl text-amber-600" />
-                    <span className="text-xs font-semibold text-amber-700">스마트폰</span>
+                    <FontAwesomeIcon icon={faMobileScreen} className="text-xl text-amber-500" />
+                    <span className="text-xs font-semibold text-gray-700">스마트폰</span>
                   </div>
                   <TimeSpinner
                     hours={lifeForm.phoneH} minutes={lifeForm.phoneM}
                     onHour={v => setLifeForm(f => ({ ...f, phoneH: v }))}
                     onMinute={v => setLifeForm(f => ({ ...f, phoneM: v }))}
-                    btnCls="bg-amber-200 text-amber-700 hover:bg-amber-300"
-                    textCls="text-amber-700"
+                    btnCls="bg-amber-100 text-amber-700 hover:bg-amber-200"
+                    textCls="text-gray-700"
                   />
-                  <p className="text-xs text-amber-400 mt-3 text-center">권장 2시간↓</p>
+                  <p className="text-xs text-gray-400 mt-3 text-center">권장 2시간↓</p>
                 </div>
               </div>
               <button type="submit" disabled={lifeSaving}
-                className="w-full bg-blue-600 disabled:bg-blue-300 text-white font-semibold py-3 rounded-xl">
+                className="w-full bg-teal-600 disabled:bg-teal-200 text-white font-semibold py-3 rounded-xl">
                 {lifeSaving ? '저장 중...' : '저장'}
               </button>
             </form>

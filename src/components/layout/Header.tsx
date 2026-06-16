@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { useChild } from '@/context/ChildContext'
@@ -13,7 +13,7 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-30 bg-white border-b border-gray-100">
       <div className="flex items-center justify-between px-4 h-14">
-        <span className="font-bold text-blue-600 text-lg">마이오노트</span>
+        <span className="font-bold text-teal-600 text-lg">마이오노트</span>
 
         <button
           onClick={() => setOpen(o => !o)}
@@ -40,20 +40,20 @@ export default function Header() {
                 key={c.id}
                 onClick={() => { switchChild(c.id); setOpen(false) }}
                 className={`w-full flex items-center gap-3 px-4 py-3 text-sm text-left hover:bg-gray-50 transition-colors
-                  ${c.id === activeChildId ? 'bg-blue-50 text-blue-700' : 'text-gray-700'}`}
+                  ${c.id === activeChildId ? 'bg-teal-50 text-teal-700' : 'text-gray-700'}`}
               >
                 <span className="text-base">{c.gender === 'F' ? '👧' : '👦'}</span>
                 <div>
                   <div className="font-semibold">{c.name}</div>
                   <div className="text-xs text-gray-400">{calcAgeLabel(c.birth)}</div>
                 </div>
-                {c.id === activeChildId && <FontAwesomeIcon icon={faCheck} className="ml-auto text-blue-600 text-xs" />}
+                {c.id === activeChildId && <FontAwesomeIcon icon={faCheck} className="ml-auto text-teal-600 text-xs" />}
               </button>
             ))}
             <div className="border-t border-gray-100" />
             <button
               onClick={() => { setOpen(false); document.dispatchEvent(new CustomEvent('open-add-child')) }}
-              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-blue-600 hover:bg-blue-50 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-teal-600 hover:bg-teal-50 transition-colors"
             >
               <FontAwesomeIcon icon={faPlus} /> 자녀 추가
             </button>

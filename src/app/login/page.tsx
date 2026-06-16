@@ -1,4 +1,4 @@
-import KakaoLoginButton from '@/components/auth/KakaoLoginButton'
+﻿import KakaoLoginButton from '@/components/auth/KakaoLoginButton'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEye, faClipboardList, faChartLine, faUserGroup } from '@fortawesome/free-solid-svg-icons'
 
@@ -13,7 +13,7 @@ export default function LoginPage({
 
         {/* 로고 */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-600 mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-teal-600 mb-4">
             <FontAwesomeIcon icon={faEye} className="text-2xl text-white" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">마이오노트</h1>
@@ -28,7 +28,7 @@ export default function LoginPage({
             { icon: faUserGroup,     text: '보호자 여러 명이 함께 관리' },
           ].map(({ icon, text }) => (
             <div key={text} className="flex items-center gap-3 text-sm text-gray-600">
-              <FontAwesomeIcon icon={icon} className="text-base text-blue-500 w-4" />
+              <FontAwesomeIcon icon={icon} className="text-base text-teal-500 w-4" />
               <span>{text}</span>
             </div>
           ))}
@@ -57,7 +57,7 @@ async function ErrorMessage({
   const params = await searchParams
   if (!params.error) return null
   return (
-    <p className="mt-3 text-center text-sm text-red-500">
+    <p className="mt-3 text-center text-sm text-rose-500">
       로그인에 실패했습니다. 다시 시도해주세요.
     </p>
   )
