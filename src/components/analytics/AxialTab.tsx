@@ -62,7 +62,7 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
           {/* 커스텀 범례 토글 */}
           <div className="flex gap-1.5">
             <button
-              onClick={() => setShowOD(v => !v)}
+              onClick={() => { if (showOD && !showOS) { setShowOS(true) } else { setShowOD(true); setShowOS(false) } }}
               className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-all ${
                 showOD
                   ? 'bg-[#edf7f6] text-[#10bcad] border border-[#10bcad]/30'
@@ -73,7 +73,7 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
               우안
             </button>
             <button
-              onClick={() => setShowOS(v => !v)}
+              onClick={() => { if (!showOD && showOS) { setShowOD(true) } else { setShowOD(false); setShowOS(true) } }}
               className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-all ${
                 showOS
                   ? 'bg-gray-100 text-gray-600 border border-gray-300'
