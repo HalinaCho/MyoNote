@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useChild } from '@/context/ChildContext'
 import { Line } from 'react-chartjs-2'
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend } from 'chart.js'
@@ -9,12 +9,20 @@ import { faCircleInfo } from '@fortawesome/free-solid-svg-icons'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend)
 
+const SCROLL_THRESHOLD = 8
+const PER_POINT = 52
+
 export default function SerTab() {
   const { exams } = useChild()
   const [showOD, setShowOD] = useState(true)
   const [showOS, setShowOS] = useState(true)
+  const scrollRef = useRef<HTMLDivElement>(null)
 
   const sorted = [...exams].sort((a, b) => a.date.localeCompare(b.date))
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollLeft = scrollRef.current.scrollWidth
+  }, [])
 
   if (sorted.length < 2) {
     return (
@@ -69,21 +77,26 @@ export default function SerTab() {
             </button>
           </div>
         </div>
-        <Line
-          data={{ labels, datasets }}
-          options={{
-            responsive: true,
-            plugins: { legend: { display: false } },
-            scales: {
-              x: { grid: { display: false }, ticks: { font: { size: 10 } } },
-              y: {
-                min: yMin, max: yMax,
-                ticks: { callback: v => `${(v as number).toFixed(1)}D`, font: { size: 10 } },
-                grid: { color: '#F3F4F6' },
-              },
-            },
-          }}
-        />
+        <div ref={scrollRef} className="overflow-x-auto">
+          <div style={{ width: sorted.length > SCROLL_THRESHOLD ? sorted.length * PER_POINT : undefined, height: 200 }}>
+            <Line
+              data={{ labels, datasets }}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                  x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+                  y: {
+                    min: yMin, max: yMax,
+                    ticks: { callback: v => `${(v as number).toFixed(1)}D`, font: { size: 10 } },
+                    grid: { color: '#F3F4F6' },
+                  },
+                },
+              }}
+            />
+          </div>
+        </div>
       </div>
       <div className="bg-teal-50 rounded-2xl p-4 text-sm text-teal-700">
         <div className="font-semibold mb-1 flex items-center gap-1.5"><FontAwesomeIcon icon={faCircleInfo} /> SEQ 해석 가이드</div>

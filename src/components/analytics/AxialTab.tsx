@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useChild } from '@/context/ChildContext'
 import { Line } from 'react-chartjs-2'
 import {
@@ -35,9 +35,17 @@ export default function AxialTab() {
 
 // ── 변화 추이 뷰 ──────────────────────────────────────────────────
 
+const SCROLL_THRESHOLD = 8
+const PER_POINT = 52
+
 function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: string }[] }) {
   const [showOD, setShowOD] = useState(true)
   const [showOS, setShowOS] = useState(true)
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollLeft = scrollRef.current.scrollWidth
+  }, [])
 
   const labels = exams.map(e => e.date.slice(2, 7).replace('-', '.'))
   const odData = exams.map(e => parseFloat(e.axOD) || null)
@@ -85,21 +93,26 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
             </button>
           </div>
         </div>
-        <Line
-          data={{ labels, datasets }}
-          options={{
-            responsive: true,
-            plugins: { legend: { display: false } },
-            scales: {
-              x: { grid: { display: false }, ticks: { font: { size: 10 } } },
-              y: {
-                min: yMin, max: yMax,
-                ticks: { callback: v => `${v}mm`, font: { size: 10 } },
-                grid: { color: '#F3F4F6' },
-              },
-            },
-          }}
-        />
+        <div ref={scrollRef} className="overflow-x-auto">
+          <div style={{ width: exams.length > SCROLL_THRESHOLD ? exams.length * PER_POINT : undefined, height: 200 }}>
+            <Line
+              data={{ labels, datasets }}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                  x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+                  y: {
+                    min: yMin, max: yMax,
+                    ticks: { callback: v => `${v}mm`, font: { size: 10 } },
+                    grid: { color: '#F3F4F6' },
+                  },
+                },
+              }}
+            />
+          </div>
+        </div>
       </div>
       <GrowthRateCard exams={exams} />
     </>
