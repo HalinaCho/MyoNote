@@ -2,9 +2,10 @@
 
 import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import Image from 'next/image'
 import KakaoLoginButton from '@/components/auth/KakaoLoginButton'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEye, faClipboardList, faChartLine, faUserGroup } from '@fortawesome/free-solid-svg-icons'
+import { faClipboardList, faChartLine, faUserGroup } from '@fortawesome/free-solid-svg-icons'
 
 function ErrorMessage() {
   const searchParams = useSearchParams()
@@ -23,8 +24,8 @@ export default function LoginPage() {
 
         {/* 로고 */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-teal-600 mb-4">
-            <FontAwesomeIcon icon={faEye} className="text-2xl text-white" />
+          <div className="inline-flex items-center justify-center w-16 h-16 mb-4">
+            <Image src="/icon.svg" alt="마이오노트" width={64} height={64} priority />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">마이오노트</h1>
           <p className="mt-1 text-sm text-gray-500">내 아이 근시 관리</p>
