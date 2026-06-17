@@ -10,9 +10,12 @@ function CallbackHandler() {
 
   useEffect(() => {
     const code = searchParams.get('code')
-    if (!code) { router.replace('/login?error=auth_failed'); return }
+    const loginUrl = (suffix = '') =>
+      `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/login${suffix}`
+    if (!code) { window.location.replace(loginUrl('?error=auth_failed')); return }
     createClient().auth.exchangeCodeForSession(code).then(({ error }) => {
-      router.replace(error ? '/login?error=auth_failed' : '/dashboard')
+      if (error) window.location.replace(loginUrl('?error=auth_failed'))
+      else router.replace('/dashboard')
     })
   }, [router, searchParams])
 

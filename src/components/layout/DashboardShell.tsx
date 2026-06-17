@@ -14,7 +14,9 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
   useEffect(() => {
     createClient().auth.getSession().then(({ data: { session } }) => {
-      if (!session) router.replace('/login')
+      if (!session) {
+        window.location.replace(`${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/login`)
+      }
       else setAuthed(true)
     })
   }, [router])
