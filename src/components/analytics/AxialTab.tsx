@@ -326,9 +326,8 @@ function PctSummaryCard({
             <div className="text-xl font-black text-gray-800 leading-none">
               {mm.toFixed(2)}<span className="text-xs font-normal text-gray-400 ml-0.5">mm</span>
             </div>
-            <div className="flex items-baseline gap-0.5 mt-2 leading-none">
-              <span className="text-xs font-semibold text-[#10bcad]">{l.prefix}</span>
-              <span className="text-2xl font-black text-[#10bcad]">{l.value}</span>
+            <div className="mt-2 text-xl font-black text-[#10bcad] leading-none">
+              {l.prefix} {l.value}
             </div>
             <PctBar pct={pct} />
           </div>
