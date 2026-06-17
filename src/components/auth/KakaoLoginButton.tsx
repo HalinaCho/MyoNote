@@ -16,7 +16,10 @@ export default function KakaoLoginButton() {
       const redirectTo = `${siteUrl}/auth/callback`
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'kakao',
-        options: { redirectTo },
+        options: {
+          redirectTo,
+          queryParams: { prompt: 'login' },
+        },
       })
       if (error) setErrorMsg(error.message)
     } catch (e: any) {
