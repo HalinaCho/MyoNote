@@ -2,6 +2,7 @@
 
 import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import KakaoLoginButton from '@/components/auth/KakaoLoginButton'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faClipboardList, faChartLine, faUserGroup } from '@fortawesome/free-solid-svg-icons'
@@ -59,7 +60,7 @@ export default function LoginPage() {
 
         <p className="mt-6 text-center text-xs text-gray-400">
           로그인 시{' '}
-          <span className="underline cursor-pointer">개인정보 처리방침</span>에 동의하게 됩니다
+          <Link href="/privacy" className="underline">개인정보 처리방침</Link>에 동의하게 됩니다
         </p>
       </div>
     </div>
