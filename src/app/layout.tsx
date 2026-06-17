@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: `${siteUrl}/og-image.svg`,
+        url: `${siteUrl}/og-image.png`,
         width: 1200,
         height: 630,
         alt: '마이오노트 — 내 아이 근시 관리',
