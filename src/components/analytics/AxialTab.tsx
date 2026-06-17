@@ -108,7 +108,7 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
                     min: yMin, max: yMax,
                     // @ts-ignore
                     afterFit: (s: any) => { s.width = 52 },
-                    ticks: { callback: v => `${v}mm`, font: { size: 10 } },
+                    ticks: { callback: v => `${(v as number).toFixed(1)}mm`, font: { size: 10 } },
                     grid: { color: '#F3F4F6' },
                   },
                 },
