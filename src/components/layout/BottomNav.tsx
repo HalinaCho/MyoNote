@@ -1,16 +1,17 @@
-﻿'use client'
+'use client'
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faHouse, faClipboardList, faChartColumn, faGear } from '@fortawesome/free-solid-svg-icons'
+import { faHouse, faCalendarDays, faMicroscope, faChartColumn, faGear } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 
 const TABS: { href: string; label: string; icon: IconDefinition }[] = [
-  { href: '/dashboard',           label: '홈',  icon: faHouse },
-  { href: '/dashboard/records',   label: '기록', icon: faClipboardList },
-  { href: '/dashboard/analytics', label: '분석', icon: faChartColumn },
-  { href: '/dashboard/settings',  label: '설정', icon: faGear },
+  { href: '/dashboard',          label: '홈',    icon: faHouse },
+  { href: '/dashboard/calendar', label: '캘린더', icon: faCalendarDays },
+  { href: '/dashboard/records',  label: '검사',   icon: faMicroscope },
+  { href: '/dashboard/analytics',label: '분석',   icon: faChartColumn },
+  { href: '/dashboard/settings', label: '설정',   icon: faGear },
 ]
 
 export default function BottomNav() {
