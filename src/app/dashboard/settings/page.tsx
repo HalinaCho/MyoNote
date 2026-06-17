@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { getAlertDay, setAlertDay } from '@/lib/notificationPrefs'
 import { useChild } from '@/context/ChildContext'
@@ -14,6 +15,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPen, faTrashCan, faPlus, faUserGroup, faKey, faRightFromBracket, faXmark, faChevronRight, faBell } from '@fortawesome/free-solid-svg-icons'
 
 export default function SettingsPage() {
+  const router = useRouter()
   const { children, activeChildId, activeChild, deleteChild, refreshChildren } = useChild()
   const [childModal, setChildModal] = useState<{ open: boolean; editing: Child | null }>({ open: false, editing: null })
   const [inviteModal, setInviteModal] = useState(false)
@@ -164,7 +166,7 @@ export default function SettingsPage() {
       <section className="bg-white rounded-2xl overflow-hidden mb-3 shadow-sm">
         <div className="px-4 pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">계정</div>
         <button
-          onClick={async () => { await signOut(); window.location.href = '/login' }}
+          onClick={async () => { await signOut(); router.replace('/login') }}
           className="w-full flex items-center gap-3 px-4 py-3 border-t border-gray-50 text-sm text-rose-500 hover:bg-rose-50"
         >
           <FontAwesomeIcon icon={faRightFromBracket} className="w-4" /> 로그아웃
