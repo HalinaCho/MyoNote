@@ -46,5 +46,10 @@ export default function KakaoLoginButton() {
     {errorMsg && (
       <p className="mt-2 text-xs text-rose-500 text-center break-all">{errorMsg}</p>
     )}
+    <p className="mt-2 text-[10px] text-gray-300 text-center break-all">
+      url:{process.env.NEXT_PUBLIC_SUPABASE_URL ? '✓' : '✗'}&nbsp;
+      key:{process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✓' : '✗'}&nbsp;
+      site:{process.env.NEXT_PUBLIC_SITE_URL ?? '(없음)'}
+    </p>
   )
 }
