@@ -5,6 +5,7 @@ import { useChild } from '@/context/ChildContext'
 import { calcAgeLabel } from '@/lib/utils/date'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronUp, faChevronDown, faCheck, faPlus } from '@fortawesome/free-solid-svg-icons'
+import Link from 'next/link'
 
 export default function Header() {
   const { children, activeChild, activeChildId, switchChild } = useChild()
@@ -13,7 +14,7 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-30 bg-white border-b border-gray-100">
       <div className="flex items-center justify-between px-4 h-14">
-        <div className="flex items-center gap-2">
+        <Link href="/dashboard" className="flex items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={`${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/icon.png`}
@@ -21,7 +22,7 @@ export default function Header() {
             className="h-9 w-auto"
           />
           <span className="font-bold text-[#10bcad] text-lg">마이오노트</span>
-        </div>
+        </Link>
 
         <button
           onClick={() => setOpen(o => !o)}
