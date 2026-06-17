@@ -1,54 +1,48 @@
 'use client'
 
-import { Suspense, useEffect, useRef } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 function CallbackHandler() {
   const done = useRef(false)
+  const [errMsg, setErrMsg] = useState<string | null>(null)
 
   useEffect(() => {
     if (done.current) return
     done.current = true
 
-    const supabase = createClient()
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? ''
+    const code = new URLSearchParams(window.location.search).get('code')
 
-    // @supabase/supabase-js auto-processes ?code= from URL (detectSessionInUrl: true)
-    // Wait for SIGNED_IN event instead of manually calling exchangeCodeForSession
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        subscription.unsubscribe()
-        clearTimeout(timeout)
-        window.location.replace(`${siteUrl}/dashboard`)
-      }
-    })
-
-    // Already signed in (e.g. revisit)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        subscription.unsubscribe()
-        clearTimeout(timeout)
-        window.location.replace(`${siteUrl}/dashboard`)
-      }
-    })
-
-    const timeout = setTimeout(() => {
-      subscription.unsubscribe()
-      window.location.replace(`${siteUrl}/login?error=auth_failed`)
-    }, 10000)
-
-    return () => {
-      clearTimeout(timeout)
-      subscription.unsubscribe()
+    if (!code) {
+      setErrMsg('URL에 code 없음')
+      return
     }
+
+    createClient().auth.exchangeCodeForSession(code).then(({ data, error }) => {
+      if (error) {
+        setErrMsg(`${error.message} [${error.status ?? '?'}]`)
+      } else if (!data.session) {
+        setErrMsg('session null')
+      } else {
+        window.location.replace(`${siteUrl}/dashboard`)
+      }
+    })
   }, [])
 
+  if (errMsg) {
+    return (
+      <p className="text-rose-500 text-sm text-center px-4 mt-4 break-all border border-rose-200 rounded p-2">
+        {errMsg}
+      </p>
+    )
+  }
   return null
 }
 
 export default function AuthCallbackPage() {
   return (
-    <div className="flex items-center justify-center min-h-screen text-gray-400 text-sm">
+    <div className="flex flex-col items-center justify-center min-h-screen text-gray-400 text-sm px-4">
       <Suspense>
         <CallbackHandler />
       </Suspense>
