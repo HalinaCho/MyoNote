@@ -1,6 +1,6 @@
 <svg viewBox="0 0 1024 1024" width="512" height="512" xmlns="http://www.w3.org/2000/svg">
   <!-- Background -->
-  <rect x="0" y="0" width="1024" height="1024" rx="228" fill="#FFFFFF" stroke="#10bcad" stroke-width="36"/>
+  <rect x="18" y="18" width="988" height="988" rx="210" fill="#FFFFFF" stroke="#10bcad" stroke-width="36"/>
 
   <!-- Clipboard body -->
   <rect x="266" y="300" width="492" height="576" rx="72" fill="#ccfbf1"/>
