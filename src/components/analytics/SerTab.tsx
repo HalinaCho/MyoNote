@@ -78,7 +78,7 @@ export default function SerTab() {
               x: { grid: { display: false }, ticks: { font: { size: 10 } } },
               y: {
                 min: yMin, max: yMax,
-                ticks: { callback: v => v === 0 ? '0D' : `-${v}D`, font: { size: 10 } },
+                ticks: { callback: v => `${(v as number).toFixed(1)}D`, font: { size: 10 } },
                 grid: { color: '#F3F4F6' },
               },
             },
