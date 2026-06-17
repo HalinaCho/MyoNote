@@ -10,15 +10,18 @@ export default function KakaoLoginButton() {
   const handleLogin = async () => {
     setLoading(true)
     setErrorMsg(null)
-    const supabase = createClient()
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin
-    const redirectTo = `${siteUrl}/auth/callback`
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'kakao',
-      options: { redirectTo },
-    })
-    if (error) {
-      setErrorMsg(error.message)
+    try {
+      const supabase = createClient()
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin
+      const redirectTo = `${siteUrl}/auth/callback`
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'kakao',
+        options: { redirectTo },
+      })
+      if (error) setErrorMsg(error.message)
+    } catch (e: any) {
+      setErrorMsg(e?.message ?? String(e))
+    } finally {
       setLoading(false)
     }
   }
