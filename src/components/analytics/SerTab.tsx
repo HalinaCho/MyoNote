@@ -49,11 +49,11 @@ export default function SerTab() {
               onClick={() => setShowOD(v => !v)}
               className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-all ${
                 showOD
-                  ? 'bg-teal-50 text-teal-700 border border-teal-200'
+                  ? 'bg-[#edf7f6] text-[#10bcad] border border-[#10bcad]/30'
                   : 'bg-gray-100 text-gray-300 border border-transparent'
               }`}
             >
-              <span className={`w-2 h-2 rounded-full transition-all ${showOD ? 'bg-[#0D9488]' : 'bg-gray-300'}`} />
+              <span className={`w-2 h-2 rounded-full transition-all ${showOD ? 'bg-[#10bcad]' : 'bg-gray-300'}`} />
               우안
             </button>
             <button
