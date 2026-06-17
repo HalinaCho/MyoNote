@@ -48,12 +48,11 @@ export function calcPercentile(al: number, age: number): number {
   return 50
 }
 
-/** Returns label text for a percentile */
-export function pctLabel(pct: number): { text: string } {
-  if (pct >= 90) return { text: `상위 ${100 - pct}%` }
-  if (pct >= 75) return { text: `상위 ${100 - pct}%` }
-  if (pct >= 25) return { text: '정상 범위' }
-  return              { text: `하위 ${pct}%` }
+/** Returns structured label for a percentile */
+export function pctLabel(pct: number): { prefix: string; value: string } {
+  if (pct >= 75) return { prefix: '상위', value: `${100 - pct}%` }
+  if (pct >= 25) return { prefix: '정상',  value: '범위' }
+  return                { prefix: '하위', value: `${pct}%` }
 }
 
 /** Returns smooth curve points {x: ageYears, y: mm} for chart rendering */
