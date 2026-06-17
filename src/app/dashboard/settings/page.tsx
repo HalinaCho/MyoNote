@@ -166,7 +166,7 @@ export default function SettingsPage() {
       <section className="bg-white rounded-2xl overflow-hidden mb-3 shadow-sm">
         <div className="px-4 pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">계정</div>
         <button
-          onClick={async () => { await signOut(); router.replace('/login') }}
+          onClick={async () => { try { await signOut() } catch {} router.replace('/login') }}
           className="w-full flex items-center gap-3 px-4 py-3 border-t border-gray-50 text-sm text-rose-500 hover:bg-rose-50"
         >
           <FontAwesomeIcon icon={faRightFromBracket} className="w-4" /> 로그아웃
