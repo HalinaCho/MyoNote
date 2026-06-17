@@ -93,24 +93,45 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
             </button>
           </div>
         </div>
-        <div ref={scrollRef} className="overflow-x-auto">
-          <div style={{ width: exams.length > SCROLL_THRESHOLD ? exams.length * PER_POINT : undefined, height: 200 }}>
+        <div className="flex" style={{ height: 210 }}>
+          {/* Y축 고정 차트 */}
+          <div style={{ width: 52, flexShrink: 0 }}>
             <Line
-              data={{ labels, datasets }}
+              data={{ labels, datasets: [{ data: labels.map(() => null), borderColor: 'transparent', pointRadius: 0 }] }}
               options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                responsive: true, maintainAspectRatio: false,
+                animation: { duration: 0 }, events: [],
+                plugins: { legend: { display: false }, tooltip: { enabled: false } },
                 scales: {
-                  x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+                  x: { display: false },
                   y: {
                     min: yMin, max: yMax,
+                    // @ts-ignore
+                    afterFit: (s: any) => { s.width = 52 },
                     ticks: { callback: v => `${v}mm`, font: { size: 10 } },
                     grid: { color: '#F3F4F6' },
                   },
                 },
+                layout: { padding: { bottom: 22 } },
               }}
             />
+          </div>
+          {/* 스크롤 데이터 차트 */}
+          <div ref={scrollRef} style={{ flex: 1, overflowX: 'auto' }}>
+            <div style={{ width: exams.length > SCROLL_THRESHOLD ? exams.length * PER_POINT : undefined, height: '100%' }}>
+              <Line
+                data={{ labels, datasets }}
+                options={{
+                  responsive: true, maintainAspectRatio: false,
+                  plugins: { legend: { display: false } },
+                  scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+                    y: { display: false, min: yMin, max: yMax },
+                  },
+                  layout: { padding: { left: 0 } },
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>
