@@ -18,9 +18,7 @@ export default function Header() {
           <img
             src={`${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/icon.png`}
             alt=""
-            width={28}
-            height={28}
-            className="rounded-lg"
+            className="h-9 w-auto"
           />
           <span className="font-bold text-[#10bcad] text-lg">마이오노트</span>
         </div>
