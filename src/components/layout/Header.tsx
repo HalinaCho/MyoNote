@@ -13,7 +13,17 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-30 bg-white border-b border-gray-100">
       <div className="flex items-center justify-between px-4 h-14">
-        <span className="font-bold text-teal-600 text-lg">마이오노트</span>
+        <div className="flex items-center gap-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/icon.png`}
+            alt=""
+            width={28}
+            height={28}
+            className="rounded-lg"
+          />
+          <span className="font-bold text-[#10bcad] text-lg">마이오노트</span>
+        </div>
 
         <button
           onClick={() => setOpen(o => !o)}
