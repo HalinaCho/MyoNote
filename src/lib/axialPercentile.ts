@@ -1,14 +1,15 @@
-// Axial length normative reference data for East Asian children (ages 6–13)
-// Based on Korean pediatric myopia research.
+// Axial length normative reference data for East Asian children (ages 6–18)
+// Ages 6–13: Korean pediatric myopia research cohort data.
+// Ages 14–18: East Asian cohort estimates (SCORM, He et al.) — growth decelerates.
 // For reference and monitoring purposes only — not a clinical diagnostic tool.
 
-const NORM_AGES = [6, 7, 8, 9, 10, 11, 12, 13]
+const NORM_AGES = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
 const NORM: Record<string, number[]> = {
-  p10: [21.6, 21.9, 22.1, 22.4, 22.7, 22.9, 23.1, 23.4],
-  p25: [22.0, 22.3, 22.6, 22.9, 23.2, 23.5, 23.8, 24.1],
-  p50: [22.5, 22.8, 23.1, 23.5, 23.8, 24.2, 24.5, 24.8],
-  p75: [23.0, 23.3, 23.7, 24.1, 24.5, 24.8, 25.2, 25.5],
-  p90: [23.5, 23.8, 24.2, 24.7, 25.1, 25.4, 25.8, 26.1],
+  p10: [21.6, 21.9, 22.1, 22.4, 22.7, 22.9, 23.1, 23.4, 23.5, 23.6, 23.65, 23.7,  23.7 ],
+  p25: [22.0, 22.3, 22.6, 22.9, 23.2, 23.5, 23.8, 24.1, 24.3, 24.4, 24.5,  24.55, 24.6 ],
+  p50: [22.5, 22.8, 23.1, 23.5, 23.8, 24.2, 24.5, 24.8, 25.0, 25.15,25.25, 25.3,  25.35],
+  p75: [23.0, 23.3, 23.7, 24.1, 24.5, 24.8, 25.2, 25.5, 25.7, 25.85,25.95, 26.0,  26.05],
+  p90: [23.5, 23.8, 24.2, 24.7, 25.1, 25.4, 25.8, 26.1, 26.3, 26.5, 26.6,  26.65, 26.7 ],
 }
 
 function interpNorm(key: string, age: number): number {
@@ -58,7 +59,7 @@ export function pctLabel(pct: number): { text: string } {
 /** Returns smooth curve points {x: ageYears, y: mm} for chart rendering */
 export function normCurve(key: string): { x: number; y: number }[] {
   const pts: { x: number; y: number }[] = []
-  for (let a = 6; a <= 13; a += 0.25) {
+  for (let a = 6; a <= 18; a += 0.25) {
     pts.push({ x: parseFloat(a.toFixed(2)), y: parseFloat(interpNorm(key, a).toFixed(3)) })
   }
   return pts
