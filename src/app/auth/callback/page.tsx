@@ -1,24 +1,27 @@
 'use client'
 
-import { Suspense, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense, useEffect, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 function CallbackHandler() {
-  const router = useRouter()
   const searchParams = useSearchParams()
+  const done = useRef(false)
 
   useEffect(() => {
+    if (done.current) return
+    done.current = true
+
     const code = searchParams.get('code')
-    const loginUrl = (suffix = '') =>
-      `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/login${suffix}`
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? ''
+    const loginUrl = (suffix = '') => `${siteUrl}/login${suffix}`
+
     if (!code) { window.location.replace(loginUrl('?error=auth_failed')); return }
     createClient().auth.exchangeCodeForSession(code).then(({ error }) => {
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? ''
       if (error) window.location.replace(loginUrl('?error=auth_failed'))
       else window.location.replace(`${siteUrl}/dashboard`)
     })
-  }, [router, searchParams])
+  }, [searchParams])
 
   return null
 }
