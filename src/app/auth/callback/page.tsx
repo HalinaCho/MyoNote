@@ -1,27 +1,47 @@
 'use client'
 
 import { Suspense, useEffect, useRef } from 'react'
-import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 function CallbackHandler() {
-  const searchParams = useSearchParams()
   const done = useRef(false)
 
   useEffect(() => {
     if (done.current) return
     done.current = true
 
-    const code = searchParams.get('code')
+    const supabase = createClient()
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? ''
-    const loginUrl = (suffix = '') => `${siteUrl}/login${suffix}`
 
-    if (!code) { window.location.replace(loginUrl('?error=auth_failed')); return }
-    createClient().auth.exchangeCodeForSession(code).then(({ error }) => {
-      if (error) window.location.replace(loginUrl('?error=auth_failed'))
-      else window.location.replace(`${siteUrl}/dashboard`)
+    // @supabase/supabase-js auto-processes ?code= from URL (detectSessionInUrl: true)
+    // Wait for SIGNED_IN event instead of manually calling exchangeCodeForSession
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        subscription.unsubscribe()
+        clearTimeout(timeout)
+        window.location.replace(`${siteUrl}/dashboard`)
+      }
     })
-  }, [searchParams])
+
+    // Already signed in (e.g. revisit)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        subscription.unsubscribe()
+        clearTimeout(timeout)
+        window.location.replace(`${siteUrl}/dashboard`)
+      }
+    })
+
+    const timeout = setTimeout(() => {
+      subscription.unsubscribe()
+      window.location.replace(`${siteUrl}/login?error=auth_failed`)
+    }, 10000)
+
+    return () => {
+      clearTimeout(timeout)
+      subscription.unsubscribe()
+    }
+  }, [])
 
   return null
 }
