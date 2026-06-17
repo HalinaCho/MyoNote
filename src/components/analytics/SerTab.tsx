@@ -61,10 +61,10 @@ export default function SerTab() {
               className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-all ${
                 showOS
                   ? 'bg-gray-100 text-gray-600 border border-gray-300'
-                  : 'bg-gray-50 text-gray-300 border border-transparent'
+                  : 'bg-gray-100 text-gray-300 border border-transparent'
               }`}
             >
-              <span className={`w-2 h-2 rounded-full transition-all ${showOS ? 'bg-gray-400' : 'bg-gray-200'}`} />
+              <span className={`w-2 h-2 rounded-full transition-all ${showOS ? 'bg-gray-400' : 'bg-gray-300'}`} />
               좌안
             </button>
           </div>
