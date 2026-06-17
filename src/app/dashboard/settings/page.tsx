@@ -1,7 +1,8 @@
 ﻿'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
+import { getAlertDay, setAlertDay } from '@/lib/notificationPrefs'
 import { useChild } from '@/context/ChildContext'
 import ChildFormModal from '@/components/child/ChildFormModal'
 import { signOut } from '@/lib/supabase/auth'
@@ -10,7 +11,7 @@ import type { Child } from '@/types'
 import { createClient } from '@/lib/supabase/client'
 import * as q from '@/lib/supabase/queries'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPen, faTrashCan, faPlus, faUserGroup, faKey, faRightFromBracket, faXmark, faChevronRight } from '@fortawesome/free-solid-svg-icons'
+import { faPen, faTrashCan, faPlus, faUserGroup, faKey, faRightFromBracket, faXmark, faChevronRight, faBell } from '@fortawesome/free-solid-svg-icons'
 
 export default function SettingsPage() {
   const { children, activeChildId, activeChild, deleteChild, refreshChildren } = useChild()
@@ -20,6 +21,15 @@ export default function SettingsPage() {
   const [inviteCode, setInviteCode] = useState('')
   const [joinCode, setJoinCode] = useState('')
   const [generating, setGenerating] = useState(false)
+  const [alertDay, setAlertDayState] = useState<number | null>(null)
+
+  useEffect(() => { setAlertDayState(getAlertDay()) }, [])
+
+  const selectAlertDay = (day: number) => {
+    const next = alertDay === day ? null : day
+    setAlertDayState(next)
+    setAlertDay(next)
+  }
 
   const handleDeleteChild = async (child: Child) => {
     if (!confirm(`${child.name}을(를) 삭제하시겠습니까?\n모든 기록이 함께 삭제됩니다.`)) return
@@ -121,6 +131,33 @@ export default function SettingsPage() {
         <button onClick={() => setJoinModal(true)} className="w-full flex items-center gap-3 px-4 py-3 border-t border-gray-50 text-sm text-gray-700 hover:bg-gray-50">
           <FontAwesomeIcon icon={faKey} className="w-4" /> <span className="flex-1 text-left">코드로 참여하기</span> <FontAwesomeIcon icon={faChevronRight} className="text-gray-300 text-xs" />
         </button>
+      </section>
+
+      {/* 알림 설정 */}
+      <section className="bg-white rounded-2xl overflow-hidden mb-3 shadow-sm">
+        <div className="px-4 pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">알림 설정</div>
+        <div className="px-4 py-3 border-t border-gray-50">
+          <div className="flex items-center gap-3 text-sm font-medium text-gray-700 mb-1">
+            <FontAwesomeIcon icon={faBell} className="w-4" />
+            병원 예약 알림
+          </div>
+          <div className="text-xs text-gray-400 mb-3">예약일 며칠 전부터 홈 화면에 배너를 표시합니다.</div>
+          <div className="flex gap-2">
+            {[1, 3, 7].map(day => (
+              <button
+                key={day}
+                onClick={() => selectAlertDay(day)}
+                className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all border ${
+                  alertDay === day
+                    ? 'bg-[#edf7f6] text-[#10bcad] border-[#10bcad]/30'
+                    : 'bg-gray-50 text-gray-400 border-transparent'
+                }`}
+              >
+                {day}일 전
+              </button>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* 계정 */}

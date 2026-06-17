@@ -7,8 +7,9 @@ import ChildFormModal from '@/components/child/ChildFormModal'
 import TimeSpinner from '@/components/lifestyle/TimeSpinner'
 import { today, formatDate } from '@/lib/utils/date'
 import { calcStreak, calcMonthCompliance, getDayStatus } from '@/lib/utils/compliance'
+import { getAlertDay } from '@/lib/notificationPrefs'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEye, faCheck, faMinus, faFire, faXmark, faTree, faMobileScreen, faCalendarDays, faPen } from '@fortawesome/free-solid-svg-icons'
+import { faEye, faCheck, faMinus, faFire, faXmark, faTree, faMobileScreen, faCalendarDays, faPen, faBell, faHospital } from '@fortawesome/free-solid-svg-icons'
 import { faCircle } from '@fortawesome/free-regular-svg-icons'
 
 const INPUT = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400'
@@ -17,6 +18,13 @@ export default function HomePage() {
   const { activeChild, activeTreatments, logs, lifestyle, exams, isLoading, saveTreatmentLog, saveLifestyle, updateExam } = useChild()
   const [showAddChild, setShowAddChild] = useState(false)
   const [showLifestyle, setShowLifestyle] = useState(false)
+  const [alertDay, setAlertDayState] = useState<number | null>(null)
+  const [dismissedBanners, setDismissedBanners] = useState<Set<string>>(new Set())
+
+  useEffect(() => { setAlertDayState(getAlertDay()) }, [])
+
+  const dismissBanner = (key: string) =>
+    setDismissedBanners(prev => new Set(prev).add(key))
   const [lifeForm, setLifeForm] = useState({ date: today(), outdoorH: 0, outdoorM: 0, phoneH: 0, phoneM: 0 })
   const [editingAppt, setEditingAppt] = useState(false)
   const [apptDate, setApptDate] = useState('')
@@ -94,6 +102,23 @@ export default function HomePage() {
     ? Math.round((new Date(nextAppt.nextAppointment).getTime() - new Date(todayStr).getTime()) / 86400000)
     : null
 
+  // 배너 표시 조건
+  const showDDayBanner =
+    alertDay !== null &&
+    dDays !== null &&
+    dDays <= alertDay &&
+    !dismissedBanners.has('dday')
+
+  const careNotEntered =
+    activeTreatments.length > 0 &&
+    !logs[todayStr] &&
+    !dismissedBanners.has('care')
+
+  const dDayBannerStyle =
+    dDays! <= 3
+      ? { bg: 'bg-rose-50',  text: 'text-rose-600',  sub: 'text-rose-400',  icon: 'text-rose-400'  }
+      : { bg: 'bg-amber-50', text: 'text-amber-700', sub: 'text-amber-500', icon: 'text-amber-400' }
+
   const weekDays = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(); d.setDate(d.getDate() - (6 - i))
     const ds = formatDate(d)
@@ -103,6 +128,37 @@ export default function HomePage() {
 
   return (
     <>
+      {/* ── 알림 배너 ── */}
+      {showDDayBanner && nextAppt && (
+        <div className={`flex items-center gap-3 ${dDayBannerStyle.bg} rounded-2xl px-4 py-3 mb-3`}>
+          <FontAwesomeIcon icon={faHospital} className={`text-base flex-shrink-0 ${dDayBannerStyle.icon}`} />
+          <div className="flex-1 min-w-0">
+            <p className={`text-sm font-semibold ${dDayBannerStyle.text}`}>
+              {dDays === 0 ? '오늘 병원 예약일입니다!' : `병원 예약 D-${dDays}`}
+            </p>
+            <p className={`text-xs mt-0.5 ${dDayBannerStyle.sub}`}>
+              {nextAppt.nextAppointment}{nextAppt.clinic ? ` · ${nextAppt.clinic}` : ''}
+            </p>
+          </div>
+          <button onClick={() => dismissBanner('dday')} className={`p-1 ${dDayBannerStyle.sub}`}>
+            <FontAwesomeIcon icon={faXmark} />
+          </button>
+        </div>
+      )}
+
+      {careNotEntered && (
+        <div className="flex items-center gap-3 bg-amber-50 rounded-2xl px-4 py-3 mb-3">
+          <FontAwesomeIcon icon={faBell} className="text-base text-amber-400 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-amber-700">오늘 케어를 아직 기록하지 않았습니다</p>
+            <p className="text-xs text-amber-500 mt-0.5">아래에서 오늘의 케어를 체크해주세요</p>
+          </div>
+          <button onClick={() => dismissBanner('care')} className="p-1 text-amber-400">
+            <FontAwesomeIcon icon={faXmark} />
+          </button>
+        </div>
+      )}
+
       {/* ── 오늘의 케어 ── */}
       <section className="bg-white rounded-2xl p-4 mb-3 shadow-sm">
         <div className="flex items-center justify-between mb-3">
@@ -270,7 +326,7 @@ export default function HomePage() {
                 {nextAppt.nextAppointment}
               </span>
               <span className={`text-base font-bold px-3 py-1 rounded-full
-                ${dDays === 0 ? 'bg-rose-50 text-rose-400'
+                ${dDays! <= 3 ? 'bg-rose-50 text-rose-500'
                   : dDays! <= 7 ? 'bg-[#fde68a]/40 text-amber-600'
                   : 'bg-teal-50 text-[#10bcad]'}`}>
                 {dDays === 0 ? 'D-Day' : `D-${dDays}`}
