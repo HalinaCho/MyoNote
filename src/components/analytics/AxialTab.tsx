@@ -123,11 +123,21 @@ function PctView({
   const childOD = withBoth.map(e => ({ x: parseFloat(calcAgeYears(birth, e.date).toFixed(2)), y: parseFloat(e.axOD) }))
   const childOS = withBoth.map(e => ({ x: parseFloat(calcAgeYears(birth, e.date).toFixed(2)), y: parseFloat(e.axOS) }))
 
-  // X축: 오늘 기준 현재 나이 ±3세, 정수 단위, 참조 데이터 범위(6–13) 내 클램프
+  // X축: 오늘 기준 현재 나이 ±3세, 참조 데이터 범위(6–13) 내 클램프
   const today = new Date().toISOString().slice(0, 10)
   const curAge = Math.floor(calcAgeYears(birth, today))
   const xMin = Math.max(6,  curAge - 3)
   const xMax = Math.min(13, curAge + 3)
+
+  // 참조 데이터 범위(6~13세) 밖이면 차트 대신 안내
+  if (xMin >= xMax) {
+    return (
+      <div className="bg-white rounded-2xl p-6 shadow-sm text-center space-y-1">
+        <p className="text-sm text-gray-500">또래 비교 기준 데이터는 만 6~13세까지 제공됩니다.</p>
+        <p className="text-xs text-gray-400">현재 만 {curAge}세</p>
+      </div>
+    )
+  }
 
   return (
     <>
