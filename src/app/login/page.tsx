@@ -1,12 +1,22 @@
-﻿import KakaoLoginButton from '@/components/auth/KakaoLoginButton'
+'use client'
+
+import { Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
+import KakaoLoginButton from '@/components/auth/KakaoLoginButton'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEye, faClipboardList, faChartLine, faUserGroup } from '@fortawesome/free-solid-svg-icons'
 
-export default function LoginPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string }>
-}) {
+function ErrorMessage() {
+  const searchParams = useSearchParams()
+  if (!searchParams.get('error')) return null
+  return (
+    <p className="mt-3 text-center text-sm text-rose-500">
+      로그인에 실패했습니다. 다시 시도해주세요.
+    </p>
+  )
+}
+
+export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-sm">
@@ -38,7 +48,9 @@ export default function LoginPage({
         <KakaoLoginButton />
 
         {/* 에러 메시지 */}
-        <ErrorMessage searchParams={searchParams} />
+        <Suspense>
+          <ErrorMessage />
+        </Suspense>
 
         <p className="mt-6 text-center text-xs text-gray-400">
           로그인 시{' '}
@@ -46,19 +58,5 @@ export default function LoginPage({
         </p>
       </div>
     </div>
-  )
-}
-
-async function ErrorMessage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string }>
-}) {
-  const params = await searchParams
-  if (!params.error) return null
-  return (
-    <p className="mt-3 text-center text-sm text-rose-500">
-      로그인에 실패했습니다. 다시 시도해주세요.
-    </p>
   )
 }

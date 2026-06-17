@@ -163,11 +163,12 @@ export default function SettingsPage() {
       {/* 계정 */}
       <section className="bg-white rounded-2xl overflow-hidden mb-3 shadow-sm">
         <div className="px-4 pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">계정</div>
-        <form action={signOut}>
-          <button type="submit" className="w-full flex items-center gap-3 px-4 py-3 border-t border-gray-50 text-sm text-rose-500 hover:bg-rose-50">
-            <FontAwesomeIcon icon={faRightFromBracket} className="w-4" /> 로그아웃
-          </button>
-        </form>
+        <button
+          onClick={async () => { await signOut(); window.location.href = '/login' }}
+          className="w-full flex items-center gap-3 px-4 py-3 border-t border-gray-50 text-sm text-rose-500 hover:bg-rose-50"
+        >
+          <FontAwesomeIcon icon={faRightFromBracket} className="w-4" /> 로그아웃
+        </button>
       </section>
 
       <p className="text-center text-xs text-gray-300 mt-2 mb-4">마이오노트 v1.0.0</p>

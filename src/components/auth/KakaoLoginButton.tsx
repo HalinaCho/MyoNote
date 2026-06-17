@@ -9,10 +9,11 @@ export default function KakaoLoginButton() {
   const handleLogin = async () => {
     setLoading(true)
     const supabase = createClient()
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin
     await supabase.auth.signInWithOAuth({
       provider: 'kakao',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${siteUrl}/auth/callback`,
       },
     })
   }

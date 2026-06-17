@@ -1,11 +1,26 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Toaster } from 'react-hot-toast'
+import { createClient } from '@/lib/supabase/client'
 import { ChildProvider } from '@/context/ChildContext'
 import Header from './Header'
 import BottomNav from './BottomNav'
 
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
+  const router = useRouter()
+  const [authed, setAuthed] = useState(false)
+
+  useEffect(() => {
+    createClient().auth.getSession().then(({ data: { session } }) => {
+      if (!session) router.replace('/login')
+      else setAuthed(true)
+    })
+  }, [router])
+
+  if (!authed) return null
+
   return (
     <ChildProvider>
       <div className="flex justify-center min-h-screen bg-[#d9efed]">
