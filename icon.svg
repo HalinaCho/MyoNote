@@ -1,0 +1,31 @@
+<svg viewBox="0 0 1024 1024" width="512" height="512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect x="0" y="0" width="1024" height="1024" rx="228" fill="#10bcad"/>
+
+  <!-- Clipboard body -->
+  <rect x="266" y="300" width="492" height="576" rx="72" fill="#ccfbf1"/>
+
+  <!-- Eye: eyeball -->
+  <circle cx="512" cy="606" r="142" fill="#FFFFFF"/>
+
+  <!-- Eye: upper eyelid arc -->
+  <path d="M 370 606 Q 512 428 654 606" fill="none" stroke="#10bcad" stroke-width="32" stroke-linecap="round"/>
+
+  <!-- Eye: lashes -->
+  <g stroke="#10bcad" stroke-width="18" stroke-linecap="round">
+    <line x1="427" y1="549" x2="388" y2="510"/>
+    <line x1="469" y1="525" x2="448" y2="472"/>
+    <line x1="512" y1="517" x2="512" y2="458"/>
+    <line x1="555" y1="525" x2="576" y2="472"/>
+    <line x1="597" y1="549" x2="636" y2="510"/>
+  </g>
+
+  <!-- Eye: iris -->
+  <circle cx="512" cy="606" r="50" fill="none" stroke="#10bcad" stroke-width="30"/>
+
+  <!-- Clasp: hanger bump (behind) -->
+  <rect x="476" y="208" width="72" height="86" rx="32" fill="#ccfbf1" stroke="#10bcad" stroke-width="28"/>
+
+  <!-- Clasp: bar (front, straddles top edge of clipboard) -->
+  <rect x="398" y="250" width="228" height="98" rx="46" fill="#ccfbf1" stroke="#10bcad" stroke-width="28"/>
+</svg>
