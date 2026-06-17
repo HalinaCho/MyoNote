@@ -9,8 +9,9 @@ import { today, formatDate } from '@/lib/utils/date'
 import { calcStreak, calcMonthCompliance, getDayStatus } from '@/lib/utils/compliance'
 import { getAlertDay } from '@/lib/notificationPrefs'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEye, faCheck, faMinus, faFire, faXmark, faTree, faMobileScreen, faCalendarDays, faPen, faBell, faHospital } from '@fortawesome/free-solid-svg-icons'
+import { faCheck, faMinus, faFire, faXmark, faTree, faMobileScreen, faCalendarDays, faPen, faBell, faHospital } from '@fortawesome/free-solid-svg-icons'
 import { faCircle } from '@fortawesome/free-regular-svg-icons'
+import OnboardingFlow from '@/components/onboarding/OnboardingFlow'
 
 const INPUT = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400'
 
@@ -67,22 +68,7 @@ export default function HomePage() {
   }
 
   if (!activeChild) {
-    return (
-      <>
-        <div className="flex flex-col items-center justify-center h-64 gap-4 text-center">
-          <FontAwesomeIcon icon={faEye} className="text-5xl text-teal-200" />
-          <div>
-            <p className="font-semibold text-gray-700">아직 등록된 자녀가 없습니다</p>
-            <p className="text-sm text-gray-400 mt-1">자녀를 추가해 근시 관리를 시작하세요</p>
-          </div>
-          <button onClick={() => setShowAddChild(true)}
-            className="bg-teal-600 text-white font-semibold px-6 py-2.5 rounded-xl text-sm">
-            자녀 추가하기
-          </button>
-        </div>
-        <ChildFormModal open={showAddChild} onClose={() => setShowAddChild(false)} />
-      </>
-    )
+    return <OnboardingFlow />
   }
 
   const fmtTime = (h: number) => {
