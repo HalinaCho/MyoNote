@@ -27,9 +27,9 @@ export default function LoginPage() {
           <img
             src={`${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/icon.svg`}
             alt="마이오노트"
-            width={80}
-            height={80}
-            className="mb-4"
+            width={72}
+            height={72}
+            className="mx-auto mb-2"
           />
           <h1 className="text-2xl font-bold text-gray-900">마이오노트</h1>
           <p className="mt-1 text-sm text-gray-500">내 아이 근시 관리</p>
