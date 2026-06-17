@@ -5,17 +5,22 @@ import { createClient } from '@/lib/supabase/client'
 
 export default function KakaoLoginButton() {
   const [loading, setLoading] = useState(false)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   const handleLogin = async () => {
     setLoading(true)
+    setErrorMsg(null)
     const supabase = createClient()
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin
-    await supabase.auth.signInWithOAuth({
+    const redirectTo = `${siteUrl}/auth/callback`
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'kakao',
-      options: {
-        redirectTo: `${siteUrl}/auth/callback`,
-      },
+      options: { redirectTo },
     })
+    if (error) {
+      setErrorMsg(error.message)
+      setLoading(false)
+    }
   }
 
   return (
@@ -35,5 +40,8 @@ export default function KakaoLoginButton() {
       )}
       {loading ? '로그인 중...' : '카카오로 시작하기'}
     </button>
+    {errorMsg && (
+      <p className="mt-2 text-xs text-rose-500 text-center break-all">{errorMsg}</p>
+    )}
   )
 }
