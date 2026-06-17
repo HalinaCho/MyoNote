@@ -1,5 +1,6 @@
-﻿'use client'
+'use client'
 
+import { useState } from 'react'
 import { useChild } from '@/context/ChildContext'
 import { Line } from 'react-chartjs-2'
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend } from 'chart.js'
@@ -10,6 +11,9 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip,
 
 export default function SerTab() {
   const { exams } = useChild()
+  const [showOD, setShowOD] = useState(true)
+  const [showOS, setShowOS] = useState(true)
+
   const sorted = [...exams].sort((a, b) => a.date.localeCompare(b.date))
 
   if (sorted.length < 2) {
@@ -21,24 +25,62 @@ export default function SerTab() {
   }
 
   const labels = sorted.map(e => e.date.slice(2, 7).replace('-', '.'))
+  const odData = sorted.map(e => { const v = parseFloat(e.serOD); return isNaN(v) ? null : -v })
+  const osData = sorted.map(e => { const v = parseFloat(e.serOS); return isNaN(v) ? null : -v })
+
+  // Y축 고정: 표시 여부와 관계없이 전체 데이터 기준
+  const allVals = [...odData, ...osData].filter((v): v is number => v !== null)
+  const yMin = parseFloat((Math.min(...allVals) - 0.3).toFixed(1))
+  const yMax = parseFloat((Math.max(...allVals) + 0.3).toFixed(1))
+
+  const allDatasets = [
+    { label: '우안(OD)', data: odData, borderColor: '#0D9488', tension: 0.4, pointRadius: 4, fill: false },
+    { label: '좌안(OS)', data: osData, borderColor: '#9CA3AF', tension: 0.4, pointRadius: 4, fill: false },
+  ]
+  const datasets = allDatasets.filter((_, i) => (i === 0 ? showOD : showOS))
+
   return (
     <div className="space-y-3">
       <div className="bg-white rounded-2xl p-4 shadow-sm">
-        <h3 className="font-bold text-gray-800 mb-3">굴절값(SEQ) 변화</h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-bold text-gray-800">굴절값(SEQ) 변화</h3>
+          <div className="flex gap-1.5">
+            <button
+              onClick={() => setShowOD(v => !v)}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-all ${
+                showOD
+                  ? 'bg-teal-50 text-teal-700 border border-teal-200'
+                  : 'bg-gray-100 text-gray-300 border border-transparent'
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full transition-all ${showOD ? 'bg-[#0D9488]' : 'bg-gray-300'}`} />
+              우안
+            </button>
+            <button
+              onClick={() => setShowOS(v => !v)}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-all ${
+                showOS
+                  ? 'bg-gray-100 text-gray-600 border border-gray-300'
+                  : 'bg-gray-50 text-gray-300 border border-transparent'
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full transition-all ${showOS ? 'bg-gray-400' : 'bg-gray-200'}`} />
+              좌안
+            </button>
+          </div>
+        </div>
         <Line
-          data={{
-            labels,
-            datasets: [
-              { label: '우안(OD)', data: sorted.map(e => { const v = parseFloat(e.serOD); return isNaN(v) ? null : -v }), borderColor: '#0D9488', tension: 0.4, pointRadius: 4, fill: false },
-              { label: '좌안(OS)', data: sorted.map(e => { const v = parseFloat(e.serOS); return isNaN(v) ? null : -v }), borderColor: '#9CA3AF', tension: 0.4, pointRadius: 4, fill: false },
-            ],
-          }}
+          data={{ labels, datasets }}
           options={{
             responsive: true,
-            plugins: { legend: { position: 'top', labels: { font: { size: 11 } } } },
+            plugins: { legend: { display: false } },
             scales: {
               x: { grid: { display: false }, ticks: { font: { size: 10 } } },
-              y: { ticks: { callback: v => v === 0 ? '0D' : `-${v}D`, font: { size: 10 } }, grid: { color: '#F3F4F6' } },
+              y: {
+                min: yMin, max: yMax,
+                ticks: { callback: v => v === 0 ? '0D' : `-${v}D`, font: { size: 10 } },
+                grid: { color: '#F3F4F6' },
+              },
             },
           }}
         />

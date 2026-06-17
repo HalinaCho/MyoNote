@@ -1,12 +1,18 @@
-﻿'use client'
+'use client'
 
+import { useState } from 'react'
 import { useChild } from '@/context/ChildContext'
 import { Line } from 'react-chartjs-2'
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler } from 'chart.js'
+import {
+  Chart as ChartJS, CategoryScale, LinearScale,
+  PointElement, LineElement, Tooltip, Legend, Filler,
+} from 'chart.js'
+import { calcAgeYears, calcPercentile, pctLabel, normCurve } from '@/lib/axialPercentile'
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler)
 
 export default function AxialTab() {
-  const { exams } = useChild()
+  const { exams, activeChild } = useChild()
+
   const sorted = [...exams]
     .filter(e => e.axOD || e.axOS)
     .sort((a, b) => a.date.localeCompare(b.date))
@@ -19,45 +25,315 @@ export default function AxialTab() {
     )
   }
 
-  const labels = sorted.map(e => e.date.slice(2, 7).replace('-', '.'))
-  const odData = sorted.map(e => parseFloat(e.axOD) || null)
-  const osData = sorted.map(e => parseFloat(e.axOS) || null)
-
   return (
     <div className="space-y-3">
+      <TrendView exams={sorted} />
+      <PctView exams={sorted} birth={activeChild?.birth} />
+    </div>
+  )
+}
+
+// ── 변화 추이 뷰 ──────────────────────────────────────────────────
+
+function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: string }[] }) {
+  const [showOD, setShowOD] = useState(true)
+  const [showOS, setShowOS] = useState(true)
+
+  const labels = exams.map(e => e.date.slice(2, 7).replace('-', '.'))
+  const odData = exams.map(e => parseFloat(e.axOD) || null)
+  const osData = exams.map(e => parseFloat(e.axOS) || null)
+
+  // Y축 고정: 표시 여부와 관계없이 전체 데이터 기준
+  const allVals = [...odData, ...osData].filter((v): v is number => v !== null)
+  const yMin = parseFloat((Math.min(...allVals) - 0.3).toFixed(1))
+  const yMax = parseFloat((Math.max(...allVals) + 0.3).toFixed(1))
+
+  const allDatasets = [
+    { label: '우안(OD)', data: odData, borderColor: '#0D9488', backgroundColor: 'rgba(13,148,136,.1)', tension: 0.4, fill: true, pointRadius: 4 },
+    { label: '좌안(OS)', data: osData, borderColor: '#9CA3AF', backgroundColor: 'rgba(156,163,175,.08)', tension: 0.4, fill: true, pointRadius: 4 },
+  ]
+  const datasets = allDatasets.filter((_, i) => (i === 0 ? showOD : showOS))
+
+  return (
+    <>
       <div className="bg-white rounded-2xl p-4 shadow-sm">
-        <h3 className="font-bold text-gray-800 mb-3">안축장 변화 추이</h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-bold text-gray-800">안축장 변화 추이</h3>
+          {/* 커스텀 범례 토글 */}
+          <div className="flex gap-1.5">
+            <button
+              onClick={() => setShowOD(v => !v)}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-all ${
+                showOD
+                  ? 'bg-teal-50 text-teal-700 border border-teal-200'
+                  : 'bg-gray-100 text-gray-300 border border-transparent'
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full transition-all ${showOD ? 'bg-[#0D9488]' : 'bg-gray-300'}`} />
+              우안
+            </button>
+            <button
+              onClick={() => setShowOS(v => !v)}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-all ${
+                showOS
+                  ? 'bg-gray-100 text-gray-600 border border-gray-300'
+                  : 'bg-gray-50 text-gray-300 border border-transparent'
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full transition-all ${showOS ? 'bg-gray-400' : 'bg-gray-200'}`} />
+              좌안
+            </button>
+          </div>
+        </div>
         <Line
-          data={{
-            labels,
-            datasets: [
-              { label: '우안(OD)', data: odData, borderColor: '#0D9488', backgroundColor: 'rgba(13,148,136,.1)', tension: 0.4, fill: true, pointRadius: 4 },
-              { label: '좌안(OS)', data: osData, borderColor: '#9CA3AF', backgroundColor: 'rgba(156,163,175,.08)', tension: 0.4, fill: true, pointRadius: 4 },
-            ],
-          }}
+          data={{ labels, datasets }}
           options={{
             responsive: true,
-            plugins: { legend: { position: 'top', labels: { font: { size: 11 } } } },
+            plugins: { legend: { display: false } },
             scales: {
               x: { grid: { display: false }, ticks: { font: { size: 10 } } },
-              y: { ticks: { callback: v => `${v}mm`, font: { size: 10 } }, grid: { color: '#F3F4F6' } },
+              y: {
+                min: yMin, max: yMax,
+                ticks: { callback: v => `${v}mm`, font: { size: 10 } },
+                grid: { color: '#F3F4F6' },
+              },
             },
           }}
         />
       </div>
+      <GrowthRateCard exams={exams} />
+    </>
+  )
+}
 
-      {/* 성장률 분석 */}
-      <GrowthRateCard exams={sorted} />
+// ── 또래 비교 뷰 ──────────────────────────────────────────────────
+
+function PctView({
+  exams, birth,
+}: { exams: { date: string; axOD: string; axOS: string }[]; birth?: string }) {
+  if (!birth) {
+    return (
+      <div className="bg-white rounded-2xl p-6 shadow-sm text-center text-gray-400 text-sm">
+        또래 비교를 사용하려면 설정에서 생년월일을 등록해주세요.
+      </div>
+    )
+  }
+
+  const withBoth = exams.filter(e => e.axOD && e.axOS)
+  const childOD = withBoth.map(e => ({ x: parseFloat(calcAgeYears(birth, e.date).toFixed(2)), y: parseFloat(e.axOD) }))
+  const childOS = withBoth.map(e => ({ x: parseFloat(calcAgeYears(birth, e.date).toFixed(2)), y: parseFloat(e.axOS) }))
+
+  // X축: 오늘 기준 현재 나이 ±3세, 정수 단위, 참조 데이터 범위(6–13) 내 클램프
+  const today = new Date().toISOString().slice(0, 10)
+  const curAge = Math.floor(calcAgeYears(birth, today))
+  const xMin = Math.max(6,  curAge - 3)
+  const xMax = Math.min(13, curAge + 3)
+
+  return (
+    <>
+      <div className="bg-white rounded-2xl p-4 shadow-sm">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-bold text-gray-800">또래 안축장 백분위 비교</h3>
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <span className="flex items-center gap-1">
+              <span className="w-3 h-0.5 rounded bg-[#0D9488] inline-block"/>우안
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-3 h-0.5 rounded bg-gray-400 inline-block"/>좌안
+            </span>
+          </div>
+        </div>
+
+        <Line
+          data={{
+            datasets: [
+              // P25–P75 채움 밴드
+              {
+                label: 'P25', data: normCurve('p25'),
+                borderColor: 'rgba(13,148,136,0.25)', borderWidth: 1,
+                // @ts-ignore
+                borderDash: [4, 4], fill: '+1',
+                backgroundColor: 'rgba(13,148,136,0.08)',
+                pointRadius: 0, tension: 0.4,
+              },
+              {
+                label: 'P75', data: normCurve('p75'),
+                borderColor: 'rgba(13,148,136,0.25)', borderWidth: 1,
+                // @ts-ignore
+                borderDash: [4, 4], fill: false,
+                pointRadius: 0, tension: 0.4,
+              },
+              // P50 중앙값
+              {
+                label: 'P50', data: normCurve('p50'),
+                borderColor: 'rgba(13,148,136,0.55)', borderWidth: 1.5,
+                // @ts-ignore
+                borderDash: [6, 3], fill: false,
+                pointRadius: 0, tension: 0.4,
+              },
+              // P90
+              {
+                label: 'P90', data: normCurve('p90'),
+                borderColor: 'rgba(251,113,133,0.6)', borderWidth: 1.5,
+                // @ts-ignore
+                borderDash: [4, 3], fill: false,
+                pointRadius: 0, tension: 0.4,
+              },
+              // P10
+              {
+                label: 'P10', data: normCurve('p10'),
+                borderColor: 'rgba(156,163,175,0.45)', borderWidth: 1,
+                // @ts-ignore
+                borderDash: [3, 3], fill: false,
+                pointRadius: 0, tension: 0.4,
+              },
+              // 아이 실측값
+              {
+                label: '우안(OD)', data: childOD,
+                borderColor: '#0D9488', backgroundColor: '#0D9488',
+                borderWidth: 2.5, pointRadius: 3, pointHoverRadius: 5,
+                fill: false, tension: 0.3,
+              },
+              {
+                label: '좌안(OS)', data: childOS,
+                borderColor: '#9CA3AF', backgroundColor: '#9CA3AF',
+                borderWidth: 2.5, pointRadius: 3, pointHoverRadius: 5,
+                fill: false, tension: 0.3,
+              },
+            ],
+          }}
+          options={{
+            responsive: true,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: ctx => {
+                    const n = ctx.dataset.label ?? ''
+                    const y = (ctx.parsed.y ?? 0).toFixed(2)
+                    if (['P10','P25','P50','P75','P90'].includes(n)) return `${n}: ${y}mm`
+                    return `${n}: ${y}mm (${(ctx.parsed.x ?? 0).toFixed(1)}세)`
+                  },
+                },
+              },
+            },
+            scales: {
+              x: {
+                type: 'linear' as const,
+                min: xMin, max: xMax,
+                title: { display: true, text: '나이 (세)', font: { size: 11 } },
+                ticks: { stepSize: 1, callback: v => `${v}세`, font: { size: 11 } },
+                grid: { color: '#F3F4F6' },
+              },
+              y: {
+                min: 21.5, max: 26.5,
+                title: { display: true, text: '안축장 (mm)', font: { size: 11 } },
+                ticks: { callback: v => (v as number).toFixed(1), font: { size: 11 } },
+                grid: { color: '#F3F4F6' },
+              },
+            },
+          }}
+        />
+
+        {/* 차트 범례 */}
+        <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-gray-400">
+          <span className="flex items-center gap-1">
+            <span className="w-5 h-2 rounded" style={{ backgroundColor: 'rgba(13,148,136,0.15)', border: '1px dashed rgba(13,148,136,0.4)' }}/>
+            정상범위 (P25–P75)
+          </span>
+          <span className="flex items-center gap-1">
+            <svg width="18" height="4"><line x1="0" y1="2" x2="18" y2="2" stroke="rgba(13,148,136,0.6)" strokeWidth="1.5" strokeDasharray="6,3"/></svg>
+            P50 중앙값
+          </span>
+          <span className="flex items-center gap-1">
+            <svg width="18" height="4"><line x1="0" y1="2" x2="18" y2="2" stroke="rgba(251,113,133,0.7)" strokeWidth="1.5" strokeDasharray="4,3"/></svg>
+            P90
+          </span>
+        </div>
+      </div>
+
+      <PctSummaryCard exams={withBoth} birth={birth} />
+
+      <p className="text-[10px] text-gray-400 px-1">
+        * 한국 아동 근시 연구 기반 참고 기준값입니다. 정확한 평가는 전문의와 상담하세요.
+      </p>
+    </>
+  )
+}
+
+// ── 백분위 바 ────────────────────────────────────────────────────
+
+function PctBar({ pct }: { pct: number }) {
+  return (
+    <div className="mt-2.5">
+      <div className="relative h-1 bg-white rounded-full overflow-visible">
+        <div className="h-full bg-[#10bcad] rounded-full opacity-40" style={{ width: `${pct}%` }} />
+        <div
+          className="absolute top-1/2 w-2.5 h-2.5 bg-[#10bcad] rounded-full border-2 border-white shadow-sm"
+          style={{ left: `${Math.min(pct, 97)}%`, transform: 'translate(-50%, -50%)' }}
+        />
+      </div>
+      <div className="flex justify-between text-[9px] text-gray-300 mt-1.5">
+        <span>P0</span><span>P50</span><span>P100</span>
+      </div>
     </div>
   )
 }
+
+// ── 또래 비교 요약 카드 ───────────────────────────────────────────
+
+function PctSummaryCard({
+  exams, birth,
+}: { exams: { date: string; axOD: string; axOS: string }[]; birth: string }) {
+  const latest = [...exams].sort((a, b) => b.date.localeCompare(a.date))[0]
+  if (!latest) return null
+
+  const ageYears = calcAgeYears(birth, latest.date)
+  const ageInt   = Math.floor(ageYears)
+  const odMm = parseFloat(latest.axOD)
+  const osMm = parseFloat(latest.axOS)
+  if (isNaN(odMm) || isNaN(osMm)) return null
+
+  const pOD = calcPercentile(odMm, ageYears)
+  const pOS = calcPercentile(osMm, ageYears)
+  const lOD = pctLabel(pOD)
+  const lOS = pctLabel(pOS)
+
+  return (
+    <div className="bg-white rounded-2xl p-4 shadow-sm">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-sm font-bold text-gray-700">또래 안축장 비교</span>
+        <span className="text-xs text-gray-400">만 {ageInt}세 기준</span>
+      </div>
+
+      <div className="flex gap-3">
+        {[
+          { label: '우안 (OD)', mm: odMm, pct: pOD, l: lOD },
+          { label: '좌안 (OS)', mm: osMm, pct: pOS, l: lOS },
+        ].map(({ label, mm, pct, l }) => (
+          <div key={label} className="flex-1 bg-[#edf7f6] rounded-xl p-3">
+            <div className="text-xs text-gray-500 mb-2">{label}</div>
+            <div className="text-xl font-black text-gray-800 leading-none">
+              {mm.toFixed(2)}<span className="text-xs font-normal text-gray-400 ml-0.5">mm</span>
+            </div>
+            <div className="text-2xl font-black text-[#10bcad] mt-1 leading-none">P{pct}</div>
+            <div className="text-xs font-semibold text-[#10bcad] mt-0.5">{l.text}</div>
+            <PctBar pct={pct} />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── 성장률 카드 ───────────────────────────────────────────────────
 
 function linearSlope(xs: number[], ys: (number | null)[]): number {
   const pairs = xs
     .map((x, i) => [x, ys[i]] as [number, number | null])
     .filter((p): p is [number, number] => p[1] != null)
   if (pairs.length < 2) return 0
-  const n = pairs.length
+  const n   = pairs.length
   const sx  = pairs.reduce((s, [x])    => s + x,     0)
   const sy  = pairs.reduce((s, [, y])  => s + y,     0)
   const sxy = pairs.reduce((s, [x, y]) => s + x * y, 0)
@@ -69,8 +345,8 @@ function linearSlope(xs: number[], ys: (number | null)[]): number {
 function GrowthRateCard({ exams }: { exams: { date: string; axOD: string; axOS: string }[] }) {
   if (exams.length < 2) return null
 
-  const first = new Date(exams[0].date).getTime()
-  const xs    = exams.map(e => (new Date(e.date).getTime() - first) / (1000 * 60 * 60 * 24 * 30.4))
+  const first  = new Date(exams[0].date).getTime()
+  const xs     = exams.map(e => (new Date(e.date).getTime() - first) / (1000 * 60 * 60 * 24 * 30.4))
   const odData = exams.map(e => parseFloat(e.axOD) || null)
   const osData = exams.map(e => parseFloat(e.axOS) || null)
   const growthOD = linearSlope(xs, odData)
