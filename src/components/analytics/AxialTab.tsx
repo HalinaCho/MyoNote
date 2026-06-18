@@ -208,7 +208,6 @@ function PctView({
             </span>
           </div>
         </div>
-        <p className="text-xs text-gray-400 mt-1">백분위(P)는 같은 나이 또래 100명 중 순위예요. 높을수록 안축장이 긴 편입니다.</p>
         </div>
 
         <Line
@@ -303,7 +302,7 @@ function PctView({
         />
 
         {/* 차트 범례 */}
-        <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-gray-400">
+        <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 mt-2 text-xs text-gray-400">
           <span className="flex items-center gap-1">
             <span className="w-5 h-2 rounded" style={{ backgroundColor: 'rgba(13,148,136,0.15)', border: '1px dashed rgba(13,148,136,0.4)' }}/>
             정상범위 (P25–P75)
@@ -317,6 +316,7 @@ function PctView({
             P90
           </span>
         </div>
+        <p className="text-xs text-gray-400 mt-2 text-center">백분위(P)는 같은 나이 또래 100명 중 순위예요. 높을수록 안축장이 긴 편입니다.</p>
 
         <PctSummaryInline exams={withBoth} birth={birth} />
       </div>
