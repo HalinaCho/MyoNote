@@ -67,7 +67,7 @@ export default function ComplianceTab({ year, half, bare }: Props) {
         }}
         options={{
           responsive: true,
-          plugins: { legend: { display: false } },
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `${ctx.parsed.y}%` } } },
           scales: {
             x: { grid: { display: false }, ticks: { font: { size: 11 } } },
             y: { min: 0, max: 100, ticks: { callback: v => `${v}%`, font: { size: 11 } }, grid: { color: '#F3F4F6' } },
