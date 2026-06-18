@@ -127,8 +127,6 @@ export default function CalendarPage() {
               : status === 'missed'  ? 'bg-rose-100 text-rose-600'
               : 'bg-gray-50 text-gray-300'
 
-            const lifeIconCls = life ? 'text-gray-500' : 'text-gray-200'
-
             return (
               <button
                 key={ds}
@@ -137,10 +135,9 @@ export default function CalendarPage() {
                 className={`aspect-square flex flex-col items-center justify-between py-1.5 rounded-lg transition-colors
                   ${bg} ${isToday ? 'ring-2 ring-teal-400' : ''} ${clickable ? 'hover:opacity-80 active:scale-95' : ''}`}
               >
-                <span className="text-sm font-semibold leading-none">{d}</span>
-                <div className="flex gap-1">
-                  <FontAwesomeIcon icon={faTree}         className={`text-[8px] ${lifeIconCls}`} />
-                  <FontAwesomeIcon icon={faMobileScreen} className={`text-[8px] ${lifeIconCls}`} />
+                <span className="text-sm sm:text-base font-semibold leading-none">{d}</span>
+                <div className="h-1.5 flex items-center justify-center">
+                  {life && <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />}
                 </div>
               </button>
             )
