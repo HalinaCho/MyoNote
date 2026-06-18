@@ -97,7 +97,7 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
         </div>
         <div className="flex" style={{ aspectRatio: '2/1' }}>
           {/* Y축 고정 차트 */}
-          <div style={{ width: 52, flexShrink: 0, position: 'relative' }}>
+          <div style={{ width: 44, flexShrink: 0, position: 'relative' }}>
             <span className="absolute top-0 right-1 text-[9px] text-gray-400 leading-none" style={{ zIndex: 1 }}>mm</span>
             <Line
               data={{ labels, datasets: [{ data: labels.map(() => null), borderColor: 'transparent', pointRadius: 0 }] }}
@@ -110,8 +110,8 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
                   y: {
                     min: yMin, max: yMax,
                     // @ts-ignore
-                    afterFit: (s: any) => { s.width = 52 },
-                    ticks: { callback: v => `${(v as number).toFixed(1)}`, font: { size: 10 } },
+                    afterFit: (s: any) => { s.width = 44 },
+                    ticks: { stepSize: 0.5, callback: (v, i, ticks) => i === ticks.length - 1 ? null : `${(v as number).toFixed(1)}`, font: { size: 10 } },
                     grid: { color: '#F3F4F6' },
                   },
                 },
@@ -277,7 +277,9 @@ function PctView({
               },
               y: {
                 min: 21.5, max: 27.0,
-                ticks: { callback: v => (v as number).toFixed(1), font: { size: 11 } },
+                // @ts-ignore
+                afterFit: (s: any) => { s.width = 44 },
+                ticks: { stepSize: 0.5, callback: (v, i, ticks) => i === ticks.length - 1 ? null : (v as number).toFixed(1), font: { size: 10 } },
                 grid: { color: '#F3F4F6' },
               },
             },
