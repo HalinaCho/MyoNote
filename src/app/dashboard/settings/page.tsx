@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 import { getAlertDay, setAlertDay } from '@/lib/notificationPrefs'
 import { useChild } from '@/context/ChildContext'
 import ChildFormModal from '@/components/child/ChildFormModal'
+import ConfirmModal from '@/components/ui/ConfirmModal'
 import { signOut } from '@/lib/supabase/auth'
 import { calcAgeLabel } from '@/lib/utils/date'
 import type { Child } from '@/types'
@@ -26,6 +27,12 @@ export default function SettingsPage() {
   const [guardians, setGuardians] = useState<Guardian[]>([])
   const [loadingGuardians, setLoadingGuardians] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [confirmDialog, setConfirmDialog] = useState<{
+    title: string
+    message: string
+    confirmLabel?: string
+    onConfirm: () => Promise<void> | void
+  } | null>(null)
 
   useEffect(() => { setAlertDayState(getAlertDay()) }, [])
 
@@ -48,14 +55,20 @@ export default function SettingsPage() {
     setAlertDay(next)
   }
 
-  const handleDeleteChild = async (child: Child) => {
-    if (!confirm(`${child.name}을(를) 삭제하시겠습니까?\n모든 기록이 함께 삭제됩니다.`)) return
-    try {
-      await deleteChild(child.id)
-      toast.success(`${child.name} 삭제 완료`)
-    } catch {
-      toast.error('삭제에 실패했습니다')
-    }
+  const handleDeleteChild = (child: Child) => {
+    setConfirmDialog({
+      title: `${child.name} 삭제`,
+      message: '모든 검사기록과 생활습관 기록이 함께 삭제됩니다.\n이 작업은 되돌릴 수 없습니다.',
+      confirmLabel: '삭제',
+      onConfirm: async () => {
+        try {
+          await deleteChild(child.id)
+          toast.success(`${child.name} 삭제 완료`)
+        } catch {
+          toast.error('삭제에 실패했습니다')
+        }
+      },
+    })
   }
 
   const handleGenerateInvite = async () => {
@@ -83,19 +96,26 @@ export default function SettingsPage() {
     }
   }
 
-  const handleRemoveGuardian = async (userId: string) => {
+  const handleRemoveGuardian = (userId: string) => {
     if (!activeChildId) return
     const isSelf = userId === currentUserId
-    const msg = isSelf ? '보호자 자격을 포기하시겠습니까?' : '이 보호자를 제거하시겠습니까?'
-    if (!confirm(msg)) return
-    try {
-      await q.removeGuardian(activeChildId, userId)
-      setGuardians(prev => prev.filter(g => g.userId !== userId))
-      toast.success(isSelf ? '보호자에서 나갔습니다' : '보호자를 제거했습니다')
-      if (isSelf) await refreshChildren()
-    } catch {
-      toast.error('처리에 실패했습니다')
-    }
+    setConfirmDialog({
+      title: isSelf ? '보호자 나가기' : '보호자 제거',
+      message: isSelf
+        ? '이 자녀의 보호자 자격을 포기합니다.\n다시 참여하려면 초대 코드가 필요합니다.'
+        : '이 보호자의 접근 권한을 제거합니다.',
+      confirmLabel: isSelf ? '나가기' : '제거',
+      onConfirm: async () => {
+        try {
+          await q.removeGuardian(activeChildId, userId)
+          setGuardians(prev => prev.filter(g => g.userId !== userId))
+          toast.success(isSelf ? '보호자에서 나갔습니다' : '보호자를 제거했습니다')
+          if (isSelf) await refreshChildren()
+        } catch {
+          toast.error('처리에 실패했습니다')
+        }
+      },
+    })
   }
 
   return (
@@ -260,6 +280,16 @@ export default function SettingsPage() {
         open={childModal.open}
         onClose={() => setChildModal({ open: false, editing: null })}
         editing={childModal.editing}
+      />
+
+      {/* 삭제/제거 확인 모달 */}
+      <ConfirmModal
+        open={!!confirmDialog}
+        title={confirmDialog?.title ?? ''}
+        message={confirmDialog?.message}
+        confirmLabel={confirmDialog?.confirmLabel}
+        onConfirm={async () => { await confirmDialog?.onConfirm(); setConfirmDialog(null) }}
+        onCancel={() => setConfirmDialog(null)}
       />
 
       {/* 보호자 초대 모달 */}
