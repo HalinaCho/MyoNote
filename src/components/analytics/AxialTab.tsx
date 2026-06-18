@@ -97,7 +97,8 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
         </div>
         <div className="flex" style={{ aspectRatio: '2/1' }}>
           {/* Y축 고정 차트 */}
-          <div style={{ width: 52, flexShrink: 0 }}>
+          <div style={{ width: 52, flexShrink: 0, position: 'relative' }}>
+            <span className="absolute top-0 right-1 text-[9px] text-gray-400 leading-none" style={{ zIndex: 1 }}>mm</span>
             <Line
               data={{ labels, datasets: [{ data: labels.map(() => null), borderColor: 'transparent', pointRadius: 0 }] }}
               options={{
@@ -110,7 +111,7 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
                     min: yMin, max: yMax,
                     // @ts-ignore
                     afterFit: (s: any) => { s.width = 52 },
-                    ticks: { callback: v => `${(v as number).toFixed(1)}mm`, font: { size: 10 } },
+                    ticks: { callback: v => `${(v as number).toFixed(1)}`, font: { size: 10 } },
                     grid: { color: '#F3F4F6' },
                   },
                 },
@@ -192,6 +193,8 @@ function PctView({
         </div>
         </div>
 
+        <div className="relative">
+        <span className="absolute top-0 left-[2px] text-[9px] text-gray-400 leading-none" style={{ zIndex: 1 }}>mm</span>
         <Line
           data={{
             datasets: [
@@ -269,19 +272,18 @@ function PctView({
               x: {
                 type: 'linear' as const,
                 min: xMin, max: xMax,
-                title: { display: true, text: '나이 (세)', font: { size: 11 } },
                 ticks: { stepSize: 1, callback: v => `${v}세`, font: { size: 11 } },
                 grid: { color: '#F3F4F6' },
               },
               y: {
                 min: 21.5, max: 27.0,
-                title: { display: true, text: '안축장 (mm)', font: { size: 11 } },
                 ticks: { callback: v => (v as number).toFixed(1), font: { size: 11 } },
                 grid: { color: '#F3F4F6' },
               },
             },
           }}
         />
+        </div>
 
         {/* 차트 범례 */}
         <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 mt-2 text-xs text-gray-400">
