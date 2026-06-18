@@ -50,7 +50,7 @@ export default function SerTab() {
 
   const allDatasets = [
     { label: '우안(OD)', data: odData, borderColor: '#0D9488', backgroundColor: 'rgba(13,148,136,0.08)', pointBackgroundColor: '#0D9488', tension: 0.4, pointRadius: 4, fill: true },
-    { label: '좌안(OS)', data: osData, borderColor: '#9CA3AF', pointBackgroundColor: '#9CA3AF', tension: 0.4, pointRadius: 4, fill: false },
+    { label: '좌안(OS)', data: osData, borderColor: '#9CA3AF', backgroundColor: 'rgba(156,163,175,.08)', pointBackgroundColor: '#9CA3AF', tension: 0.4, pointRadius: 4, fill: true },
   ]
   const datasets = allDatasets.filter((_, i) => (i === 0 ? showOD : showOS))
 
