@@ -23,8 +23,11 @@ export default function SerTab() {
   const sorted = [...exams].sort((a, b) => a.date.localeCompare(b.date))
 
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollLeft = scrollRef.current.scrollWidth
-  }, [])
+    const id = requestAnimationFrame(() => {
+      if (scrollRef.current) scrollRef.current.scrollLeft = scrollRef.current.scrollWidth
+    })
+    return () => cancelAnimationFrame(id)
+  }, [exams.length])
 
   const scroll = (dir: 'left' | 'right') => {
     scrollRef.current?.scrollBy({ left: dir === 'left' ? -(PER_POINT * 3) : (PER_POINT * 3), behavior: 'smooth' })

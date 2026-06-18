@@ -45,8 +45,11 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
   const isScrollable = exams.length > SCROLL_THRESHOLD
 
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollLeft = scrollRef.current.scrollWidth
-  }, [])
+    const id = requestAnimationFrame(() => {
+      if (scrollRef.current) scrollRef.current.scrollLeft = scrollRef.current.scrollWidth
+    })
+    return () => cancelAnimationFrame(id)
+  }, [exams.length])
 
   const scroll = (dir: 'left' | 'right') => {
     scrollRef.current?.scrollBy({ left: dir === 'left' ? -(PER_POINT * 3) : (PER_POINT * 3), behavior: 'smooth' })
