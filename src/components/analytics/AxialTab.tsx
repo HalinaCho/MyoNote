@@ -98,7 +98,7 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
             </button>
           </div>
         </div>
-        <div className="flex" style={{ height: 210 }}>
+        <div className="flex" style={{ height: 160 }}>
           {/* Y축 고정 차트 */}
           <div style={{ width: 52, flexShrink: 0 }}>
             <Line
@@ -208,6 +208,7 @@ function PctView({
         <p className="text-xs text-gray-400 mt-1">백분위(P)는 같은 나이 또래 100명 중 순위예요. 높을수록 안축장이 긴 편입니다.</p>
         </div>
 
+        <div style={{ height: 220 }}>
         <Line
           data={{
             datasets: [
@@ -267,7 +268,7 @@ function PctView({
             ],
           }}
           options={{
-            responsive: true,
+            responsive: true, maintainAspectRatio: false,
             plugins: {
               legend: { display: false },
               tooltip: {
@@ -298,6 +299,7 @@ function PctView({
             },
           }}
         />
+        </div>
 
         {/* 차트 범례 */}
         <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-gray-400">
