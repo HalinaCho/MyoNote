@@ -38,7 +38,13 @@ function GoalStepper({ icon, iconCls, label, dir, value, onChange }: {
 
 export default function ChildFormModal({ open, onClose, editing }: Props) {
   const { addChild, updateChild } = useChild()
-  const [form, setForm] = useState(EMPTY)
+  const [form, setForm] = useState(
+    editing
+      ? { name: editing.name, birth: editing.birth, gender: editing.gender,
+          treatAtropine: editing.treatAtropine, treatDreamlens: editing.treatDreamlens,
+          outdoorGoal: editing.outdoorGoal ?? 2, phoneGoal: editing.phoneGoal ?? 2 }
+      : EMPTY
+  )
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
