@@ -10,7 +10,7 @@ import { today } from '@/lib/utils/date'
 import { getDayStatus } from '@/lib/utils/compliance'
 import TimeSpinner from '@/components/lifestyle/TimeSpinner'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheck, faMinus, faXmark, faTree, faMobileScreen } from '@fortawesome/free-solid-svg-icons'
+import { faXmark, faTree, faMobileScreen } from '@fortawesome/free-solid-svg-icons'
 
 function fmtTime(h: number) {
   const hrs = Math.floor(h)
@@ -138,12 +138,6 @@ export default function CalendarPage() {
                   ${bg} ${isToday ? 'ring-2 ring-teal-400' : ''} ${clickable ? 'hover:opacity-80 active:scale-95' : ''}`}
               >
                 <span className="text-[11px] font-semibold leading-none">{d}</span>
-                <span className="text-[9px] leading-none">
-                  {status === 'done'    ? <FontAwesomeIcon icon={faCheck} />
-                  : status === 'partial' ? <FontAwesomeIcon icon={faMinus} />
-                  : status === 'missed'  ? <FontAwesomeIcon icon={faXmark} />
-                  : null}
-                </span>
                 <div className="flex gap-1">
                   <FontAwesomeIcon icon={faTree}         className={`text-[8px] ${lifeIconCls}`} />
                   <FontAwesomeIcon icon={faMobileScreen} className={`text-[8px] ${lifeIconCls}`} />
@@ -155,7 +149,7 @@ export default function CalendarPage() {
 
         {/* 범례 */}
         <div className="flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 mt-3 text-xs text-gray-500">
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-teal-100"/>완료</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-teal-100"/>케어완료</span>
           {activeTreatments.length >= 2 && (
             <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-amber-100"/>부분</span>
           )}
