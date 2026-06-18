@@ -1,46 +1,24 @@
 'use client'
 
-import { useState } from 'react'
 import { useChild } from '@/context/ChildContext'
 import TabSkeleton from '@/components/ui/TabSkeleton'
 import EmptyState from '@/components/ui/EmptyState'
 import { Bar } from 'react-chartjs-2'
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Tooltip, Legend } from 'chart.js'
 import { calcMonthCompliance } from '@/lib/utils/compliance'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 
 type Half = '상' | '하'
 
-export default function ComplianceTab() {
+interface Props { year: number; half: Half }
+
+export default function ComplianceTab({ year, half }: Props) {
   const { logs, activeTreatments, isLoading } = useChild()
 
   const today = new Date()
   const curYear = today.getFullYear()
   const curHalf: Half = today.getMonth() < 6 ? '상' : '하'
-
-  const [year, setYear] = useState(curYear)
-  const [half, setHalf] = useState<Half>(curHalf)
-
-  const isFuture = (y: number, h: Half) => {
-    if (y > curYear) return true
-    if (y === curYear && h === '하' && curHalf === '상') return true
-    return false
-  }
-
-  const handlePrev = () => {
-    if (half === '상') { setYear(y => y - 1); setHalf('하') }
-    else setHalf('상')
-  }
-
-  const handleNext = () => {
-    if (half === '하') { setYear(y => y + 1); setHalf('상') }
-    else setHalf('하')
-  }
-
-  const isNextFuture = isFuture(half === '하' ? year + 1 : year, half === '하' ? '상' : '하')
 
   const months = Array.from({ length: 6 }, (_, i) => {
     const monthIndex = half === '상' ? i : i + 6
@@ -82,28 +60,7 @@ export default function ComplianceTab() {
 
   return (
     <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
-      {/* 헤더: 제목 + 네비게이션 */}
-      <div className="flex items-center justify-between">
-        <h3 className="font-bold text-gray-800">케어 달성률</h3>
-        <div className="flex items-center gap-0.5">
-          <button
-            onClick={handlePrev}
-            className="w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 active:bg-gray-200 transition-colors"
-          >
-            <FontAwesomeIcon icon={faChevronLeft} className="text-xs" />
-          </button>
-          <span className="text-sm font-semibold text-gray-600 w-[90px] text-center">
-            {year}년 {half}반기
-          </span>
-          <button
-            onClick={handleNext}
-            disabled={isNextFuture}
-            className="w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 active:bg-gray-200 transition-colors disabled:opacity-30 disabled:pointer-events-none"
-          >
-            <FontAwesomeIcon icon={faChevronRight} className="text-xs" />
-          </button>
-        </div>
-      </div>
+      <h3 className="font-bold text-gray-800">케어 달성률</h3>
 
       {/* 차트 */}
       <Bar

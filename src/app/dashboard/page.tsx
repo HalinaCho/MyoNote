@@ -14,6 +14,7 @@ import { faCheck, faMinus, faFire, faXmark, faTree, faMobileScreen, faCalendarDa
 import { faCircle } from '@fortawesome/free-regular-svg-icons'
 import OnboardingFlow from '@/components/onboarding/OnboardingFlow'
 import TabSkeleton from '@/components/ui/TabSkeleton'
+import LifestyleTab from '@/components/analytics/LifestyleTab'
 
 const INPUT = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400'
 
@@ -276,6 +277,11 @@ export default function HomePage() {
             </span>
           </p>
         )}
+      </section>
+
+      {/* ── 최근 7일 생활습관 ── */}
+      <section className="mb-3">
+        <LifestyleTab />
       </section>
 
       {/* ── 다음 예약일 ── */}

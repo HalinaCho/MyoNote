@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 import { useChild } from '@/context/ChildContext'
 import TabSkeleton from '@/components/ui/TabSkeleton'
 import ComplianceTab from '@/components/analytics/ComplianceTab'
-import LifestyleTab from '@/components/analytics/LifestyleTab'
+import LifestyleMonthlyTab, { type Half } from '@/components/analytics/LifestyleMonthlyTab'
 import { today } from '@/lib/utils/date'
 import { getDayStatus } from '@/lib/utils/compliance'
 import TimeSpinner from '@/components/lifestyle/TimeSpinner'
@@ -23,6 +23,24 @@ export default function CalendarPage() {
   const [calYear, setCalYear]   = useState(new Date().getFullYear())
   const [calMonth, setCalMonth] = useState(new Date().getMonth())
   const [statsTab, setStatsTab] = useState<'care' | 'lifestyle'>('care')
+
+  const today_ = new Date()
+  const curYear = today_.getFullYear()
+  const curHalf: Half = today_.getMonth() < 6 ? '상' : '하'
+  const [statsYear, setStatsYear] = useState(curYear)
+  const [statsHalf, setStatsHalf] = useState<Half>(curHalf)
+  const handleStatsPrev = () => {
+    if (statsHalf === '상') { setStatsYear(y => y - 1); setStatsHalf('하') }
+    else setStatsHalf('상')
+  }
+  const handleStatsNext = () => {
+    if (statsHalf === '하') { setStatsYear(y => y + 1); setStatsHalf('상') }
+    else setStatsHalf('하')
+  }
+  const nextStatsYear = statsHalf === '하' ? statsYear + 1 : statsYear
+  const nextStatsHalf: Half = statsHalf === '하' ? '상' : '하'
+  const isStatsNextFuture = nextStatsYear > curYear
+    || (nextStatsYear === curYear && nextStatsHalf === '하' && curHalf === '상')
   const [dayModal, setDayModal] = useState<string | null>(null)
   const [lifeForm, setLifeForm] = useState({ outdoorH: 0, outdoorM: 0, phoneH: 0, phoneM: 0 })
   const [lifeSaving, setLifeSaving] = useState(false)
@@ -229,7 +247,8 @@ export default function CalendarPage() {
 
       {/* 통계 탭 */}
       <div className="mt-3">
-        <div className="flex bg-white rounded-xl mb-3 p-1 shadow-sm">
+        {/* 탭 토글 */}
+        <div className="flex bg-white rounded-xl p-1 shadow-sm mb-2">
           {([['care', '케어'], ['lifestyle', '생활습관']] as const).map(([t, label]) => (
             <button key={t} onClick={() => setStatsTab(t)}
               className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors
@@ -238,8 +257,24 @@ export default function CalendarPage() {
             </button>
           ))}
         </div>
-        {statsTab === 'care'      && <ComplianceTab />}
-        {statsTab === 'lifestyle' && <LifestyleTab />}
+
+        {/* 기간 네비게이션 */}
+        <div className="flex items-center justify-center gap-1 mb-3">
+          <button onClick={handleStatsPrev}
+            className="w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:bg-white active:bg-gray-100 transition-colors">
+            ‹
+          </button>
+          <span className="text-sm font-semibold text-gray-600 w-[100px] text-center">
+            {statsYear}년 {statsHalf}반기
+          </span>
+          <button onClick={handleStatsNext} disabled={isStatsNextFuture}
+            className="w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:bg-white active:bg-gray-100 transition-colors disabled:opacity-30 disabled:pointer-events-none">
+            ›
+          </button>
+        </div>
+
+        {statsTab === 'care'      && <ComplianceTab year={statsYear} half={statsHalf} />}
+        {statsTab === 'lifestyle' && <LifestyleMonthlyTab year={statsYear} half={statsHalf} />}
       </div>
     </>
   )
