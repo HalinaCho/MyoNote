@@ -68,9 +68,17 @@ function BarRow({ icon, iconCls, label, values, monthLabels, goal, isOverBad }: 
       </div>
 
       <div className="relative flex gap-1.5" style={{ height: BAR_H }}>
+        {/* 좋음 구역 배경 */}
+        <div
+          className="absolute left-0 right-0 bg-teal-50/60 pointer-events-none"
+          style={isOverBad
+            ? { bottom: 0, height: goalH }
+            : { bottom: goalH, height: BAR_H - goalH }
+          }
+        />
         {/* 목표 가이드라인 */}
         <div
-          className="absolute left-0 right-0 border-t border-dashed border-gray-400/70 pointer-events-none z-10"
+          className="absolute left-0 right-0 border-t border-dashed border-gray-400/70 pointer-events-none"
           style={{ bottom: goalH }}
         />
 
