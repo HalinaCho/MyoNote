@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useChild } from '@/context/ChildContext'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTree, faMobileScreen } from '@fortawesome/free-solid-svg-icons'
@@ -26,6 +27,14 @@ function parseDateLocal(dateStr: string): Date {
   return new Date(y, mo - 1, d)
 }
 
+function fmtH(h: number) {
+  const hrs = Math.floor(h)
+  const mins = Math.round((h - hrs) * 60)
+  if (hrs === 0) return `${mins}분`
+  if (mins === 0) return `${hrs}시간`
+  return `${hrs}시간 ${mins}분`
+}
+
 interface BarRowProps {
   icon: IconDefinition
   iconCls: string
@@ -37,10 +46,12 @@ interface BarRowProps {
 }
 
 function BarRow({ icon, iconCls, label, values, dayLabels, goal, isOverBad }: BarRowProps) {
+  const [activeIdx, setActiveIdx] = useState<number | null>(null)
   const valid = values.filter((v): v is number => v !== null)
   const avg = valid.length ? valid.reduce((a, b) => a + b, 0) / valid.length : null
   const meetsGoal = avg != null && (isOverBad ? avg <= goal : avg >= goal)
   const maxVal = Math.max(goal * 1.5, ...valid, 0.5)
+  const goalH = (goal / maxVal) * BAR_H
 
   return (
     <div>
@@ -61,22 +72,36 @@ function BarRow({ icon, iconCls, label, values, dayLabels, goal, isOverBad }: Ba
         )}
       </div>
 
-      <div className="flex items-end gap-1.5" style={{ height: BAR_H }}>
+      <div className="relative flex gap-1.5" style={{ height: BAR_H }}>
+        {/* 목표 가이드라인 */}
+        <div
+          className="absolute left-0 right-0 border-t border-dashed border-gray-400/70 pointer-events-none z-10"
+          style={{ bottom: goalH }}
+        />
+
         {values.map((v, i) => {
           const h = v != null ? Math.max(Math.round((v / maxVal) * BAR_H), 4) : 4
           const isBad = v != null && (isOverBad ? v > goal : v < goal)
+          const isActive = activeIdx === i
           return (
-            <div
-              key={i}
-              className={`flex-1 rounded-t-sm ${
-                v == null
-                  ? 'bg-gray-100'
-                  : isBad
-                    ? (isOverBad ? 'bg-rose-300' : 'bg-amber-300')
-                    : 'bg-[#10bcad]'
-              }`}
-              style={{ height: h, alignSelf: 'flex-end' }}
-            />
+            <div key={i} className="relative flex-1 flex items-end">
+              {isActive && v != null && (
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-0.5 bg-gray-800/90 text-white text-[10px] rounded px-1.5 py-0.5 whitespace-nowrap z-20">
+                  {fmtH(v)}
+                </div>
+              )}
+              <div
+                onClick={() => v != null && setActiveIdx(isActive ? null : i)}
+                className={`w-full rounded-t-sm transition-opacity ${v != null ? 'cursor-pointer' : ''} ${isActive ? 'opacity-70' : ''} ${
+                  v == null
+                    ? 'bg-gray-100'
+                    : isBad
+                      ? (isOverBad ? 'bg-rose-300' : 'bg-amber-300')
+                      : 'bg-[#10bcad]'
+                }`}
+                style={{ height: h }}
+              />
+            </div>
           )
         })}
       </div>
