@@ -369,7 +369,7 @@ function PctSummaryInline({
   return (
     <div className="mt-4 pt-3 border-t border-gray-100">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-semibold text-gray-500">현재 또래 위치</span>
+        <span className="text-xs font-semibold text-gray-500">최근 검사 기준</span>
         <span className="text-xs text-gray-400">만 {ageInt}세 기준</span>
       </div>
 
