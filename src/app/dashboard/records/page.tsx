@@ -21,7 +21,7 @@ const withMinus  = (v: string) => v ? `-${v}` : ''
 const stripMinus = (v: string) => v.replace(/^-/, '')
 
 const EMPTY_EXAM = { date: today(), clinic: '', axOD: '', axOS: '', sphOD: '', sphOS: '', cylOD: '', cylOS: '', note: '', nextAppointment: '' }
-const INPUT = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500'
+const INPUT = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 accent-[#10bcad]'
 
 export default function RecordsPage() {
   const { exams, isLoading, saveExam, updateExam, deleteExam } = useChild()

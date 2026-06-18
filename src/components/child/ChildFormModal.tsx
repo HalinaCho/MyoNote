@@ -93,7 +93,7 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
             <label className="block text-sm font-medium text-gray-700 mb-1">생년월일</label>
             <input
               type="date"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 accent-[#10bcad]"
               value={form.birth}
               onChange={e => setForm(f => ({ ...f, birth: e.target.value }))}
             />

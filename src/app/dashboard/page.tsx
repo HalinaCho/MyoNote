@@ -16,7 +16,7 @@ import OnboardingFlow from '@/components/onboarding/OnboardingFlow'
 import TabSkeleton from '@/components/ui/TabSkeleton'
 import LifestyleTab from '@/components/analytics/LifestyleTab'
 
-const INPUT = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400'
+const INPUT = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 accent-[#10bcad]'
 
 export default function HomePage() {
   const router = useRouter()
@@ -339,7 +339,7 @@ export default function HomePage() {
           {editingAppt ? (
             <div className="mt-2 flex items-center gap-2">
               <input type="date" value={apptDate} onChange={e => setApptDate(e.target.value)}
-                className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400" />
+                className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 accent-[#10bcad]" />
               <button onClick={async () => {
                 if (!apptDate) return
                 try {
