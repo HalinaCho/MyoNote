@@ -65,7 +65,7 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
   const yMax = parseFloat((Math.max(...allVals) + 0.3).toFixed(1))
 
   const allDatasets = [
-    { label: '우안(OD)', data: odData, borderColor: '#0D9488', backgroundColor: 'rgba(204,251,241,0.6)', tension: 0.4, fill: true, pointRadius: 4 },
+    { label: '우안(OD)', data: odData, borderColor: '#0D9488', backgroundColor: 'rgba(13,148,136,0.08)', tension: 0.4, fill: true, pointRadius: 4 },
     { label: '좌안(OS)', data: osData, borderColor: '#9CA3AF', backgroundColor: 'rgba(156,163,175,.08)', tension: 0.4, fill: true, pointRadius: 4 },
   ]
   const datasets = allDatasets.filter((_, i) => (i === 0 ? showOD : showOS))
@@ -81,7 +81,7 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
               onClick={() => { if (showOD && !showOS) { setShowOS(true) } else { setShowOD(true); setShowOS(false) } }}
               className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-all ${
                 showOD
-                  ? 'bg-teal-100 text-[#10bcad] border border-[#10bcad]/30'
+                  ? 'bg-teal-50 text-[#10bcad] border border-[#10bcad]/30'
                   : 'bg-gray-100 text-gray-300 border border-transparent'
               }`}
             >
