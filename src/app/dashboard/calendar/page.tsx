@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { useChild } from '@/context/ChildContext'
+import TabSkeleton from '@/components/ui/TabSkeleton'
 import { today } from '@/lib/utils/date'
 import { getDayStatus } from '@/lib/utils/compliance'
 import TimeSpinner from '@/components/lifestyle/TimeSpinner'
@@ -16,7 +17,7 @@ function fmtTime(h: number) {
 }
 
 export default function CalendarPage() {
-  const { logs, lifestyle, activeTreatments, saveTreatmentLog, saveLifestyle } = useChild()
+  const { logs, lifestyle, activeTreatments, isLoading, saveTreatmentLog, saveLifestyle } = useChild()
   const [calYear, setCalYear]   = useState(new Date().getFullYear())
   const [calMonth, setCalMonth] = useState(new Date().getMonth())
   const [dayModal, setDayModal] = useState<string | null>(null)
@@ -70,6 +71,8 @@ export default function CalendarPage() {
     } catch { toast.error('저장에 실패했습니다') }
     finally { setLifeSaving(false) }
   }
+
+  if (isLoading) return <TabSkeleton />
 
   return (
     <>

@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useChild } from '@/context/ChildContext'
+import TabSkeleton from '@/components/ui/TabSkeleton'
+import EmptyState from '@/components/ui/EmptyState'
 import { Line } from 'react-chartjs-2'
 import {
   Chart as ChartJS, CategoryScale, LinearScale,
@@ -11,18 +13,16 @@ import { calcAgeYears, calcPercentile, pctLabel, normCurve } from '@/lib/axialPe
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler)
 
 export default function AxialTab() {
-  const { exams, activeChild } = useChild()
+  const { exams, activeChild, isLoading } = useChild()
 
   const sorted = [...exams]
     .filter(e => e.axOD || e.axOS)
     .sort((a, b) => a.date.localeCompare(b.date))
 
+  if (isLoading) return <TabSkeleton />
+
   if (sorted.length < 2) {
-    return (
-      <div className="bg-white rounded-2xl p-6 shadow-sm text-center text-gray-400 text-sm">
-        안축장 기록이 2개 이상 있어야 추세를 볼 수 있습니다.
-      </div>
-    )
+    return <EmptyState message="안축장 기록이 2개 이상 있어야 추세를 볼 수 있습니다." />
   }
 
   return (

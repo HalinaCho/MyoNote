@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { useChild } from '@/context/ChildContext'
+import TabSkeleton from '@/components/ui/TabSkeleton'
+import EmptyState from '@/components/ui/EmptyState'
 import { today } from '@/lib/utils/date'
 import type { ExamRecord } from '@/types'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -22,7 +24,7 @@ const EMPTY_EXAM = { date: today(), clinic: '', axOD: '', axOS: '', sphOD: '', s
 const INPUT = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500'
 
 export default function RecordsPage() {
-  const { exams, saveExam, updateExam, deleteExam } = useChild()
+  const { exams, isLoading, saveExam, updateExam, deleteExam } = useChild()
   const [modal, setModal]       = useState(false)
   const [editing, setEditing]   = useState<ExamRecord | null>(null)
   const [form, setForm]         = useState(EMPTY_EXAM)
@@ -78,10 +80,12 @@ export default function RecordsPage() {
     catch { toast.error('삭제에 실패했습니다') }
   }
 
+  if (isLoading) return <TabSkeleton />
+
   return (
     <>
       {exams.length === 0 ? (
-        <div className="text-center text-gray-400 py-12 text-sm">검사기록이 없습니다.</div>
+        <EmptyState message="검사기록이 없습니다." action={{ label: '첫 기록 추가', onClick: openAdd }} />
       ) : (
         <div className="space-y-2">
           {exams.map(e => (

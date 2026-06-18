@@ -12,6 +12,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck, faMinus, faFire, faXmark, faTree, faMobileScreen, faCalendarDays, faPen, faBell, faHospital } from '@fortawesome/free-solid-svg-icons'
 import { faCircle } from '@fortawesome/free-regular-svg-icons'
 import OnboardingFlow from '@/components/onboarding/OnboardingFlow'
+import TabSkeleton from '@/components/ui/TabSkeleton'
 
 const INPUT = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400'
 
@@ -63,9 +64,7 @@ export default function HomePage() {
     toast.success(newVal ? '케어 완료로 표시했습니다' : '완료 취소했습니다')
   }
 
-  if (isLoading) {
-    return <div className="flex items-center justify-center h-64 text-gray-400">불러오는 중...</div>
-  }
+  if (isLoading) return <TabSkeleton />
 
   if (!activeChild) {
     return <OnboardingFlow />

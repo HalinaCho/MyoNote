@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { useChild } from '@/context/ChildContext'
+import TabSkeleton from '@/components/ui/TabSkeleton'
+import EmptyState from '@/components/ui/EmptyState'
 import { Bar } from 'react-chartjs-2'
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Tooltip, Legend } from 'chart.js'
 import { calcMonthCompliance } from '@/lib/utils/compliance'
@@ -13,7 +15,7 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 type Half = '상' | '하'
 
 export default function ComplianceTab() {
-  const { logs, activeTreatments } = useChild()
+  const { logs, activeTreatments, isLoading } = useChild()
 
   const today = new Date()
   const curYear = today.getFullYear()
@@ -65,12 +67,10 @@ export default function ComplianceTab() {
         { label: '최저 달성', value: `${periodWorst}%`, sub: '' },
       ]
 
+  if (isLoading) return <TabSkeleton />
+
   if (!activeTreatments.length) {
-    return (
-      <div className="bg-white rounded-2xl p-6 shadow-sm text-center text-gray-400 text-sm">
-        설정에서 자녀의 케어 항목을 등록해주세요.
-      </div>
-    )
+    return <EmptyState message="설정에서 자녀의 케어 항목을 등록해주세요." />
   }
 
   return (

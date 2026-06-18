@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useChild } from '@/context/ChildContext'
+import TabSkeleton from '@/components/ui/TabSkeleton'
+import EmptyState from '@/components/ui/EmptyState'
 import { Line } from 'react-chartjs-2'
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend } from 'chart.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -13,7 +15,7 @@ const SCROLL_THRESHOLD = 8
 const PER_POINT = 52
 
 export default function SerTab() {
-  const { exams } = useChild()
+  const { exams, isLoading } = useChild()
   const [showOD, setShowOD] = useState(true)
   const [showOS, setShowOS] = useState(true)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -24,12 +26,10 @@ export default function SerTab() {
     if (scrollRef.current) scrollRef.current.scrollLeft = scrollRef.current.scrollWidth
   }, [])
 
+  if (isLoading) return <TabSkeleton />
+
   if (sorted.length < 2) {
-    return (
-      <div className="bg-white rounded-2xl p-6 shadow-sm text-center text-gray-400 text-sm">
-        검사기록이 2개 이상 있어야 추세를 볼 수 있습니다.
-      </div>
-    )
+    return <EmptyState message="검사기록이 2개 이상 있어야 추세를 볼 수 있습니다." />
   }
 
   const labels = sorted.map(e => e.date.slice(2, 7).replace('-', '.'))
