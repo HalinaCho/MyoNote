@@ -194,7 +194,7 @@ function PctView({
         </div>
 
         <div className="relative">
-        <span className="absolute top-0 left-[2px] text-[9px] text-gray-400 leading-none" style={{ zIndex: 1 }}>mm</span>
+        <span className="absolute top-0 text-[9px] text-gray-400 leading-none text-right" style={{ left: 0, width: 31, zIndex: 1 }}>(mm)</span>
         <Line
           data={{
             datasets: [
@@ -255,6 +255,7 @@ function PctView({
           }}
           options={{
             responsive: true, aspectRatio: 1.5,
+            layout: { padding: { top: 16 } },
             plugins: {
               legend: { display: false },
               tooltip: {
@@ -277,11 +278,11 @@ function PctView({
                 grid: { color: '#F3F4F6' },
               },
               y: {
-                min: 21.5, max: 27.0,
+                min: 21, max: 27,
                 border: { display: false },
                 // @ts-ignore
-                afterFit: (s: any) => { s.width = 44 },
-                ticks: { stepSize: 0.5, includeBounds: false, callback: (v, i, ticks) => i === ticks.length - 1 ? null : (v as number).toFixed(1), font: { size: 10 } },
+                afterFit: (s: any) => { s.width = 34 },
+                ticks: { stepSize: 1, callback: v => (v as number).toFixed(0), font: { size: 10 } },
                 grid: { color: '#F3F4F6' },
               },
             },
