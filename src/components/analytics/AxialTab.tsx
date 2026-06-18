@@ -192,7 +192,7 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
                   <div
                     ref={boxRef}
                     className="rounded-xl px-2.5 py-1.5 text-center whitespace-nowrap"
-                    style={{ backgroundColor: '#ffffff', boxShadow: '3px 3px 6px rgba(174,174,192,0.45), -3px 3px 6px rgba(174,174,192,0.45), 3px -3px 6px rgba(255,255,255,0.9), -3px -3px 6px rgba(255,255,255,0.9)' }}
+                    style={{ backgroundColor: '#ffffff', boxShadow: '0 1px 2px rgba(0,0,0,0.05), 0 6px 16px -4px rgba(17,24,39,0.12)' }}
                   >
                     <div className="text-[10px] text-gray-500 leading-tight">{activeExam.date.replace(/-/g, '.')}</div>
                     <div className="flex items-center justify-center gap-1.5 leading-tight mt-0.5 text-[11px] font-bold text-gray-800">
