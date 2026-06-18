@@ -150,7 +150,7 @@ export default function HomePage() {
       {/* ── 오늘의 케어 ── */}
       <section className="bg-white rounded-2xl p-4 mb-3 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-gray-800">오늘의 케어</h2>
+          <h2 className="font-bold text-gray-800">오늘의 난시케어</h2>
           <span className="text-xs text-gray-400">
             {new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })}
           </span>
