@@ -117,9 +117,9 @@ export default function RecordsPage() {
               </div>
               <div className="space-y-1.5 text-sm">
                 {(e.axOD || e.axOS) && (
-                  <div className="flex justify-between bg-gray-50 rounded-lg px-3 py-2">
-                    <span className="text-gray-500">안축장 (OD/OS)</span>
-                    <span className="font-medium">{e.axOD||'—'} / {e.axOS||'—'} mm</span>
+                  <div className="flex justify-between bg-teal-50 rounded-lg px-3 py-2">
+                    <span className="text-teal-600 font-medium">안축장 (OD/OS)</span>
+                    <span className="font-bold text-teal-700">{e.axOD||'—'} / {e.axOS||'—'} mm</span>
                   </div>
                 )}
                 {(e.sphOD || e.sphOS) && (
