@@ -183,7 +183,7 @@ function PctView({
             <h3 className="font-bold text-gray-800">또래 안축장 백분위 비교</h3>
             <div className="flex items-center gap-2 text-xs text-gray-500">
             <span className="flex items-center gap-1">
-              <span className="w-3 h-0.5 rounded bg-[#0D9488] inline-block"/>우안
+              <span className="w-3 h-0.5 rounded bg-[#10bcad] inline-block"/>우안
             </span>
             <span className="flex items-center gap-1">
               <span className="w-3 h-0.5 rounded bg-gray-400 inline-block"/>좌안
@@ -238,7 +238,7 @@ function PctView({
               // 아이 실측값
               {
                 label: '우안(OD)', data: childOD,
-                borderColor: '#0D9488', backgroundColor: '#0D9488',
+                borderColor: '#10bcad', backgroundColor: '#10bcad',
                 borderWidth: 2.5, pointRadius: 3, pointHoverRadius: 5,
                 fill: false, tension: 0.3,
               },
