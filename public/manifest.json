@@ -1,0 +1,25 @@
+{
+  "name": "마이오노트",
+  "short_name": "마이오노트",
+  "description": "내 아이 근시 관리 — 케어 기록과 안축장 변화를 한 눈에",
+  "start_url": "/MyoNote/",
+  "scope": "/MyoNote/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#edf7f6",
+  "theme_color": "#10bcad",
+  "icons": [
+    {
+      "src": "/MyoNote/icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/MyoNote/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
