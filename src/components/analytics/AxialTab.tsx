@@ -97,7 +97,7 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
   }, [activeIdx, showOD, showOS, exams.length])
 
   // 박스가 양끝에서 잘리지 않도록 클램프 (선은 실제 지점, 박스만 살짝 이동)
-  const BOX_HALF = 48
+  const BOX_HALF = 40
   const boxLeft = boxX == null ? null
     : Math.max(BOX_HALF, Math.min(boxX, (innerW || boxX + BOX_HALF) - BOX_HALF))
 
@@ -115,7 +115,8 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
       ctx.moveTo(pt.x, 0)
       ctx.lineTo(pt.x, chartArea.bottom)
       ctx.lineWidth = 1.5
-      ctx.strokeStyle = 'rgba(156,163,175,0.7)'
+      ctx.setLineDash([4, 3])
+      ctx.strokeStyle = '#9CA3AF'
       ctx.stroke()
       ctx.restore()
     },
@@ -183,16 +184,15 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
               {/* 선택 데이터 박스 (수직선 끝과 연결) */}
               {boxLeft != null && (
                 <div className="absolute z-20 -translate-x-1/2" style={{ left: boxLeft, top: 0 }}>
-                  <div className="bg-gray-700 text-white rounded-lg px-2.5 py-1 shadow-md text-center whitespace-nowrap">
-                    <div className="text-[10px] text-gray-300 leading-tight">{activeExam.date.replace(/-/g, '.')}</div>
-                    <div className="flex items-center justify-center gap-2 leading-tight mt-0.5 text-[11px] font-bold">
+                  <div className="rounded-lg px-2 py-1 shadow-md text-center whitespace-nowrap" style={{ backgroundColor: '#9CA3AF' }}>
+                    <div className="text-[10px] text-gray-800 leading-tight">{activeExam.date.replace(/-/g, '.')}</div>
+                    <div className="flex items-center justify-center gap-1.5 leading-tight mt-0.5 text-[11px] font-bold text-gray-900">
                       {showOD && !isNaN(activeOD) && (
                         <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#10bcad]" />{activeOD.toFixed(2)}</span>
                       )}
                       {showOS && !isNaN(activeOS) && (
-                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-gray-300" />{activeOS.toFixed(2)}</span>
+                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-gray-700" />{activeOS.toFixed(2)}</span>
                       )}
-                      <span className="font-normal text-gray-400">mm</span>
                     </div>
                   </div>
                 </div>
