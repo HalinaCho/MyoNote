@@ -53,10 +53,10 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
   const odData = exams.map(e => parseFloat(e.axOD) || null)
   const osData = exams.map(e => parseFloat(e.axOS) || null)
 
-  // Y축 고정: 표시 여부와 관계없이 전체 데이터 기준
+  // Y축 고정: 표시 여부와 관계없이 전체 데이터 기준, 0.5 단위로 스냅
   const allVals = [...odData, ...osData].filter((v): v is number => v !== null)
-  const yMin = parseFloat((Math.min(...allVals) - 0.3).toFixed(1))
-  const yMax = parseFloat((Math.max(...allVals) + 0.3).toFixed(1))
+  const yMin = Math.floor((Math.min(...allVals) - 0.3) * 2) / 2
+  const yMax = Math.ceil((Math.max(...allVals) + 0.3) * 2) / 2
 
   const allDatasets = [
     { label: '우안(OD)', data: odData, borderColor: '#10bcad', backgroundColor: 'rgba(16,188,173,0.08)', pointBackgroundColor: '#10bcad', tension: 0.4, fill: true, pointRadius: 4 },
@@ -95,9 +95,9 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
             </button>
           </div>
         </div>
-        <div className="flex" style={{ aspectRatio: '2/1' }}>
+        <div className="flex" style={{ aspectRatio: '3/2' }}>
           {/* Y축 고정 차트 */}
-          <div style={{ width: 44, flexShrink: 0, position: 'relative' }}>
+          <div style={{ width: 34, flexShrink: 0, position: 'relative' }}>
             <span className="absolute top-0 right-1 text-[9px] text-gray-400 leading-none" style={{ zIndex: 1 }}>mm</span>
             <Line
               data={{ labels, datasets: [{ data: labels.map(() => null), borderColor: 'transparent', pointRadius: 0 }] }}
@@ -110,12 +110,12 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
                   y: {
                     min: yMin, max: yMax,
                     // @ts-ignore
-                    afterFit: (s: any) => { s.width = 44 },
-                    ticks: { stepSize: 0.5, includeBounds: false, callback: (v, i, ticks) => i === ticks.length - 1 ? null : `${(v as number).toFixed(1)}`, font: { size: 10 } },
+                    afterFit: (s: any) => { s.width = 34 },
+                    ticks: { stepSize: 0.5, callback: v => `${(v as number).toFixed(1)}`, font: { size: 10 } },
                     grid: { color: '#F3F4F6' },
                   },
                 },
-                layout: { padding: { bottom: 22 } },
+                layout: { padding: { top: 14, bottom: 22 } },
               }}
             />
           </div>
@@ -131,7 +131,7 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
                     x: { grid: { display: false }, ticks: { font: { size: 10 } } },
                     y: { display: false, min: yMin, max: yMax },
                   },
-                  layout: { padding: { left: 0 } },
+                  layout: { padding: { top: 14, left: 0 } },
                 }}
               />
             </div>
