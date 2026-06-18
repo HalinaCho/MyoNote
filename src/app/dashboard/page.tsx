@@ -43,6 +43,17 @@ export default function HomePage() {
     return () => document.removeEventListener('open-add-child', handler)
   }, [])
 
+  const openLifestyleModal = () => {
+    if (todayLife) {
+      const outdoorH = Math.floor(todayLife.outdoor)
+      const outdoorM = Math.round((todayLife.outdoor - outdoorH) * 60)
+      const phoneH   = Math.floor(todayLife.phone)
+      const phoneM   = Math.round((todayLife.phone   - phoneH)   * 60)
+      setLifeForm(f => ({ ...f, outdoorH, outdoorM, phoneH, phoneM }))
+    }
+    setShowLifestyle(true)
+  }
+
   const handleLifeSave = async (e: React.FormEvent) => {
     e.preventDefault()
     setLifeSaving(true)
@@ -242,41 +253,70 @@ export default function HomePage() {
       {/* ── 오늘의 생활습관 ── */}
       <section className="bg-white rounded-2xl p-4 mb-3 shadow-sm">
         <h2 className="font-bold text-gray-800 mb-3">오늘의 생활습관</h2>
-        {todayLife ? (
-          <div className="flex gap-3">
-            {[
-              {
-                icon: faTree, label: '야외활동', value: todayLife.outdoor,
-                good: todayLife.outdoor >= 2, warn: todayLife.outdoor > 0,
-              },
-              {
-                icon: faMobileScreen, label: '스마트폰', value: todayLife.phone,
-                good: todayLife.phone <= 2, warn: todayLife.phone <= 4,
-              },
-            ].map(item => {
-              const state = item.good ? 'good' : item.warn ? 'warn' : 'bad'
-              const palette = {
-                good: { bg: 'bg-teal-50',  icon: 'text-[#10bcad]', val: 'text-gray-800', label: 'text-gray-500' },
-                warn: { bg: 'bg-amber-50', icon: 'text-amber-500', val: 'text-gray-800', label: 'text-gray-500' },
-                bad:  { bg: 'bg-rose-50',  icon: 'text-rose-400',  val: 'text-gray-800', label: 'text-gray-500' },
-              }[state]
-              return (
-                <div key={item.label} className={`flex-1 ${palette.bg} rounded-xl p-3 text-center`}>
-                  <FontAwesomeIcon icon={item.icon} className={`text-xl mb-1 ${palette.icon}`} />
-                  <div className={`text-base font-bold ${palette.val}`}>{fmtTime(item.value)}</div>
-                  <div className={`text-xs mt-0.5 ${palette.label}`}>{item.label}</div>
+        <div className="space-y-2">
+          {[
+            {
+              icon: faTree, label: '야외활동',
+              value: todayLife?.outdoor ?? null,
+              goal: activeChild?.outdoorGoal ?? 2,
+              isOverBad: false,
+              badgeGood: '달성',   badgeBad: '미달성',
+              badBg:       'border-amber-200/50 bg-amber-50',
+              badIconCls:  'bg-amber-100 text-amber-500',
+              badBadgeCls: 'bg-amber-100 text-amber-700',
+            },
+            {
+              icon: faMobileScreen, label: '스마트폰',
+              value: todayLife?.phone ?? null,
+              goal: activeChild?.phoneGoal ?? 2,
+              isOverBad: true,
+              badgeGood: '권장이하', badgeBad: '초과',
+              badBg:       'border-rose-200/50 bg-rose-50',
+              badIconCls:  'bg-rose-100 text-rose-400',
+              badBadgeCls: 'bg-rose-100 text-rose-500',
+            },
+          ].map(item => {
+            const hasData = item.value !== null
+            const good = hasData && (item.isOverBad ? item.value! <= item.goal : item.value! >= item.goal)
+            return (
+              <button
+                key={item.label}
+                onClick={openLifestyleModal}
+                className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left
+                  ${!hasData
+                    ? 'border-gray-100 bg-gray-50/60 hover:border-teal-100'
+                    : good
+                      ? 'border-[#10bcad]/30 bg-teal-50'
+                      : item.badBg}`}
+              >
+                <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm flex-shrink-0
+                  ${!hasData
+                    ? 'bg-white border-2 border-gray-200 text-gray-300'
+                    : good
+                      ? 'bg-teal-100 text-[#10bcad]'
+                      : item.badIconCls}`}>
+                  <FontAwesomeIcon icon={item.icon} />
                 </div>
-              )
-            })}
-          </div>
-        ) : (
-          <p className="text-sm text-gray-400 text-center py-2">
-            오늘 기록이 없습니다 —{' '}
-            <span className="text-[#10bcad] cursor-pointer font-medium" onClick={() => setShowLifestyle(true)}>
-              기록하기
-            </span>
-          </p>
-        )}
+                <div className="flex-1">
+                  <div className={`text-sm font-semibold ${hasData ? 'text-gray-800' : 'text-gray-600'}`}>
+                    {item.label}
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    {hasData ? fmtTime(item.value!) : '기록 없음'}
+                  </div>
+                </div>
+                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full
+                  ${!hasData
+                    ? 'bg-gray-100 text-gray-400'
+                    : good
+                      ? 'bg-[#10bcad]/15 text-teal-700'
+                      : item.badBadgeCls}`}>
+                  {!hasData ? '미기록' : good ? item.badgeGood : item.badgeBad}
+                </span>
+              </button>
+            )
+          })}
+        </div>
       </section>
 
       {/* ── 최근 7일 생활습관 ── */}
