@@ -29,9 +29,7 @@ export default function SerTab() {
     return () => cancelAnimationFrame(id)
   }, [exams.length])
 
-  const scroll = (dir: 'left' | 'right') => {
-    scrollRef.current?.scrollBy({ left: dir === 'left' ? -(PER_POINT * 3) : (PER_POINT * 3), behavior: 'smooth' })
-  }
+
 
   if (isLoading) return <TabSkeleton />
 
@@ -49,7 +47,7 @@ export default function SerTab() {
   const yMax = parseFloat((Math.max(...allVals) + 0.3).toFixed(1))
 
   const allDatasets = [
-    { label: '우안(OD)', data: odData, borderColor: '#0D9488', backgroundColor: 'rgba(13,148,136,0.08)', pointBackgroundColor: '#0D9488', tension: 0.4, pointRadius: 4, fill: true },
+    { label: '우안(OD)', data: odData, borderColor: '#10bcad', backgroundColor: 'rgba(16,188,173,0.08)', pointBackgroundColor: '#10bcad', tension: 0.4, pointRadius: 4, fill: true },
     { label: '좌안(OS)', data: osData, borderColor: '#9CA3AF', backgroundColor: 'rgba(156,163,175,.08)', pointBackgroundColor: '#9CA3AF', tension: 0.4, pointRadius: 4, fill: true },
   ]
   const datasets = allDatasets.filter((_, i) => (i === 0 ? showOD : showOS))
@@ -125,18 +123,6 @@ export default function SerTab() {
             </div>
           </div>
         </div>
-        {sorted.length > SCROLL_THRESHOLD && (
-          <div className="flex justify-end gap-1.5 mt-3" style={{ paddingLeft: 52 }}>
-            <button onClick={() => scroll('left')}
-              className="w-8 h-8 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 active:bg-gray-300 flex items-center justify-center text-base leading-none">
-              ‹
-            </button>
-            <button onClick={() => scroll('right')}
-              className="w-8 h-8 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 active:bg-gray-300 flex items-center justify-center text-base leading-none">
-              ›
-            </button>
-          </div>
-        )}
       </div>
       <div className="bg-teal-50 rounded-2xl p-4 text-sm text-teal-700">
         <div className="font-semibold mb-1 flex items-center gap-1.5"><FontAwesomeIcon icon={faCircleInfo} /> SEQ 해석 가이드</div>

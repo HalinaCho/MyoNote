@@ -42,18 +42,12 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
   const [showOD, setShowOD] = useState(true)
   const [showOS, setShowOS] = useState(true)
   const scrollRef = useRef<HTMLDivElement>(null)
-  const isScrollable = exams.length > SCROLL_THRESHOLD
-
   useEffect(() => {
     const id = requestAnimationFrame(() => {
       if (scrollRef.current) scrollRef.current.scrollLeft = scrollRef.current.scrollWidth
     })
     return () => cancelAnimationFrame(id)
   }, [exams.length])
-
-  const scroll = (dir: 'left' | 'right') => {
-    scrollRef.current?.scrollBy({ left: dir === 'left' ? -(PER_POINT * 3) : (PER_POINT * 3), behavior: 'smooth' })
-  }
 
   const labels = exams.map(e => e.date.slice(2, 7).replace('-', '.'))
   const odData = exams.map(e => parseFloat(e.axOD) || null)
@@ -65,7 +59,7 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
   const yMax = parseFloat((Math.max(...allVals) + 0.3).toFixed(1))
 
   const allDatasets = [
-    { label: '우안(OD)', data: odData, borderColor: '#0D9488', backgroundColor: 'rgba(13,148,136,0.08)', pointBackgroundColor: '#0D9488', tension: 0.4, fill: true, pointRadius: 4 },
+    { label: '우안(OD)', data: odData, borderColor: '#10bcad', backgroundColor: 'rgba(16,188,173,0.08)', pointBackgroundColor: '#10bcad', tension: 0.4, fill: true, pointRadius: 4 },
     { label: '좌안(OS)', data: osData, borderColor: '#9CA3AF', backgroundColor: 'rgba(156,163,175,.08)', pointBackgroundColor: '#9CA3AF', tension: 0.4, fill: true, pointRadius: 4 },
   ]
   const datasets = allDatasets.filter((_, i) => (i === 0 ? showOD : showOS))
@@ -142,18 +136,6 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
             </div>
           </div>
         </div>
-        {isScrollable && (
-          <div className="flex justify-end gap-1.5 mt-3" style={{ paddingLeft: 52 }}>
-            <button onClick={() => scroll('left')}
-              className="w-8 h-8 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 active:bg-gray-300 flex items-center justify-center text-base leading-none">
-              ‹
-            </button>
-            <button onClick={() => scroll('right')}
-              className="w-8 h-8 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 active:bg-gray-300 flex items-center justify-center text-base leading-none">
-              ›
-            </button>
-          </div>
-        )}
       </div>
       <GrowthRateCard exams={exams} />
     </>
