@@ -247,13 +247,19 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 function NegInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
+  const handleBlur = () => {
+    if (value === '') return
+    const n = parseFloat(value)
+    if (!isNaN(n)) onChange(n.toFixed(2))
+  }
   return (
     <div className="relative">
       <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500 font-medium pointer-events-none select-none">−</span>
       <input
-        type="number" step="0.25" min="0" placeholder={placeholder}
+        type="text" inputMode="decimal" placeholder={placeholder}
         value={value}
         onChange={e => onChange(e.target.value)}
+        onBlur={handleBlur}
         className="w-full border border-gray-200 rounded-lg pl-6 pr-2 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
       />
     </div>
