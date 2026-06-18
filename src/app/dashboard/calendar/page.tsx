@@ -4,6 +4,7 @@ import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { useChild } from '@/context/ChildContext'
 import TabSkeleton from '@/components/ui/TabSkeleton'
+import ComplianceTab from '@/components/analytics/ComplianceTab'
 import { today } from '@/lib/utils/date'
 import { getDayStatus } from '@/lib/utils/compliance'
 import TimeSpinner from '@/components/lifestyle/TimeSpinner'
@@ -223,6 +224,11 @@ export default function CalendarPage() {
           </div>
         </div>
       )}
+
+      {/* 달성률 */}
+      <div className="mt-3">
+        <ComplianceTab />
+      </div>
     </>
   )
 }
