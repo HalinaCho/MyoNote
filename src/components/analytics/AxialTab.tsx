@@ -111,7 +111,7 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
                     min: yMin, max: yMax,
                     // @ts-ignore
                     afterFit: (s: any) => { s.width = 44 },
-                    ticks: { stepSize: 0.5, callback: (v, i, ticks) => i === ticks.length - 1 ? null : `${(v as number).toFixed(1)}`, font: { size: 10 } },
+                    ticks: { stepSize: 0.5, includeBounds: false, callback: (v, i, ticks) => i === ticks.length - 1 ? null : `${(v as number).toFixed(1)}`, font: { size: 10 } },
                     grid: { color: '#F3F4F6' },
                   },
                 },
@@ -272,14 +272,16 @@ function PctView({
               x: {
                 type: 'linear' as const,
                 min: xMin, max: xMax,
+                border: { display: false },
                 ticks: { stepSize: 1, callback: v => `${v}세`, font: { size: 11 } },
                 grid: { color: '#F3F4F6' },
               },
               y: {
                 min: 21.5, max: 27.0,
+                border: { display: false },
                 // @ts-ignore
                 afterFit: (s: any) => { s.width = 44 },
-                ticks: { stepSize: 0.5, callback: (v, i, ticks) => i === ticks.length - 1 ? null : (v as number).toFixed(1), font: { size: 10 } },
+                ticks: { stepSize: 0.5, includeBounds: false, callback: (v, i, ticks) => i === ticks.length - 1 ? null : (v as number).toFixed(1), font: { size: 10 } },
                 grid: { color: '#F3F4F6' },
               },
             },
