@@ -331,14 +331,14 @@ function PctView({
               {
                 label: '우안(OD)', data: childOD,
                 borderColor: '#10bcad', backgroundColor: '#10bcad',
-                borderWidth: 2.5, pointRadius: 2, pointHoverRadius: 4,
-                fill: false, tension: 0.3,
+                showLine: false, pointRadius: 2, pointHoverRadius: 4,
+                fill: false,
               },
               {
                 label: '좌안(OS)', data: childOS,
                 borderColor: '#9CA3AF', backgroundColor: '#9CA3AF',
-                borderWidth: 2.5, pointRadius: 2, pointHoverRadius: 4,
-                fill: false, tension: 0.3,
+                showLine: false, pointRadius: 2, pointHoverRadius: 4,
+                fill: false,
               },
             ],
           }}
