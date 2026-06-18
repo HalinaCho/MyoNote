@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { useChild } from '@/context/ChildContext'
 import ChildFormModal from '@/components/child/ChildFormModal'
@@ -17,6 +18,7 @@ import TabSkeleton from '@/components/ui/TabSkeleton'
 const INPUT = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400'
 
 export default function HomePage() {
+  const router = useRouter()
   const { activeChild, activeTreatments, logs, lifestyle, exams, isLoading, saveTreatmentLog, saveLifestyle, updateExam } = useChild()
   const [showAddChild, setShowAddChild] = useState(false)
   const [showLifestyle, setShowLifestyle] = useState(false)
@@ -206,7 +208,10 @@ export default function HomePage() {
           </div>
 
           {/* 주간 스트립 */}
-          <div className="flex gap-1">
+          <div
+            className="flex gap-1 cursor-pointer"
+            onClick={() => router.push('/dashboard/calendar')}
+          >
             {weekDays.map(({ d, ds, status }) => {
               const isToday = ds === todayStr
               const dotBg =
