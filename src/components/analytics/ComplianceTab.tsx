@@ -16,10 +16,6 @@ interface Props { year: number; half: Half; bare?: boolean }
 export default function ComplianceTab({ year, half, bare }: Props) {
   const { logs, activeTreatments, isLoading } = useChild()
 
-  const today = new Date()
-  const curYear = today.getFullYear()
-  const curHalf: Half = today.getMonth() < 6 ? '상' : '하'
-
   const months = Array.from({ length: 6 }, (_, i) => {
     const monthIndex = half === '상' ? i : i + 6
     return { year, month: monthIndex, label: `${monthIndex + 1}월` }
@@ -41,19 +37,11 @@ export default function ComplianceTab({ year, half, bare }: Props) {
   const periodBest = activeData.length ? Math.max(...activeData) : 0
   const periodWorst = activeData.length ? Math.min(...activeData) : 0
 
-  const isCurrentPeriod = year === curYear && half === curHalf
-
-  const summaryCards = isCurrentPeriod
-    ? [
-        { label: '이번 달',  value: `${data[data.length - 1]}%`, sub: '진행 중' },
-        { label: '기간 평균', value: `${periodAvg}%`,  sub: '' },
-        { label: '최고 달성', value: `${periodBest}%`, sub: '' },
-      ]
-    : [
-        { label: '기간 평균', value: `${periodAvg}%`,   sub: '' },
-        { label: '최고 달성', value: `${periodBest}%`,  sub: '' },
-        { label: '최저 달성', value: `${periodWorst}%`, sub: '' },
-      ]
+  const summaryCards = [
+    { label: '기간 평균', value: `${periodAvg}%`,   sub: '' },
+    { label: '최고 달성', value: `${periodBest}%`,  sub: '' },
+    { label: '최저 달성', value: `${periodWorst}%`, sub: '' },
+  ]
 
   if (isLoading) return <TabSkeleton />
   if (!activeTreatments.length) return <EmptyState message="설정에서 자녀의 케어 항목을 등록해주세요." />
