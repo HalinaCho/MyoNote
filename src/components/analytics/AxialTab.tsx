@@ -184,14 +184,17 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
               {/* 선택 데이터 박스 (수직선 끝과 연결) */}
               {boxLeft != null && (
                 <div className="absolute z-20 -translate-x-1/2" style={{ left: boxLeft, top: 0 }}>
-                  <div className="rounded-lg px-2 py-1 shadow-md text-center whitespace-nowrap" style={{ backgroundColor: '#9CA3AF' }}>
-                    <div className="text-[10px] text-gray-800 leading-tight">{activeExam.date.replace(/-/g, '.')}</div>
-                    <div className="flex items-center justify-center gap-1.5 leading-tight mt-0.5 text-[11px] font-bold text-gray-900">
+                  <div
+                    className="rounded-xl px-2.5 py-1.5 text-center whitespace-nowrap"
+                    style={{ backgroundColor: '#ffffff', boxShadow: '3px 3px 6px rgba(174,174,192,0.45), -3px -3px 6px rgba(255,255,255,0.9)' }}
+                  >
+                    <div className="text-[10px] text-gray-500 leading-tight">{activeExam.date.replace(/-/g, '.')}</div>
+                    <div className="flex items-center justify-center gap-1.5 leading-tight mt-0.5 text-[11px] font-bold text-gray-800">
                       {showOD && !isNaN(activeOD) && (
                         <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#10bcad]" />{activeOD.toFixed(2)}</span>
                       )}
                       {showOS && !isNaN(activeOS) && (
-                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-gray-700" />{activeOS.toFixed(2)}</span>
+                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-gray-400" />{activeOS.toFixed(2)}</span>
                       )}
                     </div>
                   </div>
