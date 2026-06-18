@@ -73,13 +73,19 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
   const activeOD = parseFloat(activeExam.axOD)
   const activeOS = parseFloat(activeExam.axOS)
 
+  // 플러그인이 항상 최신 idx를 읽도록 ref 사용 (closure 고정 방지) + 강제 redraw
+  const chartRef = useRef<any>(null)
+  const idxRef = useRef(idx)
+  idxRef.current = idx
+  useEffect(() => { chartRef.current?.update() }, [activeIdx])
+
   // 선택 지점에 수직선 표시
   const crosshair = {
     id: 'crosshair',
     afterDatasetsDraw(chart: any) {
       const metas = chart.getSortedVisibleDatasetMetas()
       if (!metas.length) return
-      const pt = metas[0].data[idx]
+      const pt = metas[0].data[idxRef.current]
       if (!pt) return
       const { ctx, chartArea } = chart
       ctx.save()
@@ -126,23 +132,25 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
           </div>
         </div>
 
-        {/* 선택 데이터 표시 (그래프 터치 시 이동) */}
-        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mb-2">
-          <span className="text-xs font-bold text-gray-700">{activeExam.date.replace(/-/g, '.')}</span>
-          {showOD && !isNaN(activeOD) && (
-            <span className="flex items-center gap-1 text-xs">
-              <span className="w-2 h-2 rounded-full bg-[#10bcad]" />
-              <span className="text-gray-500">우안</span>
-              <span className="font-bold text-gray-800">{activeOD.toFixed(2)}<span className="font-normal text-gray-400 ml-0.5">mm</span></span>
-            </span>
-          )}
-          {showOS && !isNaN(activeOS) && (
-            <span className="flex items-center gap-1 text-xs">
-              <span className="w-2 h-2 rounded-full bg-gray-400" />
-              <span className="text-gray-500">좌안</span>
-              <span className="font-bold text-gray-800">{activeOS.toFixed(2)}<span className="font-normal text-gray-400 ml-0.5">mm</span></span>
-            </span>
-          )}
+        {/* 선택 데이터 박스 (그래프 위, 터치 시 이동) */}
+        <div className="flex justify-center mb-2">
+          <div className="inline-flex items-center gap-3 bg-gray-50 rounded-lg px-3 py-1.5">
+            <span className="text-xs font-bold text-gray-700">{activeExam.date.replace(/-/g, '.')}</span>
+            {showOD && !isNaN(activeOD) && (
+              <span className="flex items-center gap-1 text-xs">
+                <span className="w-2 h-2 rounded-full bg-[#10bcad]" />
+                <span className="font-bold text-gray-800">{activeOD.toFixed(2)}</span>
+                <span className="text-gray-400">mm</span>
+              </span>
+            )}
+            {showOS && !isNaN(activeOS) && (
+              <span className="flex items-center gap-1 text-xs">
+                <span className="w-2 h-2 rounded-full bg-gray-400" />
+                <span className="font-bold text-gray-800">{activeOS.toFixed(2)}</span>
+                <span className="text-gray-400">mm</span>
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="flex" style={{ aspectRatio: '3/2' }}>
@@ -173,13 +181,14 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
           <div ref={scrollRef} style={{ flex: 1, overflowX: 'auto' }}>
             <div style={{ width: exams.length > SCROLL_THRESHOLD ? exams.length * PER_POINT : undefined, height: '100%' }}>
               <Line
+                ref={chartRef}
                 data={{ labels, datasets }}
                 plugins={[crosshair]}
                 options={{
                   responsive: true, maintainAspectRatio: false,
                   interaction: { mode: 'index', intersect: false },
                   onClick: (_evt, els) => { if (els.length) setActiveIdx(els[0].index) },
-                  plugins: { legend: { display: false } },
+                  plugins: { legend: { display: false }, tooltip: { enabled: false } },
                   scales: {
                     x: { grid: { display: false }, ticks: { font: { size: 10 } } },
                     y: { display: false, min: yMin, max: yMax },
