@@ -134,19 +134,19 @@ export default function CalendarPage() {
                 key={ds}
                 disabled={!clickable}
                 onClick={() => clickable && openDay(ds)}
-                className={`aspect-square flex flex-col items-center justify-between py-1 rounded-lg transition-colors
+                className={`aspect-[5/6] flex flex-col items-center justify-between py-1.5 rounded-lg transition-colors
                   ${bg} ${isToday ? 'ring-2 ring-teal-400' : ''} ${clickable ? 'hover:opacity-80 active:scale-95' : ''}`}
               >
-                <span className="text-xs font-medium leading-none">{d}</span>
-                <span className="text-[9px] leading-none">
+                <span className="text-[13px] font-semibold leading-none">{d}</span>
+                <span className="text-[11px] leading-none">
                   {status === 'done'    ? <FontAwesomeIcon icon={faCheck} />
                   : status === 'partial' ? <FontAwesomeIcon icon={faMinus} />
                   : status === 'missed'  ? <FontAwesomeIcon icon={faXmark} />
                   : null}
                 </span>
-                <div className="flex gap-0.5">
-                  <FontAwesomeIcon icon={faTree}         className={`text-[8px] ${lifeIconCls}`} />
-                  <FontAwesomeIcon icon={faMobileScreen} className={`text-[8px] ${lifeIconCls}`} />
+                <div className="flex gap-1">
+                  <FontAwesomeIcon icon={faTree}         className={`text-[9px] ${lifeIconCls}`} />
+                  <FontAwesomeIcon icon={faMobileScreen} className={`text-[9px] ${lifeIconCls}`} />
                 </div>
               </button>
             )
@@ -154,27 +154,18 @@ export default function CalendarPage() {
         </div>
 
         {/* 범례 */}
-        <div className="grid grid-cols-2 gap-2 mt-3 text-xs text-gray-500">
-          {/* 좌: 난시케어 */}
-          <div className="flex flex-col gap-1.5 pr-3 border-r border-gray-100">
-            <span className="text-[11px] font-semibold text-gray-400">난시케어</span>
-            <div className="flex flex-wrap gap-x-2.5 gap-y-1">
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-teal-100"/>완료</span>
-              {activeTreatments.length >= 2 && (
-                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-amber-100"/>부분</span>
-              )}
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-rose-100"/>미완료</span>
-            </div>
-          </div>
-          {/* 우: 생활습관 */}
-          <div className="flex flex-col gap-1.5">
-            <span className="text-[11px] font-semibold text-gray-400">생활습관</span>
-            <span className="flex items-center gap-1.5">
-              <FontAwesomeIcon icon={faTree} className="text-gray-500 text-[11px]" />
-              <FontAwesomeIcon icon={faMobileScreen} className="text-gray-500 text-[11px]" />
-              기록 표시
-            </span>
-          </div>
+        <div className="flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 mt-3 text-xs text-gray-500">
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-teal-100"/>완료</span>
+          {activeTreatments.length >= 2 && (
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-amber-100"/>부분</span>
+          )}
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-rose-100"/>미완료</span>
+          <span className="w-px h-3 bg-gray-200 mx-0.5" />
+          <span className="flex items-center gap-1">
+            <FontAwesomeIcon icon={faTree} className="text-gray-500 text-[10px]" />
+            <FontAwesomeIcon icon={faMobileScreen} className="text-gray-500 text-[10px]" />
+            생활습관 기록
+          </span>
         </div>
       </div>
 
