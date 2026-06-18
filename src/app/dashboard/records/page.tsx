@@ -138,7 +138,7 @@ export default function RecordsPage() {
                 {(e.serOD || e.serOS) && (
                   <div className="flex justify-between bg-teal-50 rounded-lg px-3 py-2">
                     <span className="text-teal-600 font-medium">SEQ (OD/OS)</span>
-                    <span className="font-bold text-teal-700">{e.serOD||'—'} / {e.serOS||'—'} D</span>
+                    <span className="font-bold text-teal-700">{fmtD(e.serOD)} / {fmtD(e.serOS)} D</span>
                   </div>
                 )}
                 {e.note && <div className="text-xs text-gray-400 px-1">{e.note}</div>}
