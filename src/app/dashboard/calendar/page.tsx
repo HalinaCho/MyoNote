@@ -154,17 +154,27 @@ export default function CalendarPage() {
         </div>
 
         {/* 범례 */}
-        <div className="flex flex-wrap gap-x-3 gap-y-1 mt-3 justify-center text-xs text-gray-500">
-          {[['bg-teal-100','완료'],['bg-amber-100','부분'],['bg-rose-100','미완료'],['bg-gray-50','예정']].map(([c,l]) => (
-            <span key={l} className="flex items-center gap-1">
-              <span className={`w-3 h-3 rounded-sm ${c}`}/>{l}
+        <div className="grid grid-cols-2 gap-2 mt-3 text-xs text-gray-500">
+          {/* 좌: 난시케어 */}
+          <div className="flex flex-col gap-1.5 pr-3 border-r border-gray-100">
+            <span className="text-[11px] font-semibold text-gray-400">난시케어</span>
+            <div className="flex flex-wrap gap-x-2.5 gap-y-1">
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-teal-100"/>완료</span>
+              {activeTreatments.length >= 2 && (
+                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-amber-100"/>부분</span>
+              )}
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-rose-100"/>미완료</span>
+            </div>
+          </div>
+          {/* 우: 생활습관 */}
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[11px] font-semibold text-gray-400">생활습관</span>
+            <span className="flex items-center gap-1.5">
+              <FontAwesomeIcon icon={faTree} className="text-gray-500 text-[11px]" />
+              <FontAwesomeIcon icon={faMobileScreen} className="text-gray-500 text-[11px]" />
+              기록 표시
             </span>
-          ))}
-          <span className="flex items-center gap-1">
-            <FontAwesomeIcon icon={faTree} className="text-gray-500 text-[10px]" />
-            <FontAwesomeIcon icon={faMobileScreen} className="text-gray-500 text-[10px]" />
-            생활습관 기록
-          </span>
+          </div>
         </div>
       </div>
 
