@@ -19,6 +19,7 @@ function calcSeq(sph: string, cyl: string) {
 
 const withMinus  = (v: string) => v ? `-${v}` : ''
 const stripMinus = (v: string) => v.replace(/^-/, '')
+const fmtD = (v: string) => { const n = parseFloat(v); return isNaN(n) ? '—' : n.toFixed(2) }
 
 const EMPTY_EXAM = { date: today(), clinic: '', axOD: '', axOS: '', sphOD: '', sphOS: '', cylOD: '', cylOS: '', note: '', nextAppointment: '' }
 const INPUT = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 accent-[#10bcad]'
@@ -125,13 +126,13 @@ export default function RecordsPage() {
                 {(e.sphOD || e.sphOS) && (
                   <div className="flex justify-between bg-gray-50 rounded-lg px-3 py-2">
                     <span className="text-gray-500">Sph (OD/OS)</span>
-                    <span className="font-medium">{e.sphOD||'—'} / {e.sphOS||'—'} D</span>
+                    <span className="font-medium">{fmtD(e.sphOD)} / {fmtD(e.sphOS)} D</span>
                   </div>
                 )}
                 {(e.cylOD || e.cylOS) && (
                   <div className="flex justify-between bg-gray-50 rounded-lg px-3 py-2">
                     <span className="text-gray-500">Cyl (OD/OS)</span>
-                    <span className="font-medium">{e.cylOD||'—'} / {e.cylOS||'—'} D</span>
+                    <span className="font-medium">{fmtD(e.cylOD)} / {fmtD(e.cylOS)} D</span>
                   </div>
                 )}
                 {(e.serOD || e.serOS) && (
