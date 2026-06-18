@@ -30,6 +30,11 @@ export default function RecordsPage() {
   const [form, setForm]         = useState(EMPTY_EXAM)
   const [saving, setSaving]     = useState(false)
   const [showCRInfo, setShowCRInfo] = useState(false)
+  const [selectedYear, setSelectedYear] = useState('')
+
+  const years = [...new Set(exams.map(e => e.date.slice(0, 4)))].sort().reverse()
+  const activeYear = selectedYear || years[0] || ''
+  const filtered = activeYear ? exams.filter(e => e.date.startsWith(activeYear)) : exams
 
   const seqOD = calcSeq(form.sphOD, form.cylOD)
   const seqOS = calcSeq(form.sphOS, form.cylOS)
@@ -88,7 +93,19 @@ export default function RecordsPage() {
         <EmptyState message="검사기록이 없습니다." action={{ label: '첫 기록 추가', onClick: openAdd }} />
       ) : (
         <div className="space-y-2">
-          {exams.map(e => (
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-400">{filtered.length}건</span>
+            <select
+              value={activeYear}
+              onChange={e => setSelectedYear(e.target.value)}
+              className="text-sm font-semibold text-gray-700 border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#10bcad]"
+            >
+              {years.map(y => (
+                <option key={y} value={y}>{y}년</option>
+              ))}
+            </select>
+          </div>
+          {filtered.map(e => (
             <div key={e.id} className="bg-white rounded-xl p-4 shadow-sm">
               <div className="flex items-center justify-between mb-2">
                 <span className="font-semibold text-gray-800">{e.date}</span>
