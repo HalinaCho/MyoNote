@@ -153,8 +153,7 @@ export default function CalendarPage() {
           <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-rose-100"/>미완료</span>
           <span className="w-px h-3 bg-gray-200 mx-0.5" />
           <span className="flex items-center gap-1">
-            <FontAwesomeIcon icon={faTree} className="text-gray-500 text-[10px]" />
-            <FontAwesomeIcon icon={faMobileScreen} className="text-gray-500 text-[10px]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
             생활습관 기록
           </span>
         </div>
