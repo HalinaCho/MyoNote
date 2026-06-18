@@ -134,10 +134,10 @@ export default function CalendarPage() {
                 key={ds}
                 disabled={!clickable}
                 onClick={() => clickable && openDay(ds)}
-                className={`aspect-[5/6] flex flex-col items-center justify-between py-2 rounded-lg transition-colors
+                className={`aspect-square flex flex-col items-center justify-between py-1.5 rounded-lg transition-colors
                   ${bg} ${isToday ? 'ring-2 ring-teal-400' : ''} ${clickable ? 'hover:opacity-80 active:scale-95' : ''}`}
               >
-                <span className="text-[11px] font-semibold leading-none">{d}</span>
+                <span className="text-sm font-semibold leading-none">{d}</span>
                 <div className="flex gap-1">
                   <FontAwesomeIcon icon={faTree}         className={`text-[8px] ${lifeIconCls}`} />
                   <FontAwesomeIcon icon={faMobileScreen} className={`text-[8px] ${lifeIconCls}`} />
