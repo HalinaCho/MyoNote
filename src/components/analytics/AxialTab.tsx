@@ -96,10 +96,15 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
     return () => window.removeEventListener('resize', sync)
   }, [activeIdx, showOD, showOS, exams.length])
 
-  // 박스가 양끝에서 잘리지 않도록 클램프 (선은 실제 지점, 박스만 살짝 이동)
-  const BOX_HALF = 40
+  // 박스 실제 너비 측정 → 양끝에서 잘리지 않도록 클램프 (선은 실제 지점, 박스만 살짝 이동)
+  const boxRef = useRef<HTMLDivElement>(null)
+  const [boxW, setBoxW] = useState(0)
+  useEffect(() => {
+    if (boxRef.current) setBoxW(boxRef.current.offsetWidth)
+  }, [activeIdx, showOD, showOS, exams.length, boxX])
+  const half = (boxW ? boxW / 2 : 50) + 4
   const boxLeft = boxX == null ? null
-    : Math.max(BOX_HALF, Math.min(boxX, (innerW || boxX + BOX_HALF) - BOX_HALF))
+    : Math.max(half, Math.min(boxX, (innerW || boxX + half) - half))
 
   // 선택 지점 수직선: 데이터 선 뒤(beforeDatasetsDraw), 연한 그레이, 박스까지 연결
   const crosshair = {
@@ -185,8 +190,9 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
               {boxLeft != null && (
                 <div className="absolute z-20 -translate-x-1/2" style={{ left: boxLeft, top: 0 }}>
                   <div
+                    ref={boxRef}
                     className="rounded-xl px-2.5 py-1.5 text-center whitespace-nowrap"
-                    style={{ backgroundColor: '#ffffff', boxShadow: '3px 3px 6px rgba(174,174,192,0.45), -3px -3px 6px rgba(255,255,255,0.9)' }}
+                    style={{ backgroundColor: '#ffffff', boxShadow: '3px 3px 6px rgba(174,174,192,0.45), -3px 3px 6px rgba(174,174,192,0.45), 3px -3px 6px rgba(255,255,255,0.9), -3px -3px 6px rgba(255,255,255,0.9)' }}
                   >
                     <div className="text-[10px] text-gray-500 leading-tight">{activeExam.date.replace(/-/g, '.')}</div>
                     <div className="flex items-center justify-center gap-1.5 leading-tight mt-0.5 text-[11px] font-bold text-gray-800">
