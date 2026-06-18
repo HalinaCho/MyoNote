@@ -267,7 +267,7 @@ export default function CalendarPage() {
 
         {/* 탭 토글 */}
         <div className="flex bg-gray-100 rounded-xl p-1 mb-3">
-          {([['care', '케어'], ['lifestyle', '생활습관']] as const).map(([t, label]) => (
+          {([['care', '난시케어'], ['lifestyle', '생활습관']] as const).map(([t, label]) => (
             <button key={t} onClick={() => setStatsTab(t)}
               className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors
                 ${statsTab === t ? 'bg-[#10bcad] text-white' : 'text-gray-500'}`}>

@@ -90,10 +90,10 @@ export default function ComplianceTab({ year, half, bare }: Props) {
       {/* 요약 통계 */}
       <div className="grid grid-cols-3 gap-2 pt-2 border-t border-gray-100">
         {summaryCards.map(({ label, value, sub }) => (
-          <div key={label} className="text-center">
-            <div className="text-lg font-bold text-gray-800">{value}</div>
-            <div className="text-xs text-gray-400 mt-0.5">{label}</div>
-            {sub && <div className="text-xs text-teal-400 mt-0.5">{sub}</div>}
+          <div key={label} className="bg-[#edf7f6] rounded-xl p-3 text-center">
+            <div className="text-xs text-gray-500 mb-1">{label}</div>
+            <div className="text-lg font-black text-gray-800 leading-none">{value}</div>
+            {sub && <div className="text-xs text-teal-400 mt-1">{sub}</div>}
           </div>
         ))}
       </div>
