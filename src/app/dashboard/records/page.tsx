@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 import { useChild } from '@/context/ChildContext'
 import TabSkeleton from '@/components/ui/TabSkeleton'
 import EmptyState from '@/components/ui/EmptyState'
+import ConfirmModal from '@/components/ui/ConfirmModal'
 import { today } from '@/lib/utils/date'
 import type { ExamRecord } from '@/types'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -32,6 +33,7 @@ export default function RecordsPage() {
   const [saving, setSaving]     = useState(false)
   const [showCRInfo, setShowCRInfo] = useState(false)
   const [selectedYear, setSelectedYear] = useState('')
+  const [deleting, setDeleting] = useState<ExamRecord | null>(null)
 
   const years = [...new Set(exams.map(e => e.date.slice(0, 4)))].sort().reverse()
   const activeYear = selectedYear || years[0] || ''
@@ -80,10 +82,11 @@ export default function RecordsPage() {
     finally { setSaving(false) }
   }
 
-  const handleDelete = async (exam: ExamRecord) => {
-    if (!confirm('이 기록을 삭제하시겠습니까?')) return
-    try { await deleteExam(exam.id); toast.success('삭제됐습니다') }
+  const confirmDelete = async () => {
+    if (!deleting) return
+    try { await deleteExam(deleting.id); toast.success('삭제됐습니다') }
     catch { toast.error('삭제에 실패했습니다') }
+    finally { setDeleting(null) }
   }
 
   if (isLoading) return <TabSkeleton />
@@ -113,7 +116,7 @@ export default function RecordsPage() {
                 <div className="flex items-center gap-2">
                   {e.clinic && <span className="text-xs text-gray-400">{e.clinic}</span>}
                   <button onClick={() => openEdit(e)} className="text-gray-300 hover:text-teal-400 text-sm"><FontAwesomeIcon icon={faPen} /></button>
-                  <button onClick={() => handleDelete(e)} className="text-gray-300 hover:text-rose-400 text-sm"><FontAwesomeIcon icon={faXmark} /></button>
+                  <button onClick={() => setDeleting(e)} className="text-gray-300 hover:text-rose-400 text-sm"><FontAwesomeIcon icon={faXmark} /></button>
                 </div>
               </div>
               <div className="space-y-1.5 text-sm">
@@ -162,6 +165,16 @@ export default function RecordsPage() {
       >
         <FontAwesomeIcon icon={faPlus} className="text-xl" />
       </button>
+
+      <ConfirmModal
+        open={!!deleting}
+        title="검사기록을 삭제할까요?"
+        message={deleting ? `${deleting.date} 기록이 삭제됩니다.\n이 작업은 되돌릴 수 없습니다.` : ''}
+        confirmLabel="삭제"
+        cancelLabel="취소"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleting(null)}
+      />
 
       {modal && (
         <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
