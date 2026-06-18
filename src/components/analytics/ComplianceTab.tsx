@@ -11,9 +11,9 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 
 type Half = '상' | '하'
 
-interface Props { year: number; half: Half }
+interface Props { year: number; half: Half; bare?: boolean }
 
-export default function ComplianceTab({ year, half }: Props) {
+export default function ComplianceTab({ year, half, bare }: Props) {
   const { logs, activeTreatments, isLoading } = useChild()
 
   const today = new Date()
@@ -58,9 +58,9 @@ export default function ComplianceTab({ year, half }: Props) {
   if (isLoading) return <TabSkeleton />
   if (!activeTreatments.length) return <EmptyState message="설정에서 자녀의 케어 항목을 등록해주세요." />
 
-  return (
-    <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3">
-      <h3 className="font-bold text-gray-800">케어 달성률</h3>
+  const inner = (
+    <div className="space-y-3">
+      {!bare && <h3 className="font-bold text-gray-800">케어 달성률</h3>}
 
       {/* 차트 */}
       <Bar
@@ -99,4 +99,5 @@ export default function ComplianceTab({ year, half }: Props) {
       </div>
     </div>
   )
+  return bare ? inner : <div className="bg-white rounded-2xl p-4 shadow-sm">{inner}</div>
 }

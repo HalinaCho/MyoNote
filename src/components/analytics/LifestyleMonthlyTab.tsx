@@ -116,9 +116,9 @@ function BarRow({ icon, iconCls, label, values, monthLabels, goal, isOverBad }: 
   )
 }
 
-interface Props { year: number; half: Half }
+interface Props { year: number; half: Half; bare?: boolean }
 
-export default function LifestyleMonthlyTab({ year, half }: Props) {
+export default function LifestyleMonthlyTab({ year, half, bare }: Props) {
   const { lifestyle, activeChild } = useChild()
 
   const months = Array.from({ length: 6 }, (_, i) => {
@@ -134,9 +134,9 @@ export default function LifestyleMonthlyTab({ year, half }: Props) {
   const outdoorGoal = activeChild?.outdoorGoal ?? 2
   const phoneGoal   = activeChild?.phoneGoal   ?? 2
 
-  return (
-    <div className="bg-white rounded-2xl p-4 shadow-sm space-y-4">
-      <h3 className="font-bold text-gray-800">생활습관 월평균</h3>
+  const inner = (
+    <div className="space-y-4">
+      {!bare && <h3 className="font-bold text-gray-800">생활습관 월평균</h3>}
 
       <BarRow
         icon={faMobileScreen} iconCls="text-gray-500" label="스마트폰"
@@ -151,4 +151,5 @@ export default function LifestyleMonthlyTab({ year, half }: Props) {
       />
     </div>
   )
+  return bare ? inner : <div className="bg-white rounded-2xl p-4 shadow-sm">{inner}</div>
 }

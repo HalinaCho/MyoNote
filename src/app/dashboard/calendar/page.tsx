@@ -245,10 +245,10 @@ export default function CalendarPage() {
         </div>
       )}
 
-      {/* 통계 탭 */}
-      <div className="mt-3">
+      {/* 통계 카드 */}
+      <div className="mt-3 bg-white rounded-2xl p-4 shadow-sm">
         {/* 탭 토글 */}
-        <div className="flex bg-white rounded-xl p-1 shadow-sm mb-2">
+        <div className="flex bg-gray-100 rounded-xl p-1 mb-3">
           {([['care', '케어'], ['lifestyle', '생활습관']] as const).map(([t, label]) => (
             <button key={t} onClick={() => setStatsTab(t)}
               className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors
@@ -261,20 +261,20 @@ export default function CalendarPage() {
         {/* 기간 네비게이션 */}
         <div className="flex items-center justify-center gap-1 mb-3">
           <button onClick={handleStatsPrev}
-            className="w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:bg-white active:bg-gray-100 transition-colors">
+            className="w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-200 active:bg-gray-300 transition-colors">
             ‹
           </button>
           <span className="text-sm font-semibold text-gray-600 w-[100px] text-center">
             {statsYear}년 {statsHalf}반기
           </span>
           <button onClick={handleStatsNext} disabled={isStatsNextFuture}
-            className="w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:bg-white active:bg-gray-100 transition-colors disabled:opacity-30 disabled:pointer-events-none">
+            className="w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-200 active:bg-gray-300 transition-colors disabled:opacity-30 disabled:pointer-events-none">
             ›
           </button>
         </div>
 
-        {statsTab === 'care'      && <ComplianceTab year={statsYear} half={statsHalf} />}
-        {statsTab === 'lifestyle' && <LifestyleMonthlyTab year={statsYear} half={statsHalf} />}
+        {statsTab === 'care'      && <ComplianceTab year={statsYear} half={statsHalf} bare />}
+        {statsTab === 'lifestyle' && <LifestyleMonthlyTab year={statsYear} half={statsHalf} bare />}
       </div>
     </>
   )
