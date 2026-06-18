@@ -66,6 +66,34 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
   ]
   const datasets = allDatasets.filter((_, i) => (i === 0 ? showOD : showOS))
 
+  // 선택된 데이터 (기본: 최신)
+  const [activeIdx, setActiveIdx] = useState(exams.length - 1)
+  const idx = Math.min(Math.max(activeIdx, 0), exams.length - 1)
+  const activeExam = exams[idx]
+  const activeOD = parseFloat(activeExam.axOD)
+  const activeOS = parseFloat(activeExam.axOS)
+
+  // 선택 지점에 수직선 표시
+  const crosshair = {
+    id: 'crosshair',
+    afterDatasetsDraw(chart: any) {
+      const metas = chart.getSortedVisibleDatasetMetas()
+      if (!metas.length) return
+      const pt = metas[0].data[idx]
+      if (!pt) return
+      const { ctx, chartArea } = chart
+      ctx.save()
+      ctx.beginPath()
+      ctx.moveTo(pt.x, chartArea.top)
+      ctx.lineTo(pt.x, chartArea.bottom)
+      ctx.lineWidth = 1.5
+      ctx.setLineDash([4, 3])
+      ctx.strokeStyle = 'rgba(16,188,173,0.6)'
+      ctx.stroke()
+      ctx.restore()
+    },
+  }
+
   return (
     <>
       <div className="bg-white rounded-2xl p-4 shadow-sm">
@@ -97,10 +125,30 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
             </button>
           </div>
         </div>
+
+        {/* 선택 데이터 표시 (그래프 터치 시 이동) */}
+        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mb-2">
+          <span className="text-xs font-bold text-gray-700">{activeExam.date.replace(/-/g, '.')}</span>
+          {showOD && !isNaN(activeOD) && (
+            <span className="flex items-center gap-1 text-xs">
+              <span className="w-2 h-2 rounded-full bg-[#10bcad]" />
+              <span className="text-gray-500">우안</span>
+              <span className="font-bold text-gray-800">{activeOD.toFixed(2)}<span className="font-normal text-gray-400 ml-0.5">mm</span></span>
+            </span>
+          )}
+          {showOS && !isNaN(activeOS) && (
+            <span className="flex items-center gap-1 text-xs">
+              <span className="w-2 h-2 rounded-full bg-gray-400" />
+              <span className="text-gray-500">좌안</span>
+              <span className="font-bold text-gray-800">{activeOS.toFixed(2)}<span className="font-normal text-gray-400 ml-0.5">mm</span></span>
+            </span>
+          )}
+        </div>
+
         <div className="flex" style={{ aspectRatio: '3/2' }}>
           {/* Y축 고정 차트 */}
           <div style={{ width: 34, flexShrink: 0, position: 'relative' }}>
-            <span className="absolute top-0 right-1 text-[9px] text-gray-400 leading-none" style={{ zIndex: 1 }}>mm</span>
+            <span className="absolute top-0 text-[9px] text-gray-400 leading-none text-right" style={{ left: 0, width: 31, zIndex: 1 }}>(mm)</span>
             <Line
               data={{ labels, datasets: [{ data: labels.map(() => null), borderColor: 'transparent', pointRadius: 0 }] }}
               options={{
@@ -126,8 +174,11 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
             <div style={{ width: exams.length > SCROLL_THRESHOLD ? exams.length * PER_POINT : undefined, height: '100%' }}>
               <Line
                 data={{ labels, datasets }}
+                plugins={[crosshair]}
                 options={{
                   responsive: true, maintainAspectRatio: false,
+                  interaction: { mode: 'index', intersect: false },
+                  onClick: (_evt, els) => { if (els.length) setActiveIdx(els[0].index) },
                   plugins: { legend: { display: false } },
                   scales: {
                     x: { grid: { display: false }, ticks: { font: { size: 10 } } },
