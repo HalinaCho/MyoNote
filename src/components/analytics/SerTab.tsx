@@ -29,7 +29,31 @@ export default function SerTab() {
     return () => cancelAnimationFrame(id)
   }, [exams.length])
 
-
+  // 선택 데이터 (기본 null = 최신), 수직선/박스용 ref·상태
+  const [activeIdx, setActiveIdx] = useState<number | null>(null)
+  const chartRef = useRef<any>(null)
+  const idxRef = useRef(0)
+  const boxRef = useRef<HTMLDivElement>(null)
+  const [boxX, setBoxX] = useState<number | null>(null)
+  const [innerW, setInnerW] = useState(0)
+  const [boxW, setBoxW] = useState(0)
+  useEffect(() => {
+    const syncFn = () => {
+      const chart = chartRef.current
+      if (!chart) return
+      chart.update()
+      const metas = chart.getSortedVisibleDatasetMetas?.() ?? []
+      const pt = metas[0]?.data?.[idxRef.current]
+      if (pt) setBoxX(pt.x)
+      if (scrollRef.current) setInnerW(scrollRef.current.scrollWidth)
+    }
+    syncFn()
+    window.addEventListener('resize', syncFn)
+    return () => window.removeEventListener('resize', syncFn)
+  }, [activeIdx, showOD, showOS, sorted.length])
+  useEffect(() => {
+    if (boxRef.current) setBoxW(boxRef.current.offsetWidth)
+  }, [activeIdx, showOD, showOS, sorted.length, boxX])
 
   if (isLoading) return <TabSkeleton />
 
@@ -51,6 +75,38 @@ export default function SerTab() {
     { label: '좌안(OS)', data: osData, borderColor: '#9CA3AF', backgroundColor: 'rgba(156,163,175,.08)', pointBackgroundColor: '#9CA3AF', tension: 0.4, pointRadius: 4, fill: true },
   ]
   const datasets = allDatasets.filter((_, i) => (i === 0 ? showOD : showOS))
+
+  // 선택 데이터 (raw SEQ는 음수 그대로 표시)
+  const idx = Math.min(Math.max(activeIdx ?? (sorted.length - 1), 0), sorted.length - 1)
+  idxRef.current = idx
+  const activeExam = sorted[idx]
+  const activeOD = parseFloat(activeExam.serOD)
+  const activeOS = parseFloat(activeExam.serOS)
+
+  const half = (boxW ? boxW / 2 : 50) + 4
+  const boxLeft = boxX == null ? null
+    : Math.max(half, Math.min(boxX, (innerW || boxX + half) - half))
+
+  // 선택 지점 수직선: 데이터 선 뒤, 점선 그레이, 박스까지 연결
+  const crosshair = {
+    id: 'crosshair',
+    beforeDatasetsDraw(chart: any) {
+      const metas = chart.getSortedVisibleDatasetMetas()
+      if (!metas.length) return
+      const pt = metas[0].data[idxRef.current]
+      if (!pt) return
+      const { ctx, chartArea } = chart
+      ctx.save()
+      ctx.beginPath()
+      ctx.moveTo(pt.x, 0)
+      ctx.lineTo(pt.x, chartArea.bottom)
+      ctx.lineWidth = 1.5
+      ctx.setLineDash([4, 3])
+      ctx.strokeStyle = '#9CA3AF'
+      ctx.stroke()
+      ctx.restore()
+    },
+  }
 
   return (
     <div className="space-y-3">
@@ -101,23 +157,47 @@ export default function SerTab() {
                     grid: { color: '#F3F4F6' },
                   },
                 },
-                layout: { padding: { top: 14, bottom: 22 } },
+                layout: { padding: { top: 40, bottom: 22 } },
               }}
             />
           </div>
           {/* 스크롤 데이터 차트 */}
           <div ref={scrollRef} style={{ flex: 1, overflowX: 'auto' }}>
-            <div style={{ width: sorted.length > SCROLL_THRESHOLD ? sorted.length * PER_POINT : undefined, height: '100%' }}>
+            <div style={{ width: sorted.length > SCROLL_THRESHOLD ? sorted.length * PER_POINT : undefined, height: '100%', position: 'relative' }}>
+              {/* 선택 데이터 박스 (수직선 끝과 연결) */}
+              {boxLeft != null && (
+                <div className="absolute z-20 -translate-x-1/2" style={{ left: boxLeft, top: 0 }}>
+                  <div
+                    ref={boxRef}
+                    className="rounded-xl px-2.5 py-1.5 text-center whitespace-nowrap"
+                    style={{ backgroundColor: '#ffffff', boxShadow: '0 1px 2px rgba(0,0,0,0.05), 0 6px 16px -4px rgba(17,24,39,0.12)' }}
+                  >
+                    <div className="text-[10px] text-gray-500 leading-tight">{activeExam.date.replace(/-/g, '.')}</div>
+                    <div className="flex items-center justify-center gap-1.5 leading-tight mt-0.5 text-[11px] font-bold text-gray-800">
+                      {showOD && !isNaN(activeOD) && (
+                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#10bcad]" />{activeOD.toFixed(2)}</span>
+                      )}
+                      {showOS && !isNaN(activeOS) && (
+                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-gray-400" />{activeOS.toFixed(2)}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
               <Line
+                ref={chartRef}
                 data={{ labels, datasets }}
+                plugins={[crosshair]}
                 options={{
                   responsive: true, maintainAspectRatio: false,
-                  plugins: { legend: { display: false } },
+                  interaction: { mode: 'index', intersect: false },
+                  onClick: (_evt, els) => { if (els.length) setActiveIdx(els[0].index) },
+                  plugins: { legend: { display: false }, tooltip: { enabled: false } },
                   scales: {
                     x: { grid: { display: false }, ticks: { font: { size: 10 } } },
                     y: { display: false, min: yMin, max: yMax },
                   },
-                  layout: { padding: { top: 14, left: 0 } },
+                  layout: { padding: { top: 40, left: 0 } },
                 }}
               />
             </div>
