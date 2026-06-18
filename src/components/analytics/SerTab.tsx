@@ -41,10 +41,10 @@ export default function SerTab() {
   const odData = sorted.map(e => { const v = parseFloat(e.serOD); return isNaN(v) ? null : -v })
   const osData = sorted.map(e => { const v = parseFloat(e.serOS); return isNaN(v) ? null : -v })
 
-  // Y축 고정: 표시 여부와 관계없이 전체 데이터 기준
+  // Y축 고정: 표시 여부와 관계없이 전체 데이터 기준, 0.5 단위로 스냅
   const allVals = [...odData, ...osData].filter((v): v is number => v !== null)
-  const yMin = parseFloat((Math.min(...allVals) - 0.3).toFixed(1))
-  const yMax = parseFloat((Math.max(...allVals) + 0.3).toFixed(1))
+  const yMin = Math.floor((Math.min(...allVals) - 0.3) * 2) / 2
+  const yMax = Math.ceil((Math.max(...allVals) + 0.3) * 2) / 2
 
   const allDatasets = [
     { label: '우안(OD)', data: odData, borderColor: '#10bcad', backgroundColor: 'rgba(16,188,173,0.08)', pointBackgroundColor: '#10bcad', tension: 0.4, pointRadius: 4, fill: true },
@@ -82,9 +82,9 @@ export default function SerTab() {
             </button>
           </div>
         </div>
-        <div className="flex" style={{ aspectRatio: '2/1' }}>
+        <div className="flex" style={{ aspectRatio: '3/2' }}>
           {/* Y축 고정 차트 */}
-          <div style={{ width: 44, flexShrink: 0, position: 'relative' }}>
+          <div style={{ width: 38, flexShrink: 0, position: 'relative' }}>
             <Line
               data={{ labels, datasets: [{ data: labels.map(() => null), borderColor: 'transparent', pointRadius: 0 }] }}
               options={{
@@ -96,12 +96,12 @@ export default function SerTab() {
                   y: {
                     min: yMin, max: yMax,
                     // @ts-ignore
-                    afterFit: (s: any) => { s.width = 44 },
-                    ticks: { callback: v => `-${(v as number).toFixed(1)}D`, font: { size: 10 } },
+                    afterFit: (s: any) => { s.width = 38 },
+                    ticks: { stepSize: 0.5, callback: v => `-${(v as number).toFixed(1)}D`, font: { size: 10 } },
                     grid: { color: '#F3F4F6' },
                   },
                 },
-                layout: { padding: { bottom: 22 } },
+                layout: { padding: { top: 14, bottom: 22 } },
               }}
             />
           </div>
@@ -117,7 +117,7 @@ export default function SerTab() {
                     x: { grid: { display: false }, ticks: { font: { size: 10 } } },
                     y: { display: false, min: yMin, max: yMax },
                   },
-                  layout: { padding: { left: 0 } },
+                  layout: { padding: { top: 14, left: 0 } },
                 }}
               />
             </div>
