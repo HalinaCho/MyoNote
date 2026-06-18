@@ -199,7 +199,7 @@ export default function HomePage() {
       {/* ── 케어 달성률 ── */}
       {activeTreatments.length > 0 && (
         <section className="bg-white rounded-2xl p-4 mb-3 shadow-sm">
-          <h2 className="font-bold text-gray-800 mb-3">케어 달성률</h2>
+          <h2 className="font-bold text-gray-800 mb-3">최근 7일 난시케어</h2>
 
           <div className="flex justify-around mb-4">
             <div className="text-center">
