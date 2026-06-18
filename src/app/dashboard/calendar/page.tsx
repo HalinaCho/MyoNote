@@ -22,6 +22,7 @@ export default function CalendarPage() {
   const { logs, lifestyle, activeTreatments, isLoading, saveTreatmentLog, saveLifestyle } = useChild()
   const [calYear, setCalYear]   = useState(new Date().getFullYear())
   const [calMonth, setCalMonth] = useState(new Date().getMonth())
+  const [statsTab, setStatsTab] = useState<'care' | 'lifestyle'>('care')
   const [dayModal, setDayModal] = useState<string | null>(null)
   const [lifeForm, setLifeForm] = useState({ outdoorH: 0, outdoorM: 0, phoneH: 0, phoneM: 0 })
   const [lifeSaving, setLifeSaving] = useState(false)
@@ -226,14 +227,19 @@ export default function CalendarPage() {
         </div>
       )}
 
-      {/* 달성률 */}
+      {/* 통계 탭 */}
       <div className="mt-3">
-        <ComplianceTab />
-      </div>
-
-      {/* 생활습관 */}
-      <div className="mt-3">
-        <LifestyleTab />
+        <div className="flex bg-white rounded-xl mb-3 p-1 shadow-sm">
+          {([['care', '케어'], ['lifestyle', '생활습관']] as const).map(([t, label]) => (
+            <button key={t} onClick={() => setStatsTab(t)}
+              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors
+                ${statsTab === t ? 'bg-[#10bcad] text-white' : 'text-gray-500'}`}>
+              {label}
+            </button>
+          ))}
+        </div>
+        {statsTab === 'care'      && <ComplianceTab />}
+        {statsTab === 'lifestyle' && <LifestyleTab />}
       </div>
     </>
   )
