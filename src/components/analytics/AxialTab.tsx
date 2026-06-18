@@ -73,16 +73,38 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
   const activeOD = parseFloat(activeExam.axOD)
   const activeOS = parseFloat(activeExam.axOS)
 
-  // 플러그인이 항상 최신 idx를 읽도록 ref 사용 (closure 고정 방지) + 강제 redraw
+  // 플러그인이 항상 최신 idx를 읽도록 ref 사용 (closure 고정 방지)
   const chartRef = useRef<any>(null)
   const idxRef = useRef(idx)
   idxRef.current = idx
-  useEffect(() => { chartRef.current?.update() }, [activeIdx])
 
-  // 선택 지점에 수직선 표시
+  // 값 박스 위치 (선택 지점의 픽셀 x) + 컨테이너 너비
+  const [boxX, setBoxX] = useState<number | null>(null)
+  const [innerW, setInnerW] = useState(0)
+  useEffect(() => {
+    const sync = () => {
+      const chart = chartRef.current
+      if (!chart) return
+      chart.update()
+      const metas = chart.getSortedVisibleDatasetMetas?.() ?? []
+      const pt = metas[0]?.data?.[idxRef.current]
+      if (pt) setBoxX(pt.x)
+      if (scrollRef.current) setInnerW(scrollRef.current.scrollWidth)
+    }
+    sync()
+    window.addEventListener('resize', sync)
+    return () => window.removeEventListener('resize', sync)
+  }, [activeIdx, showOD, showOS, exams.length])
+
+  // 박스가 양끝에서 잘리지 않도록 클램프 (선은 실제 지점, 박스만 살짝 이동)
+  const BOX_HALF = 48
+  const boxLeft = boxX == null ? null
+    : Math.max(BOX_HALF, Math.min(boxX, (innerW || boxX + BOX_HALF) - BOX_HALF))
+
+  // 선택 지점 수직선: 데이터 선 뒤(beforeDatasetsDraw), 연한 그레이, 박스까지 연결
   const crosshair = {
     id: 'crosshair',
-    afterDatasetsDraw(chart: any) {
+    beforeDatasetsDraw(chart: any) {
       const metas = chart.getSortedVisibleDatasetMetas()
       if (!metas.length) return
       const pt = metas[0].data[idxRef.current]
@@ -90,11 +112,10 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
       const { ctx, chartArea } = chart
       ctx.save()
       ctx.beginPath()
-      ctx.moveTo(pt.x, chartArea.top)
+      ctx.moveTo(pt.x, 0)
       ctx.lineTo(pt.x, chartArea.bottom)
       ctx.lineWidth = 1.5
-      ctx.setLineDash([4, 3])
-      ctx.strokeStyle = 'rgba(16,188,173,0.6)'
+      ctx.strokeStyle = 'rgba(156,163,175,0.7)'
       ctx.stroke()
       ctx.restore()
     },
@@ -132,27 +153,6 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
           </div>
         </div>
 
-        {/* 선택 데이터 박스 (그래프 위, 터치 시 이동) */}
-        <div className="flex justify-center mb-2">
-          <div className="inline-flex items-center gap-3 bg-gray-50 rounded-lg px-3 py-1.5">
-            <span className="text-xs font-bold text-gray-700">{activeExam.date.replace(/-/g, '.')}</span>
-            {showOD && !isNaN(activeOD) && (
-              <span className="flex items-center gap-1 text-xs">
-                <span className="w-2 h-2 rounded-full bg-[#10bcad]" />
-                <span className="font-bold text-gray-800">{activeOD.toFixed(2)}</span>
-                <span className="text-gray-400">mm</span>
-              </span>
-            )}
-            {showOS && !isNaN(activeOS) && (
-              <span className="flex items-center gap-1 text-xs">
-                <span className="w-2 h-2 rounded-full bg-gray-400" />
-                <span className="font-bold text-gray-800">{activeOS.toFixed(2)}</span>
-                <span className="text-gray-400">mm</span>
-              </span>
-            )}
-          </div>
-        </div>
-
         <div className="flex" style={{ aspectRatio: '3/2' }}>
           {/* Y축 고정 차트 */}
           <div style={{ width: 34, flexShrink: 0, position: 'relative' }}>
@@ -173,13 +173,30 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
                     grid: { color: '#F3F4F6' },
                   },
                 },
-                layout: { padding: { top: 14, bottom: 22 } },
+                layout: { padding: { top: 40, bottom: 22 } },
               }}
             />
           </div>
           {/* 스크롤 데이터 차트 */}
           <div ref={scrollRef} style={{ flex: 1, overflowX: 'auto' }}>
-            <div style={{ width: exams.length > SCROLL_THRESHOLD ? exams.length * PER_POINT : undefined, height: '100%' }}>
+            <div style={{ width: exams.length > SCROLL_THRESHOLD ? exams.length * PER_POINT : undefined, height: '100%', position: 'relative' }}>
+              {/* 선택 데이터 박스 (수직선 끝과 연결) */}
+              {boxLeft != null && (
+                <div className="absolute z-20 -translate-x-1/2" style={{ left: boxLeft, top: 0 }}>
+                  <div className="bg-gray-700 text-white rounded-lg px-2.5 py-1 shadow-md text-center whitespace-nowrap">
+                    <div className="text-[10px] text-gray-300 leading-tight">{activeExam.date.replace(/-/g, '.')}</div>
+                    <div className="flex items-center justify-center gap-2 leading-tight mt-0.5 text-[11px] font-bold">
+                      {showOD && !isNaN(activeOD) && (
+                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#10bcad]" />{activeOD.toFixed(2)}</span>
+                      )}
+                      {showOS && !isNaN(activeOS) && (
+                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-gray-300" />{activeOS.toFixed(2)}</span>
+                      )}
+                      <span className="font-normal text-gray-400">mm</span>
+                    </div>
+                  </div>
+                </div>
+              )}
               <Line
                 ref={chartRef}
                 data={{ labels, datasets }}
@@ -193,7 +210,7 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
                     x: { grid: { display: false }, ticks: { font: { size: 10 } } },
                     y: { display: false, min: yMin, max: yMax },
                   },
-                  layout: { padding: { top: 14, left: 0 } },
+                  layout: { padding: { top: 40, left: 0 } },
                 }}
               />
             </div>
