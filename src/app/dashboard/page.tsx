@@ -270,7 +270,7 @@ export default function HomePage() {
               value: todayLife?.phone ?? null,
               goal: activeChild?.phoneGoal ?? 2,
               isOverBad: true,
-              badgeGood: '권장이하', badgeBad: '초과',
+              badgeGood: '목표이하', badgeBad: '초과',
               badBg:       'border-rose-200/50 bg-rose-50',
               badIconCls:  'bg-rose-100 text-rose-400',
               badBadgeCls: 'bg-rose-100 text-rose-500',
