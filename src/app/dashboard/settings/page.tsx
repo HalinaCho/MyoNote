@@ -1,7 +1,6 @@
 ﻿'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { getAlertDay, setAlertDay } from '@/lib/notificationPrefs'
 import { useChild } from '@/context/ChildContext'
@@ -11,11 +10,11 @@ import { calcAgeLabel } from '@/lib/utils/date'
 import type { Child } from '@/types'
 import { createClient } from '@/lib/supabase/client'
 import * as q from '@/lib/supabase/queries'
+import type { Guardian } from '@/lib/supabase/queries'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPen, faTrashCan, faPlus, faUserGroup, faKey, faRightFromBracket, faXmark, faChevronRight, faBell } from '@fortawesome/free-solid-svg-icons'
 
 export default function SettingsPage() {
-  const router = useRouter()
   const { children, activeChildId, activeChild, deleteChild, refreshChildren } = useChild()
   const [childModal, setChildModal] = useState<{ open: boolean; editing: Child | null }>({ open: false, editing: null })
   const [inviteModal, setInviteModal] = useState(false)
@@ -24,8 +23,24 @@ export default function SettingsPage() {
   const [joinCode, setJoinCode] = useState('')
   const [generating, setGenerating] = useState(false)
   const [alertDay, setAlertDayState] = useState<number | null>(null)
+  const [guardians, setGuardians] = useState<Guardian[]>([])
+  const [loadingGuardians, setLoadingGuardians] = useState(false)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
   useEffect(() => { setAlertDayState(getAlertDay()) }, [])
+
+  useEffect(() => {
+    createClient().auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id ?? null))
+  }, [])
+
+  useEffect(() => {
+    if (!activeChildId) return
+    setLoadingGuardians(true)
+    q.fetchGuardians(activeChildId)
+      .then(setGuardians)
+      .catch(() => setGuardians([]))
+      .finally(() => setLoadingGuardians(false))
+  }, [activeChildId])
 
   const selectAlertDay = (day: number) => {
     const next = alertDay === day ? null : day
@@ -68,9 +83,20 @@ export default function SettingsPage() {
     }
   }
 
-  const userEmail = typeof window !== 'undefined'
-    ? undefined
-    : undefined
+  const handleRemoveGuardian = async (userId: string) => {
+    if (!activeChildId) return
+    const isSelf = userId === currentUserId
+    const msg = isSelf ? '보호자 자격을 포기하시겠습니까?' : '이 보호자를 제거하시겠습니까?'
+    if (!confirm(msg)) return
+    try {
+      await q.removeGuardian(activeChildId, userId)
+      setGuardians(prev => prev.filter(g => g.userId !== userId))
+      toast.success(isSelf ? '보호자에서 나갔습니다' : '보호자를 제거했습니다')
+      if (isSelf) await refreshChildren()
+    } catch {
+      toast.error('처리에 실패했습니다')
+    }
+  }
 
   return (
     <>
@@ -127,6 +153,57 @@ export default function SettingsPage() {
       {/* 보호자 */}
       <section className="bg-white rounded-2xl overflow-hidden mb-3 shadow-sm">
         <div className="px-4 pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">보호자</div>
+
+        {loadingGuardians ? (
+          <div className="px-4 py-3 border-t border-gray-50 space-y-2">
+            {[0, 1].map(i => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-gray-100 animate-pulse flex-shrink-0" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-3 bg-gray-100 rounded animate-pulse w-1/2" />
+                  <div className="h-3 bg-gray-100 rounded animate-pulse w-1/4" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : guardians.map(g => {
+          const isMe = g.userId === currentUserId
+          const amOwner = guardians.find(x => x.userId === currentUserId)?.role === 'owner'
+          const roleLabel = { owner: '소유자', editor: '편집자', viewer: '열람자' }[g.role]
+          const roleStyle = {
+            owner: 'text-teal-700 bg-teal-50',
+            editor: 'text-amber-600 bg-amber-50',
+            viewer: 'text-gray-500 bg-gray-100',
+          }[g.role]
+          const canRemove = (amOwner && g.role !== 'owner') || (isMe && g.role !== 'owner')
+          const initial = (g.displayName || '?')[0].toUpperCase()
+
+          return (
+            <div key={g.userId} className="flex items-center gap-3 px-4 py-3 border-t border-gray-50">
+              <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-sm font-semibold text-gray-500 flex-shrink-0">
+                {initial}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium text-gray-800 truncate">
+                  {g.displayName}
+                  {isMe && <span className="ml-1 text-gray-400 font-normal text-xs">(나)</span>}
+                </div>
+                <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${roleStyle}`}>
+                  {roleLabel}
+                </span>
+              </div>
+              {canRemove && (
+                <button
+                  onClick={() => handleRemoveGuardian(g.userId)}
+                  className="text-xs text-rose-400 hover:text-rose-600 px-2 py-1 rounded-lg hover:bg-rose-50 flex-shrink-0"
+                >
+                  {isMe ? '나가기' : '제거'}
+                </button>
+              )}
+            </div>
+          )
+        })}
+
         <button onClick={() => setInviteModal(true)} className="w-full flex items-center gap-3 px-4 py-3 border-t border-gray-50 text-sm text-gray-700 hover:bg-gray-50">
           <FontAwesomeIcon icon={faUserGroup} className="w-4" /> <span className="flex-1 text-left">보호자 초대</span> <FontAwesomeIcon icon={faChevronRight} className="text-gray-300 text-xs" />
         </button>

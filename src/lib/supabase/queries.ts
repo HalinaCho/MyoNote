@@ -212,6 +212,34 @@ export async function deleteLifestyle(childId: string, dateStr: string): Promise
   if (error) throw error
 }
 
+// ── 보호자 ────────────────────────────────────────────────────
+
+export interface Guardian {
+  userId: string
+  role: 'owner' | 'editor' | 'viewer'
+  displayName: string
+  email: string
+}
+
+export async function fetchGuardians(childId: string): Promise<Guardian[]> {
+  const sb = createClient()
+  const { data, error } = await sb.rpc('get_child_guardians', { p_child_id: childId })
+  if (error) throw error
+  return (data ?? []).map((r: any) => ({
+    userId: r.user_id,
+    role: r.role as Guardian['role'],
+    displayName: r.display_name || r.email?.split('@')[0] || '알 수 없음',
+    email: r.email || '',
+  }))
+}
+
+export async function removeGuardian(childId: string, userId: string): Promise<void> {
+  const sb = createClient()
+  const { error } = await sb.from('eyebody_child_guardians')
+    .delete().eq('child_id', childId).eq('user_id', userId)
+  if (error) throw error
+}
+
 // ── 초대 코드 ─────────────────────────────────────────────────
 
 export async function createInviteCode(role: 'editor' | 'viewer' = 'editor'): Promise<string> {
