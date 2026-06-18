@@ -122,7 +122,7 @@ export default function SettingsPage() {
     <>
       {/* 현재 자녀 프로필 */}
       {activeChild && (
-        <section className="bg-white rounded-2xl p-4 mb-3 shadow-sm flex items-center gap-3">
+        <section className="bg-white rounded-2xl p-3 mb-2 shadow-sm flex items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-white border-2 border-[#10bcad] flex items-center justify-center text-2xl">
             {activeChild.gender === 'F' ? '👧' : '👦'}
           </div>
@@ -140,11 +140,11 @@ export default function SettingsPage() {
       )}
 
       {/* 자녀 관리 */}
-      <section className="bg-white rounded-2xl overflow-hidden mb-3 shadow-sm">
-        <div className="px-4 pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">자녀 관리</div>
+      <section className="bg-white rounded-2xl overflow-hidden mb-2 shadow-sm">
+        <div className="px-4 pt-3 pb-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wide">자녀 관리</div>
 
         {children.map(c => (
-          <div key={c.id} className="flex items-center gap-3 px-4 py-3 border-t border-gray-50">
+          <div key={c.id} className="flex items-center gap-3 px-4 py-2.5 border-t border-gray-50">
             <div className={`w-10 h-10 rounded-full bg-white border-2 flex items-center justify-center text-lg flex-shrink-0
               ${c.id === activeChildId ? 'border-[#10bcad]' : 'border-gray-200'}`}>
               {c.gender === 'F' ? '👧' : '👦'}
@@ -164,18 +164,18 @@ export default function SettingsPage() {
 
         <button
           onClick={() => setChildModal({ open: true, editing: null })}
-          className="w-full flex items-center gap-3 px-4 py-3 border-t border-gray-50 text-teal-600 text-sm font-medium"
+          className="w-full flex items-center gap-3 px-4 py-2.5 border-t border-gray-50 text-teal-600 text-sm font-medium"
         >
           <FontAwesomeIcon icon={faPlus} /> 자녀 추가
         </button>
       </section>
 
       {/* 보호자 */}
-      <section className="bg-white rounded-2xl overflow-hidden mb-3 shadow-sm">
-        <div className="px-4 pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">보호자</div>
+      <section className="bg-white rounded-2xl overflow-hidden mb-2 shadow-sm">
+        <div className="px-4 pt-3 pb-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wide">보호자</div>
 
         {loadingGuardians ? (
-          <div className="px-4 py-3 border-t border-gray-50 space-y-2">
+          <div className="px-4 py-2.5 border-t border-gray-50 space-y-2">
             {[0, 1].map(i => (
               <div key={i} className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full bg-gray-100 animate-pulse flex-shrink-0" />
@@ -199,7 +199,7 @@ export default function SettingsPage() {
           const initial = (g.displayName || '?')[0].toUpperCase()
 
           return (
-            <div key={g.userId} className="flex items-center gap-3 px-4 py-3 border-t border-gray-50">
+            <div key={g.userId} className="flex items-center gap-3 px-4 py-2.5 border-t border-gray-50">
               <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-sm font-semibold text-gray-500 flex-shrink-0">
                 {initial}
               </div>
@@ -224,18 +224,18 @@ export default function SettingsPage() {
           )
         })}
 
-        <button onClick={() => setInviteModal(true)} className="w-full flex items-center gap-3 px-4 py-3 border-t border-gray-50 text-sm text-gray-700 hover:bg-gray-50">
+        <button onClick={() => setInviteModal(true)} className="w-full flex items-center gap-3 px-4 py-2.5 border-t border-gray-50 text-sm text-gray-700 hover:bg-gray-50">
           <FontAwesomeIcon icon={faUserGroup} className="w-4" /> <span className="flex-1 text-left">보호자 초대</span> <FontAwesomeIcon icon={faChevronRight} className="text-gray-300 text-xs" />
         </button>
-        <button onClick={() => setJoinModal(true)} className="w-full flex items-center gap-3 px-4 py-3 border-t border-gray-50 text-sm text-gray-700 hover:bg-gray-50">
+        <button onClick={() => setJoinModal(true)} className="w-full flex items-center gap-3 px-4 py-2.5 border-t border-gray-50 text-sm text-gray-700 hover:bg-gray-50">
           <FontAwesomeIcon icon={faKey} className="w-4" /> <span className="flex-1 text-left">코드로 참여하기</span> <FontAwesomeIcon icon={faChevronRight} className="text-gray-300 text-xs" />
         </button>
       </section>
 
       {/* 알림 설정 */}
-      <section className="bg-white rounded-2xl overflow-hidden mb-3 shadow-sm">
-        <div className="px-4 pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">알림 설정</div>
-        <div className="px-4 py-3 border-t border-gray-50">
+      <section className="bg-white rounded-2xl overflow-hidden mb-2 shadow-sm">
+        <div className="px-4 pt-3 pb-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wide">알림 설정</div>
+        <div className="px-4 py-2.5 border-t border-gray-50">
           <div className="flex items-center gap-3 text-sm font-medium text-gray-700 mb-1">
             <FontAwesomeIcon icon={faBell} className="w-4" />
             병원 예약 알림
@@ -260,14 +260,14 @@ export default function SettingsPage() {
       </section>
 
       {/* 계정 */}
-      <section className="bg-white rounded-2xl overflow-hidden mb-3 shadow-sm">
-        <div className="px-4 pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">계정</div>
+      <section className="bg-white rounded-2xl overflow-hidden mb-2 shadow-sm">
+        <div className="px-4 pt-3 pb-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wide">계정</div>
         <button
           onClick={async () => {
             try { await signOut() } catch {}
             window.location.replace(`${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/login`)
           }}
-          className="w-full flex items-center gap-3 px-4 py-3 border-t border-gray-50 text-sm text-rose-500 hover:bg-rose-50"
+          className="w-full flex items-center gap-3 px-4 py-2.5 border-t border-gray-50 text-sm text-rose-500 hover:bg-rose-50"
         >
           <FontAwesomeIcon icon={faRightFromBracket} className="w-4" /> 로그아웃
         </button>
