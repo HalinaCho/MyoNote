@@ -193,9 +193,10 @@ function PctView({
   return (
     <>
       <div className="bg-white rounded-2xl p-4 shadow-sm">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-bold text-gray-800">또래 안축장 백분위 비교</h3>
-          <div className="flex items-center gap-2 text-xs text-gray-500">
+        <div className="mb-3">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-gray-800">또래 안축장 백분위 비교</h3>
+            <div className="flex items-center gap-2 text-xs text-gray-500">
             <span className="flex items-center gap-1">
               <span className="w-3 h-0.5 rounded bg-[#0D9488] inline-block"/>우안
             </span>
@@ -203,6 +204,8 @@ function PctView({
               <span className="w-3 h-0.5 rounded bg-gray-400 inline-block"/>좌안
             </span>
           </div>
+        </div>
+        <p className="text-xs text-gray-400 mt-1">백분위(P)는 같은 나이 또래 100명 중 순위예요. 높을수록 안축장이 긴 편입니다.</p>
         </div>
 
         <Line
@@ -362,10 +365,11 @@ function PctSummaryCard({
 
   return (
     <div className="bg-white rounded-2xl p-4 shadow-sm">
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-1">
         <span className="text-sm font-bold text-gray-700">또래 안축장 비교</span>
         <span className="text-xs text-gray-400">만 {ageInt}세 기준</span>
       </div>
+      <p className="text-xs text-gray-400 mb-3">P숫자 = 또래 100명 중 순위 (예: P72 → 상위 28%)</p>
 
       <div className="flex gap-3">
         {[
