@@ -81,7 +81,7 @@ export default function SerTab() {
             </button>
           </div>
         </div>
-        <div className="flex" style={{ height: 210 }}>
+        <div className="flex" style={{ aspectRatio: '2/1' }}>
           {/* Y축 고정 차트 */}
           <div style={{ width: 52, flexShrink: 0 }}>
             <Line
