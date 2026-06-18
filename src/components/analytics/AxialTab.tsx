@@ -249,12 +249,14 @@ function PctView({
   const childOD = withBoth.map(e => ({ x: parseFloat(calcAgeYears(birth, e.date).toFixed(2)), y: parseFloat(e.axOD) }))
   const childOS = withBoth.map(e => ({ x: parseFloat(calcAgeYears(birth, e.date).toFixed(2)), y: parseFloat(e.axOS) }))
 
-  // 참조 데이터 범위(6~18세) 밖이면 차트 대신 안내
+  // X축: 오늘 기준 현재 나이 ±3세, 참조 데이터 범위(6–18) 내 클램프
   const today = new Date().toISOString().slice(0, 10)
   const curAge = Math.floor(calcAgeYears(birth, today))
-  const guardMin = Math.max(6,  curAge - 3)
-  const guardMax = Math.min(18, curAge + 3)
-  if (guardMin >= guardMax) {
+  const xMin = Math.max(6,  curAge - 3)
+  const xMax = Math.min(18, curAge + 3)
+
+  // 참조 데이터 범위(6~18세) 밖이면 차트 대신 안내
+  if (xMin >= xMax) {
     return (
       <div className="bg-white rounded-2xl p-6 shadow-sm text-center space-y-1">
         <p className="text-sm text-gray-500">또래 비교 기준 데이터는 만 6~18세까지 제공됩니다.</p>
@@ -262,19 +264,6 @@ function PctView({
       </div>
     )
   }
-
-  // X축: 자녀 검사 나이 구간에 맞춰 확대(최소 2년 폭, ±0.5 여유), 6~18 클램프
-  const ages = withBoth.map(e => calcAgeYears(birth, e.date))
-  let xMin = guardMin, xMax = guardMax
-  if (ages.length) {
-    xMin = Math.min(...ages) - 0.5
-    xMax = Math.max(...ages) + 0.5
-    if (xMax - xMin < 2) { const mid = (xMin + xMax) / 2; xMin = mid - 1; xMax = mid + 1 }
-    xMin = Math.max(6, xMin)
-    xMax = Math.min(18, xMax)
-    if (xMin >= xMax) { xMin = guardMin; xMax = guardMax }
-  }
-  const xStep = (xMax - xMin) <= 3 ? 0.5 : 1
 
   return (
     <>
@@ -342,15 +331,13 @@ function PctView({
               {
                 label: '우안(OD)', data: childOD,
                 borderColor: '#10bcad', backgroundColor: '#10bcad',
-                pointBackgroundColor: '#10bcad', pointBorderColor: '#fff', pointBorderWidth: 1.5,
-                borderWidth: 2.5, pointRadius: 4.5, pointHoverRadius: 6,
+                borderWidth: 2.5, pointRadius: 2, pointHoverRadius: 4,
                 fill: false, tension: 0.3,
               },
               {
                 label: '좌안(OS)', data: childOS,
                 borderColor: '#9CA3AF', backgroundColor: '#9CA3AF',
-                pointBackgroundColor: '#9CA3AF', pointBorderColor: '#fff', pointBorderWidth: 1.5,
-                borderWidth: 2.5, pointRadius: 4.5, pointHoverRadius: 6,
+                borderWidth: 2.5, pointRadius: 2, pointHoverRadius: 4,
                 fill: false, tension: 0.3,
               },
             ],
@@ -376,7 +363,7 @@ function PctView({
                 type: 'linear' as const,
                 min: xMin, max: xMax,
                 border: { display: false },
-                ticks: { stepSize: xStep, callback: v => `${v}세`, font: { size: 11 } },
+                ticks: { stepSize: 1, callback: v => `${v}세`, font: { size: 11 } },
                 grid: { color: '#F3F4F6' },
               },
               y: {
