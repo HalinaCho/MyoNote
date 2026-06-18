@@ -113,15 +113,15 @@ export default function LifestyleTab() {
       ) : (
         <>
           <BarRow
-            icon={faTree} iconCls="text-[#10bcad]" label="야외활동"
-            values={outdoorValues} dayLabels={dayLabels}
-            goal={outdoorGoal} isOverBad={false}
-          />
-          <div className="border-t border-gray-100" />
-          <BarRow
             icon={faMobileScreen} iconCls="text-amber-500" label="스마트폰"
             values={phoneValues} dayLabels={dayLabels}
             goal={phoneGoal} isOverBad={true}
+          />
+          <div className="border-t border-gray-100" />
+          <BarRow
+            icon={faTree} iconCls="text-[#10bcad]" label="야외활동"
+            values={outdoorValues} dayLabels={dayLabels}
+            goal={outdoorGoal} isOverBad={false}
           />
         </>
       )}

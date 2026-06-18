@@ -256,16 +256,6 @@ export default function HomePage() {
         <div className="space-y-2">
           {[
             {
-              icon: faTree, label: '야외활동',
-              value: todayLife?.outdoor ?? null,
-              goal: activeChild?.outdoorGoal ?? 2,
-              isOverBad: false,
-              badgeGood: '달성',   badgeBad: '미달성',
-              badBg:       'border-amber-200/50 bg-amber-50',
-              badIconCls:  'bg-amber-100 text-amber-500',
-              badBadgeCls: 'bg-amber-100 text-amber-700',
-            },
-            {
               icon: faMobileScreen, label: '스마트폰',
               value: todayLife?.phone ?? null,
               goal: activeChild?.phoneGoal ?? 2,
@@ -274,6 +264,16 @@ export default function HomePage() {
               badBg:       'border-rose-200/50 bg-rose-50',
               badIconCls:  'bg-rose-100 text-rose-400',
               badBadgeCls: 'bg-rose-100 text-rose-500',
+            },
+            {
+              icon: faTree, label: '야외활동',
+              value: todayLife?.outdoor ?? null,
+              goal: activeChild?.outdoorGoal ?? 2,
+              isOverBad: false,
+              badgeGood: '달성',   badgeBad: '미달성',
+              badBg:       'border-amber-200/50 bg-amber-50',
+              badIconCls:  'bg-amber-100 text-amber-500',
+              badBadgeCls: 'bg-amber-100 text-amber-700',
             },
           ].map(item => {
             const hasData = item.value !== null

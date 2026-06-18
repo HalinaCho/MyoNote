@@ -5,7 +5,8 @@ import toast from 'react-hot-toast'
 import { useChild } from '@/context/ChildContext'
 import type { Child } from '@/types'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faXmark } from '@fortawesome/free-solid-svg-icons'
+import { faXmark, faTree, faMobileScreen } from '@fortawesome/free-solid-svg-icons'
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 
 interface Props {
   open: boolean
@@ -15,12 +16,15 @@ interface Props {
 
 const EMPTY = { name: '', birth: '', gender: 'M' as 'M' | 'F', treatAtropine: false, treatDreamlens: false, outdoorGoal: 2, phoneGoal: 2 }
 
-function GoalStepper({ icon, label, dir, value, onChange }: {
-  icon: string; label: string; dir: '이상' | '이하'; value: number; onChange: (v: number) => void
+function GoalStepper({ icon, iconCls, label, dir, value, onChange }: {
+  icon: IconDefinition; iconCls: string; label: string; dir: '이상' | '이하'; value: number; onChange: (v: number) => void
 }) {
   return (
     <div className="flex items-center justify-between py-2.5 border-b border-gray-100 last:border-0">
-      <span className="text-sm text-gray-700">{icon} {label} <span className="text-xs text-gray-400">({dir})</span></span>
+      <span className="flex items-center gap-1.5 text-sm text-gray-700">
+        <FontAwesomeIcon icon={icon} className={iconCls} />
+        {label} <span className="text-xs text-gray-400">({dir})</span>
+      </span>
       <div className="flex items-center gap-2">
         <button type="button" onClick={() => onChange(Math.max(0, value - 0.5))}
           className="w-7 h-7 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-bold text-base leading-none">−</button>
@@ -140,10 +144,10 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">생활습관 권장 목표 (일 기준)</label>
             <div className="border border-gray-200 rounded-lg px-3 divide-y divide-gray-100">
-              <GoalStepper icon="🌳" label="야외활동" dir="이상"
-                value={form.outdoorGoal} onChange={v => setForm(f => ({ ...f, outdoorGoal: v }))} />
-              <GoalStepper icon="📱" label="스마트폰" dir="이하"
+              <GoalStepper icon={faMobileScreen} iconCls="text-amber-500" label="스마트폰" dir="이하"
                 value={form.phoneGoal}  onChange={v => setForm(f => ({ ...f, phoneGoal: v }))} />
+              <GoalStepper icon={faTree} iconCls="text-[#10bcad]" label="야외활동" dir="이상"
+                value={form.outdoorGoal} onChange={v => setForm(f => ({ ...f, outdoorGoal: v }))} />
             </div>
           </div>
 

@@ -104,15 +104,15 @@ export default function LifestyleMonthlyTab({ year, half }: Props) {
       <h3 className="font-bold text-gray-800">생활습관 월평균</h3>
 
       <BarRow
-        icon={faTree} iconCls="text-[#10bcad]" label="야외활동"
-        values={outdoorVals} monthLabels={monthLabels}
-        goal={outdoorGoal} isOverBad={false}
-      />
-      <div className="border-t border-gray-100" />
-      <BarRow
         icon={faMobileScreen} iconCls="text-amber-500" label="스마트폰"
         values={phoneVals} monthLabels={monthLabels}
         goal={phoneGoal} isOverBad={true}
+      />
+      <div className="border-t border-gray-100" />
+      <BarRow
+        icon={faTree} iconCls="text-[#10bcad]" label="야외활동"
+        values={outdoorVals} monthLabels={monthLabels}
+        goal={outdoorGoal} isOverBad={false}
       />
     </div>
   )
