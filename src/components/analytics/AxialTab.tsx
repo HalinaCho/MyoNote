@@ -10,6 +10,8 @@ import {
   PointElement, LineElement, Tooltip, Legend, Filler,
 } from 'chart.js'
 import { calcAgeYears, calcPercentile, pctLabel, normCurve } from '@/lib/axialPercentile'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCircleInfo, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons'
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler)
 
 export default function AxialTab() {
@@ -148,6 +150,7 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
 function PctView({
   exams, birth,
 }: { exams: { date: string; axOD: string; axOS: string }[]; birth?: string }) {
+  const [showPctInfo, setShowPctInfo] = useState(false)
   if (!birth) {
     return (
       <div className="bg-white rounded-2xl p-6 shadow-sm text-center text-gray-400 text-sm">
@@ -305,7 +308,22 @@ function PctView({
             P90
           </span>
         </div>
-        <p className="text-xs text-gray-400 mt-2 text-center">백분위(P)는 같은 나이 또래 100명 중 순위예요. 높을수록 안축장이 긴 편입니다.</p>
+        <div className="mt-2 text-center">
+          <button
+            type="button"
+            onClick={() => setShowPctInfo(v => !v)}
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            <FontAwesomeIcon icon={faCircleInfo} className="text-[#10bcad]" />
+            백분위(P)란?
+            <FontAwesomeIcon icon={showPctInfo ? faChevronUp : faChevronDown} className="text-[9px] text-gray-400" />
+          </button>
+          {showPctInfo && (
+            <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">
+              백분위(P)는 같은 나이 또래 100명 중 순위예요.<br />높을수록 안축장이 긴 편입니다.
+            </p>
+          )}
+        </div>
 
         <PctSummaryInline exams={withBoth} birth={birth} />
       </div>
