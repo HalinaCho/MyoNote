@@ -57,7 +57,7 @@ export default function SerTab() {
               onClick={() => { if (showOD && !showOS) { setShowOS(true) } else { setShowOD(true); setShowOS(false) } }}
               className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-all ${
                 showOD
-                  ? 'bg-[#edf7f6] text-[#10bcad] border border-[#10bcad]/30'
+                  ? 'bg-teal-100 text-[#10bcad] border border-[#10bcad]/30'
                   : 'bg-gray-100 text-gray-300 border border-transparent'
               }`}
             >
