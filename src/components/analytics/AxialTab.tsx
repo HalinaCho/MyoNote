@@ -317,9 +317,9 @@ function PctView({
             P90
           </span>
         </div>
-      </div>
 
-      <PctSummaryCard exams={withBoth} birth={birth} />
+        <PctSummaryInline exams={withBoth} birth={birth} />
+      </div>
 
       <p className="text-[10px] text-gray-400 px-1">
         * 만 6~13세: 한국 소아 근시 코호트 기준값. 만 14~18세: 동아시아 코호트 추정값(SCORM 등). 정확한 평가는 전문의와 상담하세요.
@@ -347,9 +347,9 @@ function PctBar({ pct }: { pct: number }) {
   )
 }
 
-// ── 또래 비교 요약 카드 ───────────────────────────────────────────
+// ── 또래 비교 요약 (인라인) ───────────────────────────────────────
 
-function PctSummaryCard({
+function PctSummaryInline({
   exams, birth,
 }: { exams: { date: string; axOD: string; axOS: string }[]; birth: string }) {
   const latest = [...exams].sort((a, b) => b.date.localeCompare(a.date))[0]
@@ -367,12 +367,11 @@ function PctSummaryCard({
   const lOS = pctLabel(pOS)
 
   return (
-    <div className="bg-white rounded-2xl p-4 shadow-sm">
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-sm font-bold text-gray-700">또래 안축장 비교</span>
+    <div className="mt-4 pt-3 border-t border-gray-100">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs font-semibold text-gray-500">현재 또래 위치</span>
         <span className="text-xs text-gray-400">만 {ageInt}세 기준</span>
       </div>
-      <p className="text-xs text-gray-400 mb-3">P숫자 = 또래 100명 중 순위 (예: P72 → 상위 28%)</p>
 
       <div className="flex gap-3">
         {[
