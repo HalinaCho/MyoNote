@@ -5,6 +5,7 @@ import type { Child, ExamRecord, TreatmentLogs, LifestyleLogs } from '@/types'
 export interface AddChildInput {
   name: string; birth: string; gender: 'M' | 'F'
   treatAtropine: boolean; treatDreamlens: boolean
+  outdoorGoal?: number; phoneGoal?: number
 }
 export interface UpdateChildInput extends AddChildInput { id: string }
 
@@ -14,7 +15,7 @@ export async function fetchChildren(): Promise<Child[]> {
   const sb = createClient()
   const { data, error } = await sb
     .from('eyebody_child_guardians')
-    .select('role, eyebody_children(id, name, birth_date, gender, treat_atropine, treat_dreamlens)')
+    .select('role, eyebody_children(id, name, birth_date, gender, treat_atropine, treat_dreamlens, outdoor_goal, phone_goal)')
     .order('created_at', { ascending: true })
   if (error) throw error
   return (data ?? []).map((r: any) => ({
@@ -25,6 +26,8 @@ export async function fetchChildren(): Promise<Child[]> {
     treatAtropine:  r.eyebody_children.treat_atropine  ?? false,
     treatDreamlens: r.eyebody_children.treat_dreamlens ?? false,
     role:           r.role,
+    outdoorGoal:    r.eyebody_children.outdoor_goal ?? 2,
+    phoneGoal:      r.eyebody_children.phone_goal   ?? 2,
   }))
 }
 
@@ -37,13 +40,14 @@ export async function addChild(input: AddChildInput): Promise<Child> {
   const { error: e1 } = await sb.from('eyebody_children').insert({
     id, name: input.name, birth_date: input.birth, gender: input.gender,
     treat_atropine: input.treatAtropine, treat_dreamlens: input.treatDreamlens,
+    outdoor_goal: input.outdoorGoal ?? 2, phone_goal: input.phoneGoal ?? 2,
   })
   if (e1) throw e1
   const { error: e2 } = await sb.from('eyebody_child_guardians')
     .insert({ child_id: id, user_id: user.id, role: 'owner' })
   if (e2) throw e2
 
-  return { id, ...input, role: 'owner' }
+  return { id, ...input, outdoorGoal: input.outdoorGoal ?? 2, phoneGoal: input.phoneGoal ?? 2, role: 'owner' }
 }
 
 export async function updateChild(input: UpdateChildInput): Promise<void> {
@@ -51,6 +55,7 @@ export async function updateChild(input: UpdateChildInput): Promise<void> {
   const { error } = await sb.from('eyebody_children').update({
     name: input.name, birth_date: input.birth, gender: input.gender,
     treat_atropine: input.treatAtropine, treat_dreamlens: input.treatDreamlens,
+    outdoor_goal: input.outdoorGoal ?? 2, phone_goal: input.phoneGoal ?? 2,
   }).eq('id', input.id)
   if (error) throw error
 }

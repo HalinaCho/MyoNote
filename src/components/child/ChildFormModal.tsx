@@ -13,7 +13,24 @@ interface Props {
   editing?: Child | null
 }
 
-const EMPTY = { name: '', birth: '', gender: 'M' as 'M' | 'F', treatAtropine: false, treatDreamlens: false }
+const EMPTY = { name: '', birth: '', gender: 'M' as 'M' | 'F', treatAtropine: false, treatDreamlens: false, outdoorGoal: 2, phoneGoal: 2 }
+
+function GoalStepper({ icon, label, dir, value, onChange }: {
+  icon: string; label: string; dir: '이상' | '이하'; value: number; onChange: (v: number) => void
+}) {
+  return (
+    <div className="flex items-center justify-between py-2.5 border-b border-gray-100 last:border-0">
+      <span className="text-sm text-gray-700">{icon} {label} <span className="text-xs text-gray-400">({dir})</span></span>
+      <div className="flex items-center gap-2">
+        <button type="button" onClick={() => onChange(Math.max(0, value - 0.5))}
+          className="w-7 h-7 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-bold text-base leading-none">−</button>
+        <span className="text-sm font-semibold text-gray-800 w-14 text-center">{value}시간</span>
+        <button type="button" onClick={() => onChange(Math.min(12, value + 0.5))}
+          className="w-7 h-7 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-bold text-base leading-none">+</button>
+      </div>
+    </div>
+  )
+}
 
 export default function ChildFormModal({ open, onClose, editing }: Props) {
   const { addChild, updateChild } = useChild()
@@ -23,7 +40,8 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
   useEffect(() => {
     setForm(editing
       ? { name: editing.name, birth: editing.birth, gender: editing.gender,
-          treatAtropine: editing.treatAtropine, treatDreamlens: editing.treatDreamlens }
+          treatAtropine: editing.treatAtropine, treatDreamlens: editing.treatDreamlens,
+          outdoorGoal: editing.outdoorGoal ?? 2, phoneGoal: editing.phoneGoal ?? 2 }
       : EMPTY
     )
   }, [editing, open])
@@ -116,6 +134,16 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
                   <span className="text-sm text-gray-700">{label}</span>
                 </label>
               ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">생활습관 권장 목표 (일 기준)</label>
+            <div className="border border-gray-200 rounded-lg px-3 divide-y divide-gray-100">
+              <GoalStepper icon="🌳" label="야외활동" dir="이상"
+                value={form.outdoorGoal} onChange={v => setForm(f => ({ ...f, outdoorGoal: v }))} />
+              <GoalStepper icon="📱" label="스마트폰" dir="이하"
+                value={form.phoneGoal}  onChange={v => setForm(f => ({ ...f, phoneGoal: v }))} />
             </div>
           </div>
 

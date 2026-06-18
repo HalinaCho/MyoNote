@@ -7,6 +7,8 @@ export interface Child {
   treatAtropine: boolean
   treatDreamlens: boolean
   role: 'owner' | 'editor' | 'viewer'
+  outdoorGoal: number  // 야외활동 목표 (시간/일), 기본 2.0
+  phoneGoal: number    // 스마트폰 목표 (시간/일), 기본 2.0
 }
 
 // ── 검사 기록 ─────────────────────────────────────────────────
