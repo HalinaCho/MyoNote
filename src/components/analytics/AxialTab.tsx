@@ -65,8 +65,8 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
   const yMax = parseFloat((Math.max(...allVals) + 0.3).toFixed(1))
 
   const allDatasets = [
-    { label: '우안(OD)', data: odData, borderColor: '#0D9488', backgroundColor: 'rgba(13,148,136,0.08)', tension: 0.4, fill: true, pointRadius: 4 },
-    { label: '좌안(OS)', data: osData, borderColor: '#9CA3AF', backgroundColor: 'rgba(156,163,175,.08)', tension: 0.4, fill: true, pointRadius: 4 },
+    { label: '우안(OD)', data: odData, borderColor: '#0D9488', backgroundColor: 'rgba(13,148,136,0.08)', pointBackgroundColor: '#0D9488', tension: 0.4, fill: true, pointRadius: 4 },
+    { label: '좌안(OS)', data: osData, borderColor: '#9CA3AF', backgroundColor: 'rgba(156,163,175,.08)', pointBackgroundColor: '#9CA3AF', tension: 0.4, fill: true, pointRadius: 4 },
   ]
   const datasets = allDatasets.filter((_, i) => (i === 0 ? showOD : showOS))
 

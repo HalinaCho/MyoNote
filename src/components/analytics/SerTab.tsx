@@ -49,8 +49,8 @@ export default function SerTab() {
   const yMax = parseFloat((Math.max(...allVals) + 0.3).toFixed(1))
 
   const allDatasets = [
-    { label: '우안(OD)', data: odData, borderColor: '#0D9488', backgroundColor: 'rgba(13,148,136,0.08)', tension: 0.4, pointRadius: 4, fill: true },
-    { label: '좌안(OS)', data: osData, borderColor: '#9CA3AF', tension: 0.4, pointRadius: 4, fill: false },
+    { label: '우안(OD)', data: odData, borderColor: '#0D9488', backgroundColor: 'rgba(13,148,136,0.08)', pointBackgroundColor: '#0D9488', tension: 0.4, pointRadius: 4, fill: true },
+    { label: '좌안(OS)', data: osData, borderColor: '#9CA3AF', pointBackgroundColor: '#9CA3AF', tension: 0.4, pointRadius: 4, fill: false },
   ]
   const datasets = allDatasets.filter((_, i) => (i === 0 ? showOD : showOS))
 
@@ -58,7 +58,7 @@ export default function SerTab() {
     <div className="space-y-3">
       <div className="bg-white rounded-2xl p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-bold text-gray-800">굴절값(SEQ) 변화</h3>
+          <h3 className="font-bold text-gray-800">굴절도수 변화 추이</h3>
           <div className="flex gap-1.5">
             <button
               onClick={() => { if (showOD && !showOS) { setShowOS(true) } else { setShowOD(true); setShowOS(false) } }}
