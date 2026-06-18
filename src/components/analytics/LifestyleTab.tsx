@@ -1,6 +1,9 @@
 'use client'
 
 import { useChild } from '@/context/ChildContext'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faTree, faMobileScreen } from '@fortawesome/free-solid-svg-icons'
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 
 const DAY_KR = ['일', '월', '화', '수', '목', '금', '토']
 const BAR_H = 52
@@ -24,7 +27,8 @@ function parseDateLocal(dateStr: string): Date {
 }
 
 interface BarRowProps {
-  icon: string
+  icon: IconDefinition
+  iconCls: string
   label: string
   values: (number | null)[]
   dayLabels: string[]
@@ -32,7 +36,7 @@ interface BarRowProps {
   isOverBad: boolean
 }
 
-function BarRow({ icon, label, values, dayLabels, goal, isOverBad }: BarRowProps) {
+function BarRow({ icon, iconCls, label, values, dayLabels, goal, isOverBad }: BarRowProps) {
   const valid = values.filter((v): v is number => v !== null)
   const avg = valid.length ? valid.reduce((a, b) => a + b, 0) / valid.length : null
   const meetsGoal = avg != null && (isOverBad ? avg <= goal : avg >= goal)
@@ -41,7 +45,10 @@ function BarRow({ icon, label, values, dayLabels, goal, isOverBad }: BarRowProps
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-semibold text-gray-700">{icon} {label}</span>
+        <span className="flex items-center gap-1.5 text-sm font-semibold text-gray-700">
+          <FontAwesomeIcon icon={icon} className={iconCls} />
+          {label}
+        </span>
         {avg != null ? (
           <div className="text-xs">
             <span className={`font-semibold ${meetsGoal ? 'text-teal-600' : isOverBad ? 'text-rose-500' : 'text-amber-500'}`}>
@@ -54,7 +61,6 @@ function BarRow({ icon, label, values, dayLabels, goal, isOverBad }: BarRowProps
         )}
       </div>
 
-      {/* 막대 차트 */}
       <div className="flex items-end gap-1.5" style={{ height: BAR_H }}>
         {values.map((v, i) => {
           const h = v != null ? Math.max(Math.round((v / maxVal) * BAR_H), 4) : 4
@@ -67,7 +73,7 @@ function BarRow({ icon, label, values, dayLabels, goal, isOverBad }: BarRowProps
                   ? 'bg-gray-100'
                   : isBad
                     ? (isOverBad ? 'bg-rose-300' : 'bg-amber-300')
-                    : 'bg-teal-300'
+                    : 'bg-[#10bcad]'
               }`}
               style={{ height: h, alignSelf: 'flex-end' }}
             />
@@ -75,7 +81,6 @@ function BarRow({ icon, label, values, dayLabels, goal, isOverBad }: BarRowProps
         })}
       </div>
 
-      {/* 요일 레이블 */}
       <div className="flex gap-1.5 mt-1">
         {dayLabels.map((d, i) => (
           <div key={i} className="flex-1 text-center text-[10px] text-gray-400">{d}</div>
@@ -108,13 +113,13 @@ export default function LifestyleTab() {
       ) : (
         <>
           <BarRow
-            icon="🌳" label="야외활동"
+            icon={faTree} iconCls="text-[#10bcad]" label="야외활동"
             values={outdoorValues} dayLabels={dayLabels}
             goal={outdoorGoal} isOverBad={false}
           />
           <div className="border-t border-gray-100" />
           <BarRow
-            icon="📱" label="스마트폰"
+            icon={faMobileScreen} iconCls="text-amber-500" label="스마트폰"
             values={phoneValues} dayLabels={dayLabels}
             goal={phoneGoal} isOverBad={true}
           />

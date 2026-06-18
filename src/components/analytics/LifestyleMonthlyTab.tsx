@@ -1,6 +1,9 @@
 'use client'
 
 import { useChild } from '@/context/ChildContext'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faTree, faMobileScreen } from '@fortawesome/free-solid-svg-icons'
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import type { LifestyleLogs } from '@/types'
 
 export type Half = '상' | '하'
@@ -19,12 +22,16 @@ function calcMonthAvg(lifestyle: LifestyleLogs, year: number, month: number) {
 }
 
 interface BarRowProps {
-  icon: string; label: string
-  values: (number | null)[]; monthLabels: string[]
-  goal: number; isOverBad: boolean
+  icon: IconDefinition
+  iconCls: string
+  label: string
+  values: (number | null)[]
+  monthLabels: string[]
+  goal: number
+  isOverBad: boolean
 }
 
-function BarRow({ icon, label, values, monthLabels, goal, isOverBad }: BarRowProps) {
+function BarRow({ icon, iconCls, label, values, monthLabels, goal, isOverBad }: BarRowProps) {
   const valid = values.filter((v): v is number => v !== null)
   const avg = valid.length ? valid.reduce((a, b) => a + b, 0) / valid.length : null
   const meetsGoal = avg != null && (isOverBad ? avg <= goal : avg >= goal)
@@ -33,7 +40,10 @@ function BarRow({ icon, label, values, monthLabels, goal, isOverBad }: BarRowPro
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-semibold text-gray-700">{icon} {label}</span>
+        <span className="flex items-center gap-1.5 text-sm font-semibold text-gray-700">
+          <FontAwesomeIcon icon={icon} className={iconCls} />
+          {label}
+        </span>
         {avg != null ? (
           <div className="text-xs">
             <span className={`font-semibold ${meetsGoal ? 'text-teal-600' : isOverBad ? 'text-rose-500' : 'text-amber-500'}`}>
@@ -55,7 +65,7 @@ function BarRow({ icon, label, values, monthLabels, goal, isOverBad }: BarRowPro
               className={`flex-1 rounded-t-sm ${
                 v == null ? 'bg-gray-100'
                 : isBad ? (isOverBad ? 'bg-rose-300' : 'bg-amber-300')
-                : 'bg-teal-300'
+                : 'bg-[#10bcad]'
               }`}
               style={{ height: h, alignSelf: 'flex-end' }}
             />
@@ -94,13 +104,13 @@ export default function LifestyleMonthlyTab({ year, half }: Props) {
       <h3 className="font-bold text-gray-800">생활습관 월평균</h3>
 
       <BarRow
-        icon="🌳" label="야외활동"
+        icon={faTree} iconCls="text-[#10bcad]" label="야외활동"
         values={outdoorVals} monthLabels={monthLabels}
         goal={outdoorGoal} isOverBad={false}
       />
       <div className="border-t border-gray-100" />
       <BarRow
-        icon="📱" label="스마트폰"
+        icon={faMobileScreen} iconCls="text-amber-500" label="스마트폰"
         values={phoneVals} monthLabels={monthLabels}
         goal={phoneGoal} isOverBad={true}
       />
