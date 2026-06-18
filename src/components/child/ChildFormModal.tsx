@@ -144,9 +144,9 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">생활습관 권장 목표 (일 기준)</label>
             <div className="border border-gray-200 rounded-lg px-3 divide-y divide-gray-100">
-              <GoalStepper icon={faMobileScreen} iconCls="text-amber-500" label="스마트폰" dir="이하"
+              <GoalStepper icon={faMobileScreen} iconCls="text-gray-500" label="스마트폰" dir="이하"
                 value={form.phoneGoal}  onChange={v => setForm(f => ({ ...f, phoneGoal: v }))} />
-              <GoalStepper icon={faTree} iconCls="text-[#10bcad]" label="야외활동" dir="이상"
+              <GoalStepper icon={faTree} iconCls="text-gray-500" label="야외활동" dir="이상"
                 value={form.outdoorGoal} onChange={v => setForm(f => ({ ...f, outdoorGoal: v }))} />
             </div>
           </div>
