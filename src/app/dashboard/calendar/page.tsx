@@ -247,6 +247,24 @@ export default function CalendarPage() {
 
       {/* 통계 카드 */}
       <div className="mt-3 bg-white rounded-2xl p-4 shadow-sm">
+        {/* 카드 헤더: 제목 + 기간 네비게이션 */}
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-bold text-gray-800">월평균 비교</h3>
+          <div className="flex items-center gap-0.5">
+            <button onClick={handleStatsPrev}
+              className="w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 active:bg-gray-200 transition-colors">
+              ‹
+            </button>
+            <span className="text-sm font-semibold text-gray-600 w-[90px] text-center">
+              {statsYear}년 {statsHalf}반기
+            </span>
+            <button onClick={handleStatsNext} disabled={isStatsNextFuture}
+              className="w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 active:bg-gray-200 transition-colors disabled:opacity-30 disabled:pointer-events-none">
+              ›
+            </button>
+          </div>
+        </div>
+
         {/* 탭 토글 */}
         <div className="flex bg-gray-100 rounded-xl p-1 mb-3">
           {([['care', '케어'], ['lifestyle', '생활습관']] as const).map(([t, label]) => (
@@ -256,21 +274,6 @@ export default function CalendarPage() {
               {label}
             </button>
           ))}
-        </div>
-
-        {/* 기간 네비게이션 */}
-        <div className="flex items-center justify-center gap-1 mb-3">
-          <button onClick={handleStatsPrev}
-            className="w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-200 active:bg-gray-300 transition-colors">
-            ‹
-          </button>
-          <span className="text-sm font-semibold text-gray-600 w-[100px] text-center">
-            {statsYear}년 {statsHalf}반기
-          </span>
-          <button onClick={handleStatsNext} disabled={isStatsNextFuture}
-            className="w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-200 active:bg-gray-300 transition-colors disabled:opacity-30 disabled:pointer-events-none">
-            ›
-          </button>
         </div>
 
         {statsTab === 'care'      && <ComplianceTab year={statsYear} half={statsHalf} bare />}
