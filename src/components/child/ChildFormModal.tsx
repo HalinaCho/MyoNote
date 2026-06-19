@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { useChild } from '@/context/ChildContext'
 import { TREATMENT_PRESETS, makeTreatmentKey } from '@/lib/treatments'
+import ConfirmModal from '@/components/ui/ConfirmModal'
 import type { Child } from '@/types'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faXmark, faTree, faMobileScreen, faPlus, faTrashCan } from '@fortawesome/free-solid-svg-icons'
@@ -59,19 +60,34 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
   const [customName, setCustomName] = useState('')
   const [customSchedule, setCustomSchedule] = useState('')
   const [saving, setSaving] = useState(false)
+  const [initialSnap, setInitialSnap] = useState('')
+  const [confirmExit, setConfirmExit] = useState(false)
 
   useEffect(() => {
-    setForm(editing
+    const initForm = editing
       ? { name: editing.name, birth: editing.birth, gender: editing.gender,
           outdoorGoal: editing.outdoorGoal ?? 2, phoneGoal: editing.phoneGoal ?? 2 }
       : { ...EMPTY_BASE }
-    )
-    setTreatments(toActiveTreatments(editing))
+    const initTreatments = toActiveTreatments(editing)
+    setForm(initForm)
+    setTreatments(initTreatments)
     setCustomName('')
     setCustomSchedule('')
+    setInitialSnap(JSON.stringify({ form: initForm, treatments: initTreatments }))
+    setConfirmExit(false)
   }, [editing, open])
 
   if (!open) return null
+
+  // 변경 여부: 폼/케어 목록이 바뀌었거나, 추가 안 한 직접입력이 남아있으면 dirty
+  const dirty =
+    JSON.stringify({ form, treatments }) !== initialSnap ||
+    customName.trim() !== '' || customSchedule.trim() !== ''
+
+  const handleClose = () => {
+    if (dirty) setConfirmExit(true)
+    else onClose()
+  }
 
   const togglePreset = (preset: 'atropine' | 'dreamlens', name: string, schedule: string) => {
     setTreatments(prev => prev.some(t => t.key === preset)
@@ -116,15 +132,17 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
   }
 
   return (
+    <>
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-[480px] bg-white rounded-t-2xl sm:rounded-2xl p-5 pb-8 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-4">
+      <div className="absolute inset-0 bg-black/40" onClick={handleClose} />
+      <div className="relative z-10 w-full max-w-[480px] bg-white rounded-t-2xl sm:rounded-2xl max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between px-5 pt-5 pb-3">
           <h2 className="text-lg font-bold">{editing ? '자녀 수정' : '자녀 추가'}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none"><FontAwesomeIcon icon={faXmark} /></button>
+          <button type="button" onClick={handleClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none"><FontAwesomeIcon icon={faXmark} /></button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1">
+          <div className="flex-1 overflow-y-auto px-5 pb-2 space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">이름</label>
             <input
@@ -227,15 +245,30 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
                 value={form.outdoorGoal} onChange={v => setForm(f => ({ ...f, outdoorGoal: v }))} />
             </div>
           </div>
+          </div>
 
-          <button
-            type="submit" disabled={saving}
-            className="w-full bg-[#10bcad] hover:bg-teal-600 disabled:bg-teal-300 text-white font-semibold py-3 rounded-xl transition-colors"
-          >
-            {saving ? '저장 중...' : (editing ? '수정하기' : '추가하기')}
-          </button>
+          {/* 하단 고정 저장 버튼 */}
+          <div className="px-5 py-3 border-t border-gray-100 bg-white rounded-b-2xl">
+            <button
+              type="submit" disabled={saving}
+              className="w-full bg-[#10bcad] hover:bg-teal-600 disabled:bg-teal-300 text-white font-semibold py-3 rounded-xl transition-colors"
+            >
+              {saving ? '저장 중...' : (editing ? '수정하기' : '추가하기')}
+            </button>
+          </div>
         </form>
       </div>
     </div>
+
+    <ConfirmModal
+      open={confirmExit}
+      title="변경사항을 저장하지 않고 나갈까요?"
+      message="입력한 내용이 저장되지 않습니다."
+      confirmLabel="나가기"
+      cancelLabel="계속 편집"
+      onConfirm={() => { setConfirmExit(false); onClose() }}
+      onCancel={() => setConfirmExit(false)}
+    />
+    </>
   )
 }
