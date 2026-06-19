@@ -91,7 +91,7 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
   const removeTreatment = (key: string) =>
     setTreatments(prev => prev.filter(t => t.key !== key))
 
-  const customItems = treatments.filter(t => t.preset === null)
+  const availablePresets = TREATMENT_PRESETS.filter(p => !treatments.some(t => t.key === p.preset))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -167,35 +167,28 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">진행 중인 난시케어</label>
 
-            {/* 프리셋 */}
-            <div className="space-y-2">
-              {TREATMENT_PRESETS.map(({ preset, name, schedule }) => {
-                const checked = treatments.some(t => t.key === preset)
-                return (
-                  <label key={preset} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50">
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => togglePreset(preset, name, schedule)}
-                      className="w-4 h-4 rounded accent-[#10bcad]"
-                    />
-                    <span className="flex-1 text-sm text-gray-700">{name}</span>
-                    <span className="text-xs text-gray-400">{schedule}</span>
-                  </label>
-                )
-              })}
-            </div>
-
-            {/* 직접입력 케어 목록 */}
-            {customItems.length > 0 && (
-              <div className="space-y-2 mt-2">
-                {customItems.map(t => (
-                  <div key={t.key} className="flex items-center gap-3 p-3 rounded-lg border border-[#10bcad]/30 bg-teal-50/40">
+            {/* 진행 중인 케어 목록 — 프리셋 + 직접입력 모두 동일한 행 + 휴지통 버튼 */}
+            {treatments.length > 0 && (
+              <div className="space-y-2">
+                {treatments.map(t => (
+                  <div key={t.key} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200">
                     <span className="flex-1 text-sm text-gray-700">{t.name}</span>
                     {t.schedule && <span className="text-xs text-gray-400">{t.schedule}</span>}
                     <button type="button" onClick={() => removeTreatment(t.key)}
-                      className="text-gray-400 hover:text-rose-500 p-0.5"><FontAwesomeIcon icon={faTrashCan} /></button>
+                      className="text-gray-400 hover:text-rose-500 p-1"><FontAwesomeIcon icon={faTrashCan} /></button>
                   </div>
+                ))}
+              </div>
+            )}
+
+            {/* 프리셋 빠른 추가 — 아직 추가 안 된 것만 */}
+            {availablePresets.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {availablePresets.map(({ preset, name, schedule }) => (
+                  <button key={preset} type="button" onClick={() => togglePreset(preset, name, schedule)}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:border-[#10bcad] hover:text-[#10bcad] transition-colors">
+                    <FontAwesomeIcon icon={faPlus} className="text-xs" /> {name}
+                  </button>
                 ))}
               </div>
             )}
