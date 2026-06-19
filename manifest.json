@@ -7,7 +7,7 @@
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#edf7f6",
-  "theme_color": "#10bcad",
+  "theme_color": "#14b8a6",
   "icons": [
     {
       "src": "/MyoNote/icon-192.png",
