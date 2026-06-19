@@ -7,7 +7,7 @@ import { TREATMENT_PRESETS, makeTreatmentKey } from '@/lib/treatments'
 import ConfirmModal from '@/components/ui/ConfirmModal'
 import type { Child } from '@/types'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faXmark, faTree, faMobileScreen, faPlus, faTrashCan, faArrowsRotate } from '@fortawesome/free-solid-svg-icons'
+import { faXmark, faTree, faMobileScreen, faPlus, faTrashCan } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 
 interface Props {
@@ -152,31 +152,28 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
               <button
                 type="button"
                 onClick={() => setForm(f => ({ ...f, gender: f.gender === 'M' ? 'F' : 'M' }))}
-                className="relative w-16 h-16 rounded-full bg-teal-50 border-2 border-[#10bcad] flex items-center justify-center text-3xl active:scale-95 transition-transform"
+                className="w-16 h-16 rounded-full bg-teal-50 border-2 border-[#10bcad] flex items-center justify-center text-3xl active:scale-95 transition-transform"
                 aria-label="성별 전환"
               >
                 {form.gender === 'F' ? '👧' : '👦'}
-                <span className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-[#10bcad] text-white text-[9px] flex items-center justify-center border-2 border-white">
-                  <FontAwesomeIcon icon={faArrowsRotate} />
-                </span>
               </button>
               <span className="text-[11px] text-gray-400">{form.gender === 'F' ? '여자' : '남자'}</span>
             </div>
-            <div className="flex-1 min-w-0 grid grid-cols-2 gap-2">
-              <div className="min-w-0">
+            <div className="flex-1 min-w-0 flex gap-2">
+              <div className="w-[36%] flex-shrink-0">
                 <label className="block text-[11px] text-gray-400 mb-0.5">이름</label>
                 <input
-                  className="w-full min-w-0 border border-gray-200 rounded-lg px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#10bcad]"
+                  className="w-full min-w-0 h-9 border border-gray-200 rounded-lg px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#10bcad]"
                   placeholder="이름"
                   value={form.name}
                   onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                 />
               </div>
-              <div className="min-w-0">
+              <div className="flex-1 min-w-0">
                 <label className="block text-[11px] text-gray-400 mb-0.5">생년월일</label>
                 <input
                   type="date"
-                  className="w-full min-w-0 border border-gray-200 rounded-lg px-2.5 py-2 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#10bcad] accent-[#10bcad]"
+                  className="w-full min-w-0 h-9 border border-gray-200 rounded-lg px-2.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#10bcad] accent-[#10bcad]"
                   value={form.birth}
                   onChange={e => setForm(f => ({ ...f, birth: e.target.value }))}
                 />
