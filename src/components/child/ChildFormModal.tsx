@@ -196,12 +196,12 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
               {treatments.length > 0 && (
                 <div className="space-y-2 mb-2.5">
                   {treatments.map(t => (
-                    <div key={t.key} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-gray-50">
+                    <div key={t.key} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-teal-50">
                       <span className="w-5 h-5 rounded-full bg-[#10bcad] text-white flex items-center justify-center text-[10px] flex-shrink-0">
                         <FontAwesomeIcon icon={faCheck} />
                       </span>
                       <span className="flex-1 text-sm font-medium text-gray-700">{t.name}</span>
-                      {t.schedule && <span className="text-xs text-gray-400">{t.schedule}</span>}
+                      {t.schedule && <span className="text-xs text-teal-600/70">{t.schedule}</span>}
                       <button type="button" onClick={() => removeTreatment(t.key)}
                         className="text-gray-300 hover:text-rose-500 p-1"><FontAwesomeIcon icon={faTrashCan} /></button>
                     </div>
