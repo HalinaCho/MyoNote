@@ -1,4 +1,5 @@
 import type { Child, TreatmentDef, DesiredTreatment } from '@/types'
+import { parseDate, formatDate } from '@/lib/utils/date'
 
 // ── 프리셋 카탈로그 ───────────────────────────────────────────
 // 하이브리드: 아래 프리셋 + 직접입력(커스텀) 모두 지원
@@ -38,15 +39,26 @@ export function mergeTreatments(
   desired: DesiredTreatment[],
   todayStr: string
 ): TreatmentDef[] {
+  // 제거는 오늘부터 비활성 → 마지막 활성일은 '어제'
+  const yd = parseDate(todayStr); yd.setDate(yd.getDate() - 1)
+  const yesterdayStr = formatDate(yd)
+
   const result: TreatmentDef[] = []
 
   // 1) 기존 정의: 활성 여부에 따라 기간 갱신
   for (const od of oldDefs) {
     const want = desired.find(d => d.key === od.key)
-    const periods = [...(od.periods ?? [])]
+    let periods = [...(od.periods ?? [])]
     const openIdx = periods.findIndex(p => p.e == null)
-    if (want && openIdx < 0) periods.push({ s: todayStr, e: null })          // 재활성
-    if (!want && openIdx >= 0) periods[openIdx] = { ...periods[openIdx], e: todayStr } // 비활성화
+    if (want && openIdx < 0) {
+      periods.push({ s: todayStr, e: null })                                 // 재활성
+    } else if (!want && openIdx >= 0) {
+      // 비활성화: 어제까지 마감. 오늘 시작·오늘 제거면 활성일 없음 → 기간 삭제
+      periods = periods[openIdx].s > yesterdayStr
+        ? periods.filter((_, i) => i !== openIdx)
+        : periods.map((p, i) => i === openIdx ? { ...p, e: yesterdayStr } : p)
+    }
+    if (periods.length === 0) continue                                       // 활성 이력 없는 정의는 제거
     result.push({
       ...od,
       name: want?.name ?? od.name,

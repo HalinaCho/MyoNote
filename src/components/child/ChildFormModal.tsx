@@ -211,14 +211,14 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
               />
               <div className="flex gap-2">
                 <input
-                  className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#10bcad]"
+                  className="flex-1 min-w-0 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#10bcad]"
                   placeholder="스케줄 (예: 주간 착용)"
                   value={customSchedule}
                   onChange={e => setCustomSchedule(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustom() } }}
                 />
                 <button type="button" onClick={addCustom}
-                  className="flex items-center gap-1 px-3 rounded-lg bg-[#10bcad] text-white text-sm font-medium whitespace-nowrap">
+                  className="flex-shrink-0 flex items-center gap-1 px-3 py-2 rounded-lg bg-[#10bcad] text-white text-sm font-medium whitespace-nowrap">
                   <FontAwesomeIcon icon={faPlus} /> 추가
                 </button>
               </div>
