@@ -185,7 +185,7 @@ export default function CalendarPage() {
                         <span className="text-sm font-medium text-gray-700">{t.name}</span>
                         <div className="relative">
                           <input type="checkbox" checked={done} onChange={e => handleCareToggle(dayModal, t.key, e.target.checked)} className="sr-only peer" />
-                          <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-teal-600 transition-colors" />
+                          <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-[#10bcad] transition-colors" />
                           <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform peer-checked:translate-x-5" />
                         </div>
                       </label>
@@ -232,7 +232,7 @@ export default function CalendarPage() {
 
             <button
               onClick={handleLifeSave} disabled={lifeSaving}
-              className="w-full bg-teal-600 disabled:bg-teal-300 text-white font-semibold py-3 rounded-xl"
+              className="w-full bg-[#10bcad] hover:bg-teal-600 disabled:bg-teal-300 text-white font-semibold py-3 rounded-xl transition-colors"
             >
               {lifeSaving ? '저장 중...' : '저장'}
             </button>

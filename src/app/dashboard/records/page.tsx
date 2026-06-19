@@ -160,7 +160,7 @@ export default function RecordsPage() {
       {/* FAB */}
       <button
         onClick={openAdd}
-        className="fixed bottom-24 z-30 w-14 h-14 bg-teal-600 hover:bg-teal-500 text-white rounded-full shadow-lg flex items-center justify-center transition-colors active:scale-95"
+        className="fixed bottom-24 z-30 w-14 h-14 bg-[#10bcad] hover:bg-teal-600 text-white rounded-full shadow-lg flex items-center justify-center transition-colors active:scale-95"
         style={{ right: 'max(1rem, calc((100vw - 480px) / 2 + 1rem))' }}
       >
         <FontAwesomeIcon icon={faPlus} className="text-xl" />
@@ -240,7 +240,7 @@ export default function RecordsPage() {
               <Field label="다음 예약일">
                 <input type="date" value={form.nextAppointment} onChange={e=>setForm(f=>({...f,nextAppointment:e.target.value}))} className={INPUT}/>
               </Field>
-              <button type="submit" disabled={saving} className="w-full bg-teal-600 disabled:bg-teal-300 text-white font-semibold py-3 rounded-xl">
+              <button type="submit" disabled={saving} className="w-full bg-[#10bcad] hover:bg-teal-600 disabled:bg-teal-300 text-white font-semibold py-3 rounded-xl transition-colors">
                 {saving ? '저장 중...' : editing ? '수정하기' : '저장'}
               </button>
             </form>
