@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { useChild } from '@/context/ChildContext'
 import { TREATMENT_PRESETS, makeTreatmentKey } from '@/lib/treatments'
-import { calcAgeLabel } from '@/lib/utils/date'
+import { calcAgeLabel, today } from '@/lib/utils/date'
 import ConfirmModal from '@/components/ui/ConfirmModal'
 import type { Child } from '@/types'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -116,6 +116,7 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
     e.preventDefault()
     if (!form.name.trim()) { toast.error('이름을 입력해주세요'); return }
     if (!form.birth)        { toast.error('생년월일을 입력해주세요'); return }
+    if (form.birth > today()) { toast.error('생년월일은 오늘 이후로 설정할 수 없습니다'); return }
     setSaving(true)
     try {
       const payload = { ...form, treatments }
@@ -175,6 +176,7 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
                   <span className="text-gray-300 text-[10px]">▼</span>
                   <input
                     type="date"
+                    max={today()}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     value={form.birth}
                     onChange={e => setForm(f => ({ ...f, birth: e.target.value }))}
