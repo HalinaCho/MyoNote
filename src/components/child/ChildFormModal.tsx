@@ -167,19 +167,20 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
                 value={form.name}
                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
               />
-              <div className="flex items-center gap-1.5 mt-0.5 text-sm text-gray-400">
-                {form.birth && <span className="text-[#10bcad] font-medium">{calcAgeLabel(form.birth)}</span>}
-                {form.birth && <span className="text-gray-300">·</span>}
+              <div className="flex items-center gap-1.5 mt-0.5 text-sm leading-none">
+                {form.birth && <span className="text-[#10bcad] font-medium leading-none">{calcAgeLabel(form.birth)}</span>}
+                {form.birth && <span className="text-gray-300 leading-none">·</span>}
                 <span className="relative inline-flex items-center">
                   <input
                     type="date"
-                    className={`bg-transparent border-0 p-0 text-sm focus:outline-none [&::-webkit-calendar-picker-indicator]:hidden ${form.birth ? 'text-gray-500' : 'text-transparent w-[5.5rem]'}`}
+                    className={`bg-transparent border-0 p-0 pr-4 text-sm leading-none focus:outline-none [&::-webkit-calendar-picker-indicator]:hidden ${form.birth ? 'text-gray-500' : 'text-transparent w-32'}`}
                     value={form.birth}
                     onChange={e => setForm(f => ({ ...f, birth: e.target.value }))}
                   />
                   {!form.birth && (
                     <span className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 text-gray-300">생년월일 입력</span>
                   )}
+                  <span className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 text-gray-300 text-[10px]">▼</span>
                 </span>
               </div>
             </div>
