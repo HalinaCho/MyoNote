@@ -22,3 +22,13 @@ body {
 .safe-pb {
   padding-bottom: env(safe-area-inset-bottom);
 }
+
+/* 헤더 생년월일: 네이티브 달력/스핀 아이콘 숨김 (커스텀 ▼ 사용) */
+.date-bare::-webkit-calendar-picker-indicator {
+  display: none;
+  -webkit-appearance: none;
+}
+.date-bare::-webkit-inner-spin-button,
+.date-bare::-webkit-clear-button {
+  display: none;
+}
