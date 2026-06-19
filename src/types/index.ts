@@ -1,11 +1,27 @@
+// ── 케어 정의 ─────────────────────────────────────────────────
+export interface TreatmentPeriod {
+  s: string            // 시작일 'YYYY-MM-DD'
+  e: string | null     // 종료일 'YYYY-MM-DD' (null = 진행 중)
+}
+
+export interface TreatmentDef {
+  key: string                              // 안정 ID (프리셋: 'atropine'/'dreamlens', 커스텀: 'c_xxxx')
+  name: string
+  preset: 'atropine' | 'dreamlens' | null  // 프리셋 종류 (커스텀이면 null)
+  schedule: string                         // 스케줄 안내 문구 (예: '취침 전 1회')
+  periods: TreatmentPeriod[]               // 활성 기간 목록
+}
+
+// 폼이 다루는 "현재 활성 케어" — periods는 context가 병합 시 부여
+export type DesiredTreatment = Omit<TreatmentDef, 'periods'>
+
 // ── 자녀 ──────────────────────────────────────────────────────
 export interface Child {
   id: string
   name: string
   birth: string        // 'YYYY-MM-DD'
   gender: 'M' | 'F'
-  treatAtropine: boolean
-  treatDreamlens: boolean
+  treatments: TreatmentDef[]
   role: 'owner' | 'editor' | 'viewer'
   outdoorGoal: number  // 야외활동 목표 (시간/일), 기본 2.0
   phoneGoal: number    // 스마트폰 목표 (시간/일), 기본 2.0
@@ -29,10 +45,8 @@ export interface ExamRecord {
 }
 
 // ── 치료 로그 ─────────────────────────────────────────────────
-export interface TreatmentLog {
-  atropine: boolean
-  dreamlens: boolean
-}
+// 그날 완료한 케어 맵 { [treatmentKey]: true }
+export type TreatmentLog = Record<string, boolean>
 
 export type TreatmentLogs = Record<string, TreatmentLog>  // key: 'YYYY-MM-DD'
 
@@ -44,11 +58,3 @@ export interface LifestyleLog {
 }
 
 export type LifestyleLogs = Record<string, LifestyleLog>  // key: 'YYYY-MM-DD'
-
-// ── 치료 항목 ─────────────────────────────────────────────────
-export interface Treatment {
-  key: 'atropine' | 'dreamlens'
-  name: string
-  time: string
-  tag: 'atropine' | 'dreamlens'
-}

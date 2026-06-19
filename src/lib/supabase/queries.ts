@@ -1,13 +1,26 @@
 // RN 이식 시 createClient만 교체하면 전체 재사용 가능
 import { createClient } from './client'
-import type { Child, ExamRecord, TreatmentLogs, LifestyleLogs } from '@/types'
+import type { Child, ExamRecord, TreatmentLogs, LifestyleLogs, TreatmentDef, DesiredTreatment } from '@/types'
 
+// 폼 입력 — treatments는 periods 없는 활성 집합 (context가 병합해 기간 부여)
+export interface ChildFormInput {
+  name: string; birth: string; gender: 'M' | 'F'
+  treatments: DesiredTreatment[]
+  outdoorGoal?: number; phoneGoal?: number
+}
+export interface ChildFormUpdateInput extends ChildFormInput { id: string }
+
+// DB 기록용 — treatments는 기간까지 포함한 완전한 정의
 export interface AddChildInput {
   name: string; birth: string; gender: 'M' | 'F'
-  treatAtropine: boolean; treatDreamlens: boolean
+  treatments: TreatmentDef[]
   outdoorGoal?: number; phoneGoal?: number
 }
 export interface UpdateChildInput extends AddChildInput { id: string }
+
+// 현재 진행 중(열린 기간)인 프리셋이 있는지 — 구 컬럼 호환용
+const hasOpenPreset = (treatments: TreatmentDef[], preset: 'atropine' | 'dreamlens') =>
+  treatments.some(t => t.preset === preset && (t.periods ?? []).some(p => p.e == null))
 
 // ── 자녀 ──────────────────────────────────────────────────────
 
@@ -15,7 +28,7 @@ export async function fetchChildren(): Promise<Child[]> {
   const sb = createClient()
   const { data, error } = await sb
     .from('eyebody_child_guardians')
-    .select('role, eyebody_children(id, name, birth_date, gender, treat_atropine, treat_dreamlens, outdoor_goal, phone_goal)')
+    .select('role, eyebody_children(id, name, birth_date, gender, treatments, outdoor_goal, phone_goal)')
     .order('created_at', { ascending: true })
   if (error) throw error
   return (data ?? []).map((r: any) => ({
@@ -23,8 +36,7 @@ export async function fetchChildren(): Promise<Child[]> {
     name:           r.eyebody_children.name,
     birth:          r.eyebody_children.birth_date,
     gender:         r.eyebody_children.gender,
-    treatAtropine:  r.eyebody_children.treat_atropine  ?? false,
-    treatDreamlens: r.eyebody_children.treat_dreamlens ?? false,
+    treatments:     (r.eyebody_children.treatments ?? []) as TreatmentDef[],
     role:           r.role,
     outdoorGoal:    r.eyebody_children.outdoor_goal ?? 2,
     phoneGoal:      r.eyebody_children.phone_goal   ?? 2,
@@ -39,7 +51,9 @@ export async function addChild(input: AddChildInput): Promise<Child> {
   const id = crypto.randomUUID()
   const { error: e1 } = await sb.from('eyebody_children').insert({
     id, name: input.name, birth_date: input.birth, gender: input.gender,
-    treat_atropine: input.treatAtropine, treat_dreamlens: input.treatDreamlens,
+    treatments: input.treatments,
+    treat_atropine: hasOpenPreset(input.treatments, 'atropine'),
+    treat_dreamlens: hasOpenPreset(input.treatments, 'dreamlens'),
     outdoor_goal: input.outdoorGoal ?? 2, phone_goal: input.phoneGoal ?? 2,
   })
   if (e1) throw e1
@@ -54,7 +68,9 @@ export async function updateChild(input: UpdateChildInput): Promise<void> {
   const sb = createClient()
   const { error } = await sb.from('eyebody_children').update({
     name: input.name, birth_date: input.birth, gender: input.gender,
-    treat_atropine: input.treatAtropine, treat_dreamlens: input.treatDreamlens,
+    treatments: input.treatments,
+    treat_atropine: hasOpenPreset(input.treatments, 'atropine'),
+    treat_dreamlens: hasOpenPreset(input.treatments, 'dreamlens'),
     outdoor_goal: input.outdoorGoal ?? 2, phone_goal: input.phoneGoal ?? 2,
   }).eq('id', input.id)
   if (error) throw error
@@ -72,7 +88,7 @@ export async function fetchChildData(childId: string) {
   const sb = createClient()
   const [examsRes, logsRes, lifeRes] = await Promise.all([
     sb.from('eyebody_exam_records').select('id,exam_date,clinic,ax_od,ax_os,sph_od,sph_os,cyl_od,cyl_os,ser_od,ser_os,note,next_appointment').eq('child_id', childId).order('exam_date', { ascending: false }),
-    sb.from('eyebody_treatment_logs').select('log_date, atropine, dreamlens').eq('child_id', childId),
+    sb.from('eyebody_treatment_logs').select('log_date, done, atropine, dreamlens').eq('child_id', childId),
     sb.from('eyebody_activity_logs').select('log_date, outdoor_hours, phone_hours, sleep_hours').eq('child_id', childId),
   ])
 
@@ -90,8 +106,15 @@ export async function fetchChildData(childId: string) {
     nextAppointment: r.next_appointment ?? '',
   }))
 
+  // done(jsonb) 우선, 없으면 구 컬럼(atropine/dreamlens)으로 폴백
   const logs: TreatmentLogs = Object.fromEntries(
-    (logsRes.data ?? []).map((r: any) => [r.log_date, { atropine: r.atropine, dreamlens: r.dreamlens }])
+    (logsRes.data ?? []).map((r: any) => {
+      const done = r.done ?? {
+        ...(r.atropine  ? { atropine: true }  : {}),
+        ...(r.dreamlens ? { dreamlens: true } : {}),
+      }
+      return [r.log_date, done as Record<string, boolean>]
+    })
   )
 
   const lifestyle: LifestyleLogs = Object.fromEntries(
@@ -108,12 +131,15 @@ export async function fetchChildData(childId: string) {
 // ── 치료 로그 ─────────────────────────────────────────────────
 
 export async function saveTreatmentLog(
-  childId: string, dateStr: string, atropine: boolean, dreamlens: boolean
+  childId: string, dateStr: string, done: Record<string, boolean>
 ): Promise<void> {
   const sb = createClient()
+  // done(jsonb)이 정본. 구 컬럼(atropine/dreamlens)도 호환 위해 함께 기록
   const { error } = await sb.from('eyebody_treatment_logs')
-    .upsert({ child_id: childId, log_date: dateStr, atropine, dreamlens },
-             { onConflict: 'child_id,log_date' })
+    .upsert({
+      child_id: childId, log_date: dateStr, done,
+      atropine: !!done.atropine, dreamlens: !!done.dreamlens,
+    }, { onConflict: 'child_id,log_date' })
   if (error) throw error
 }
 

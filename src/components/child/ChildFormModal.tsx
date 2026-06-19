@@ -1,11 +1,12 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { useChild } from '@/context/ChildContext'
+import { TREATMENT_PRESETS, makeTreatmentKey } from '@/lib/treatments'
 import type { Child } from '@/types'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faXmark, faTree, faMobileScreen } from '@fortawesome/free-solid-svg-icons'
+import { faXmark, faTree, faMobileScreen, faPlus, faTrashCan } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 
 interface Props {
@@ -14,7 +15,22 @@ interface Props {
   editing?: Child | null
 }
 
-const EMPTY = { name: '', birth: '', gender: 'M' as 'M' | 'F', treatAtropine: false, treatDreamlens: false, outdoorGoal: 2, phoneGoal: 2 }
+// 폼이 다루는 "현재 활성 케어" 항목
+interface ActiveTreatment {
+  key: string
+  name: string
+  preset: 'atropine' | 'dreamlens' | null
+  schedule: string
+}
+
+const EMPTY_BASE = { name: '', birth: '', gender: 'M' as 'M' | 'F', outdoorGoal: 2, phoneGoal: 2 }
+
+// 자녀 정의 → 현재 활성(열린 기간) 케어 목록
+function toActiveTreatments(child?: Child | null): ActiveTreatment[] {
+  return (child?.treatments ?? [])
+    .filter(t => (t.periods ?? []).some(p => p.e == null))
+    .map(t => ({ key: t.key, name: t.name, preset: t.preset, schedule: t.schedule }))
+}
 
 function GoalStepper({ icon, iconCls, label, dir, value, onChange }: {
   icon: IconDefinition; iconCls: string; label: string; dir: '이상' | '이하'; value: number; onChange: (v: number) => void
@@ -38,25 +54,44 @@ function GoalStepper({ icon, iconCls, label, dir, value, onChange }: {
 
 export default function ChildFormModal({ open, onClose, editing }: Props) {
   const { addChild, updateChild } = useChild()
-  const [form, setForm] = useState(
-    editing
-      ? { name: editing.name, birth: editing.birth, gender: editing.gender,
-          treatAtropine: editing.treatAtropine, treatDreamlens: editing.treatDreamlens,
-          outdoorGoal: editing.outdoorGoal ?? 2, phoneGoal: editing.phoneGoal ?? 2 }
-      : EMPTY
-  )
+  const [form, setForm] = useState({ ...EMPTY_BASE })
+  const [treatments, setTreatments] = useState<ActiveTreatment[]>([])
+  const [customName, setCustomName] = useState('')
+  const [customSchedule, setCustomSchedule] = useState('')
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     setForm(editing
       ? { name: editing.name, birth: editing.birth, gender: editing.gender,
-          treatAtropine: editing.treatAtropine, treatDreamlens: editing.treatDreamlens,
           outdoorGoal: editing.outdoorGoal ?? 2, phoneGoal: editing.phoneGoal ?? 2 }
-      : EMPTY
+      : { ...EMPTY_BASE }
     )
+    setTreatments(toActiveTreatments(editing))
+    setCustomName('')
+    setCustomSchedule('')
   }, [editing, open])
 
   if (!open) return null
+
+  const togglePreset = (preset: 'atropine' | 'dreamlens', name: string, schedule: string) => {
+    setTreatments(prev => prev.some(t => t.key === preset)
+      ? prev.filter(t => t.key !== preset)
+      : [...prev, { key: preset, name, preset, schedule }]
+    )
+  }
+
+  const addCustom = () => {
+    const name = customName.trim()
+    if (!name) { toast.error('케어 이름을 입력해주세요'); return }
+    setTreatments(prev => [...prev, { key: makeTreatmentKey(), name, preset: null, schedule: customSchedule.trim() }])
+    setCustomName('')
+    setCustomSchedule('')
+  }
+
+  const removeTreatment = (key: string) =>
+    setTreatments(prev => prev.filter(t => t.key !== key))
+
+  const customItems = treatments.filter(t => t.preset === null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -64,11 +99,12 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
     if (!form.birth)        { toast.error('생년월일을 입력해주세요'); return }
     setSaving(true)
     try {
+      const payload = { ...form, treatments }
       if (editing) {
-        await updateChild({ id: editing.id, ...form })
+        await updateChild({ id: editing.id, ...payload })
         toast.success('수정되었습니다')
       } else {
-        await addChild(form)
+        await addChild(payload)
         toast.success(`${form.name} 등록 완료`)
       }
       onClose()
@@ -82,7 +118,7 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-[480px] bg-white rounded-t-2xl sm:rounded-2xl p-5 pb-8">
+      <div className="relative z-10 w-full max-w-[480px] bg-white rounded-t-2xl sm:rounded-2xl p-5 pb-8 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold">{editing ? '자녀 수정' : '자녀 추가'}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none"><FontAwesomeIcon icon={faXmark} /></button>
@@ -127,23 +163,65 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
             </div>
           </div>
 
+          {/* 진행 중인 난시케어 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">진행 중인 난시케어</label>
+
+            {/* 프리셋 */}
             <div className="space-y-2">
-              {[
-                { key: 'treatAtropine' as const,  label: '아트로핀 점안' },
-                { key: 'treatDreamlens' as const, label: '드림렌즈 착용'  },
-              ].map(({ key, label }) => (
-                <label key={key} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50">
-                  <input
-                    type="checkbox"
-                    checked={form[key]}
-                    onChange={e => setForm(f => ({ ...f, [key]: e.target.checked }))}
-                    className="w-4 h-4 rounded accent-[#10bcad]"
-                  />
-                  <span className="text-sm text-gray-700">{label}</span>
-                </label>
-              ))}
+              {TREATMENT_PRESETS.map(({ preset, name, schedule }) => {
+                const checked = treatments.some(t => t.key === preset)
+                return (
+                  <label key={preset} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => togglePreset(preset, name, schedule)}
+                      className="w-4 h-4 rounded accent-[#10bcad]"
+                    />
+                    <span className="flex-1 text-sm text-gray-700">{name}</span>
+                    <span className="text-xs text-gray-400">{schedule}</span>
+                  </label>
+                )
+              })}
+            </div>
+
+            {/* 직접입력 케어 목록 */}
+            {customItems.length > 0 && (
+              <div className="space-y-2 mt-2">
+                {customItems.map(t => (
+                  <div key={t.key} className="flex items-center gap-3 p-3 rounded-lg border border-[#10bcad]/30 bg-teal-50/40">
+                    <span className="flex-1 text-sm text-gray-700">{t.name}</span>
+                    {t.schedule && <span className="text-xs text-gray-400">{t.schedule}</span>}
+                    <button type="button" onClick={() => removeTreatment(t.key)}
+                      className="text-gray-400 hover:text-rose-500 p-0.5"><FontAwesomeIcon icon={faTrashCan} /></button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 직접입력 추가 */}
+            <div className="mt-2 p-3 rounded-lg border border-dashed border-gray-300 space-y-2">
+              <p className="text-xs font-medium text-gray-500">직접입력 추가</p>
+              <input
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#10bcad]"
+                placeholder="케어 이름 (예: 마이사이트)"
+                value={customName}
+                onChange={e => setCustomName(e.target.value)}
+              />
+              <div className="flex gap-2">
+                <input
+                  className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#10bcad]"
+                  placeholder="스케줄 (예: 주간 착용)"
+                  value={customSchedule}
+                  onChange={e => setCustomSchedule(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustom() } }}
+                />
+                <button type="button" onClick={addCustom}
+                  className="flex items-center gap-1 px-3 rounded-lg bg-[#10bcad] text-white text-sm font-medium whitespace-nowrap">
+                  <FontAwesomeIcon icon={faPlus} /> 추가
+                </button>
+              </div>
             </div>
           </div>
 

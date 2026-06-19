@@ -20,7 +20,7 @@ const INPUT = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focu
 
 export default function HomePage() {
   const router = useRouter()
-  const { activeChild, activeTreatments, logs, lifestyle, exams, isLoading, saveTreatmentLog, saveLifestyle, updateExam } = useChild()
+  const { activeChild, activeTreatments, treatmentsForDate, logs, lifestyle, exams, isLoading, saveTreatmentLog, saveLifestyle, updateExam } = useChild()
   const [showAddChild, setShowAddChild] = useState(false)
   const [showLifestyle, setShowLifestyle] = useState(false)
   const [alertDay, setAlertDayState] = useState<number | null>(null)
@@ -70,11 +70,9 @@ export default function HomePage() {
     finally { setLifeSaving(false) }
   }
 
-  const toggleTreatment = async (key: 'atropine' | 'dreamlens') => {
+  const toggleTreatment = async (key: string) => {
     const newVal = !todayLog[key]
-    const atropine  = key === 'atropine'  ? newVal : !!todayLog.atropine
-    const dreamlens = key === 'dreamlens' ? newVal : !!todayLog.dreamlens
-    await saveTreatmentLog(todayStr, atropine, dreamlens)
+    await saveTreatmentLog(todayStr, { ...todayLog, [key]: newVal })
     toast.success(newVal ? '케어 완료로 표시했습니다' : '완료 취소했습니다')
   }
 
@@ -90,8 +88,8 @@ export default function HomePage() {
     return mins > 0 ? `${hrs}시간 ${mins}분` : `${hrs}시간`
   }
 
-  const streak   = calcStreak(logs, activeTreatments)
-  const monthPct = calcMonthCompliance(logs, activeTreatments, new Date().getFullYear(), new Date().getMonth())
+  const streak   = calcStreak(logs, treatmentsForDate)
+  const monthPct = calcMonthCompliance(logs, treatmentsForDate, new Date().getFullYear(), new Date().getMonth())
   const todayLife = lifestyle[todayStr]
 
   const nextAppt = exams
@@ -121,7 +119,7 @@ export default function HomePage() {
   const weekDays = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(); d.setDate(d.getDate() - (6 - i))
     const ds = formatDate(d)
-    return { d, ds, status: getDayStatus(logs, activeTreatments, ds) }
+    return { d, ds, status: getDayStatus(logs, treatmentsForDate, ds) }
   })
   const DAY_KO = ['일','월','화','수','목','금','토']
 
@@ -183,7 +181,7 @@ export default function HomePage() {
                   </div>
                   <div className="flex-1">
                     <div className={`text-sm font-semibold ${done ? 'text-gray-800' : 'text-gray-600'}`}>{t.name}</div>
-                    <div className="text-xs text-gray-400">{t.time}</div>
+                    {t.schedule && <div className="text-xs text-gray-400">{t.schedule}</div>}
                   </div>
                   <span className={`text-xs font-semibold px-2.5 py-1 rounded-full
                     ${done ? 'bg-[#10bcad]/15 text-teal-700' : 'bg-gray-100 text-gray-400'}`}>

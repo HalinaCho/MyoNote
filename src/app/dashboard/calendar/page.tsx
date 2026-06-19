@@ -19,7 +19,7 @@ function fmtTime(h: number) {
 }
 
 export default function CalendarPage() {
-  const { logs, lifestyle, activeTreatments, isLoading, saveTreatmentLog, saveLifestyle } = useChild()
+  const { logs, lifestyle, treatmentsForDate, isLoading, saveTreatmentLog, saveLifestyle } = useChild()
   const [calYear, setCalYear]   = useState(new Date().getFullYear())
   const [calMonth, setCalMonth] = useState(new Date().getMonth())
   const [statsTab, setStatsTab] = useState<'care' | 'lifestyle'>('care')
@@ -50,6 +50,12 @@ export default function CalendarPage() {
   const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate()
   const DAY_KO = ['일','월','화','수','목','금','토']
 
+  // 표시 중인 달에 케어 2개 이상이던 날이 있으면 '부분' 범례 노출
+  const monthHasPartial = Array.from({ length: daysInMonth }, (_, i) => {
+    const d = i + 1
+    return `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+  }).some(ds => treatmentsForDate(ds).length >= 2)
+
   const changeMonth = (delta: number) => {
     let m = calMonth + delta, y = calYear
     if (m > 11) { m = 0; y++ }
@@ -71,11 +77,9 @@ export default function CalendarPage() {
     setDayModal(ds)
   }
 
-  const handleCareToggle = async (ds: string, key: 'atropine' | 'dreamlens', val: boolean) => {
+  const handleCareToggle = async (ds: string, key: string, val: boolean) => {
     const log = logs[ds] || {}
-    const atropine  = key === 'atropine'  ? val : !!log.atropine
-    const dreamlens = key === 'dreamlens' ? val : !!log.dreamlens
-    await saveTreatmentLog(ds, atropine, dreamlens)
+    await saveTreatmentLog(ds, { ...log, [key]: val })
   }
 
   const handleLifeSave = async () => {
@@ -116,7 +120,7 @@ export default function CalendarPage() {
           {Array.from({ length: daysInMonth }, (_, i) => {
             const d  = i + 1
             const ds = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`
-            const status    = getDayStatus(logs, activeTreatments, ds)
+            const status    = getDayStatus(logs, treatmentsForDate, ds)
             const isToday   = ds === todayStr
             const clickable = ds <= todayStr
             const life      = lifestyle[ds]
@@ -147,7 +151,7 @@ export default function CalendarPage() {
         {/* 범례 */}
         <div className="flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 mt-3 text-xs text-gray-500">
           <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-teal-100"/>케어완료</span>
-          {activeTreatments.length >= 2 && (
+          {monthHasPartial && (
             <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-amber-100"/>부분</span>
           )}
           <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-rose-100"/>미완료</span>
@@ -169,12 +173,12 @@ export default function CalendarPage() {
               <button onClick={() => setDayModal(null)} className="text-gray-400 text-xl"><FontAwesomeIcon icon={faXmark} /></button>
             </div>
 
-            {/* 케어 */}
-            {activeTreatments.length > 0 && (
+            {/* 케어 — 그 날짜에 활성이던 케어만 표시 */}
+            {treatmentsForDate(dayModal).length > 0 && (
               <div className="mb-5">
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">케어</p>
                 <div className="space-y-2">
-                  {activeTreatments.map(t => {
+                  {treatmentsForDate(dayModal).map(t => {
                     const done = !!(logs[dayModal] || {})[t.key]
                     return (
                       <label key={t.key} className="flex items-center justify-between p-3 rounded-xl border border-gray-100 cursor-pointer hover:bg-gray-50">

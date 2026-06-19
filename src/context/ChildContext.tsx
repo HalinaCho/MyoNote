@@ -1,8 +1,8 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import type { Child, ExamRecord, TreatmentLogs, LifestyleLogs, Treatment } from '@/types'
-import { getActiveTreatments } from '@/lib/treatments'
+import type { Child, ExamRecord, TreatmentLogs, LifestyleLogs, TreatmentDef } from '@/types'
+import { getActiveTreatments, mergeTreatments } from '@/lib/treatments'
 import * as q from '@/lib/supabase/queries'
 import { today } from '@/lib/utils/date'
 
@@ -10,17 +10,18 @@ interface ChildContextType {
   children: Child[]
   activeChildId: string | null
   activeChild: Child | null
-  activeTreatments: Treatment[]
+  activeTreatments: TreatmentDef[]                       // 오늘 활성 케어
+  treatmentsForDate: (dateStr: string) => TreatmentDef[] // 날짜별 활성 케어
   logs: TreatmentLogs
   exams: ExamRecord[]
   lifestyle: LifestyleLogs
   isLoading: boolean
   switchChild: (id: string) => Promise<void>
   refreshChildren: () => Promise<void>
-  addChild: (data: q.AddChildInput) => Promise<void>
-  updateChild: (data: q.UpdateChildInput) => Promise<void>
+  addChild: (data: q.ChildFormInput) => Promise<void>
+  updateChild: (data: q.ChildFormUpdateInput) => Promise<void>
   deleteChild: (id: string) => Promise<void>
-  saveTreatmentLog: (dateStr: string, atropine: boolean, dreamlens: boolean) => Promise<void>
+  saveTreatmentLog: (dateStr: string, done: Record<string, boolean>) => Promise<void>
   saveExam: (exam: Omit<ExamRecord, 'id'>) => Promise<ExamRecord>
   updateExam: (id: string, exam: Omit<ExamRecord, 'id'>) => Promise<void>
   deleteExam: (id: string) => Promise<void>
@@ -71,17 +72,26 @@ export function ChildProvider({ children: node }: { children: React.ReactNode })
   }, [loadChildData])
 
   const activeChild = children.find(c => c.id === activeChildId) ?? null
-  const activeTreatments = getActiveTreatments(activeChild)
+  const activeTreatments = getActiveTreatments(activeChild, today())
+  const treatmentsForDate = useCallback(
+    (dateStr: string) => getActiveTreatments(activeChild, dateStr),
+    [activeChild]
+  )
 
-  const addChild = async (data: q.AddChildInput) => {
-    const child = await q.addChild(data)
+  // 폼이 넘긴 활성 집합(data.treatments)을 기존 정의와 병합해 기간 갱신
+  const addChild = async (data: q.ChildFormInput) => {
+    const merged = mergeTreatments([], data.treatments, today())
+    const child = await q.addChild({ ...data, treatments: merged })
     setChildren(prev => [...prev, child])
     await switchChild(child.id)
   }
 
-  const updateChild = async (data: q.UpdateChildInput) => {
-    await q.updateChild(data)
-    setChildren(prev => prev.map(c => c.id === data.id ? { ...c, ...data } : c))
+  const updateChild = async (data: q.ChildFormUpdateInput) => {
+    const old = children.find(c => c.id === data.id)
+    const merged = mergeTreatments(old?.treatments ?? [], data.treatments, today())
+    const payload = { ...data, treatments: merged }
+    await q.updateChild(payload)
+    setChildren(prev => prev.map(c => c.id === data.id ? { ...c, ...payload } : c))
   }
 
   const deleteChild = async (id: string) => {
@@ -100,10 +110,10 @@ export function ChildProvider({ children: node }: { children: React.ReactNode })
     }
   }
 
-  const saveTreatmentLog = async (dateStr: string, atropine: boolean, dreamlens: boolean) => {
+  const saveTreatmentLog = async (dateStr: string, done: Record<string, boolean>) => {
     if (!activeChildId) return
-    setLogs(prev => ({ ...prev, [dateStr]: { atropine, dreamlens } }))
-    await q.saveTreatmentLog(activeChildId, dateStr, atropine, dreamlens)
+    setLogs(prev => ({ ...prev, [dateStr]: done }))
+    await q.saveTreatmentLog(activeChildId, dateStr, done)
   }
 
   const sortExams = (list: ExamRecord[]) =>
@@ -140,7 +150,7 @@ export function ChildProvider({ children: node }: { children: React.ReactNode })
 
   return (
     <ChildContext.Provider value={{
-      children, activeChildId, activeChild, activeTreatments,
+      children, activeChildId, activeChild, activeTreatments, treatmentsForDate,
       logs, exams, lifestyle, isLoading,
       switchChild, refreshChildren,
       addChild, updateChild, deleteChild,

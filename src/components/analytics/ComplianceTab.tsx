@@ -14,14 +14,14 @@ type Half = '상' | '하'
 interface Props { year: number; half: Half; bare?: boolean }
 
 export default function ComplianceTab({ year, half, bare }: Props) {
-  const { logs, activeTreatments, isLoading } = useChild()
+  const { logs, activeTreatments, treatmentsForDate, isLoading } = useChild()
 
   const months = Array.from({ length: 6 }, (_, i) => {
     const monthIndex = half === '상' ? i : i + 6
     return { year, month: monthIndex, label: `${monthIndex + 1}월` }
   })
 
-  const data = months.map(m => calcMonthCompliance(logs, activeTreatments, m.year, m.month))
+  const data = months.map(m => calcMonthCompliance(logs, treatmentsForDate, m.year, m.month))
 
   const hasLogs = (y: number, month: number) => {
     const prefix = `${y}-${String(month + 1).padStart(2, '0')}`
