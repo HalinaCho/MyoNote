@@ -173,7 +173,7 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
                 <span className="relative inline-flex items-center">
                   <input
                     type="date"
-                    className={`date-bare appearance-none bg-transparent border-0 p-0 pr-4 text-sm leading-none focus:outline-none ${form.birth ? 'text-gray-500' : 'text-transparent w-32'}`}
+                    className={`date-bare appearance-none bg-transparent border-0 p-0 pr-2.5 text-sm leading-none focus:outline-none ${form.birth ? 'text-gray-500' : 'text-transparent w-28'}`}
                     value={form.birth}
                     onChange={e => setForm(f => ({ ...f, birth: e.target.value }))}
                   />
