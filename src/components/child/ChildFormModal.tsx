@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { useChild } from '@/context/ChildContext'
 import { TREATMENT_PRESETS, makeTreatmentKey } from '@/lib/treatments'
+import { calcAgeLabel } from '@/lib/utils/date'
 import ConfirmModal from '@/components/ui/ConfirmModal'
 import type { Child } from '@/types'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -159,23 +160,27 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
                 <FontAwesomeIcon icon={faArrowsRotate} />
               </span>
             </button>
-            <div className="flex-1 min-w-0 flex gap-2">
+            <div className="flex-1 min-w-0">
               <input
-                className="w-[36%] flex-shrink-0 min-w-0 h-9 border border-gray-200 rounded-lg px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#10bcad]"
+                className="w-full bg-transparent text-lg font-bold text-gray-800 placeholder:text-gray-300 placeholder:font-medium focus:outline-none"
                 placeholder="이름"
                 value={form.name}
                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
               />
-              <div className="relative flex-1 min-w-0">
-                <input
-                  type="date"
-                  className={`w-full min-w-0 h-9 border border-gray-200 rounded-lg px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#10bcad] accent-[#10bcad] [&::-webkit-calendar-picker-indicator]:hidden ${form.birth ? 'text-gray-600' : 'text-transparent'}`}
-                  value={form.birth}
-                  onChange={e => setForm(f => ({ ...f, birth: e.target.value }))}
-                />
-                {!form.birth && (
-                  <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-gray-400">생년월일</span>
-                )}
+              <div className="flex items-center gap-1.5 mt-0.5 text-sm text-gray-400">
+                {form.birth && <span className="text-[#10bcad] font-medium">{calcAgeLabel(form.birth)}</span>}
+                {form.birth && <span className="text-gray-300">·</span>}
+                <span className="relative inline-flex items-center">
+                  <input
+                    type="date"
+                    className={`bg-transparent border-0 p-0 text-sm focus:outline-none [&::-webkit-calendar-picker-indicator]:hidden ${form.birth ? 'text-gray-500' : 'text-transparent w-[5.5rem]'}`}
+                    value={form.birth}
+                    onChange={e => setForm(f => ({ ...f, birth: e.target.value }))}
+                  />
+                  {!form.birth && (
+                    <span className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 text-gray-300">생년월일 입력</span>
+                  )}
+                </span>
               </div>
             </div>
           </div>
