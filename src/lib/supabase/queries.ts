@@ -268,21 +268,18 @@ export async function removeGuardian(childId: string, userId: string): Promise<v
 
 // ── 초대 코드 ─────────────────────────────────────────────────
 
-export async function createInviteCode(role: 'editor' | 'viewer' = 'editor'): Promise<string> {
+// 자녀별 초대코드 생성 (그 자녀의 보호자 누구나) — 코드 문자열 반환
+export async function createInviteCode(childId: string, role: 'editor' | 'viewer' = 'editor'): Promise<string> {
   const sb = createClient()
-  const { data: { user } } = await sb.auth.getUser()
-  if (!user) throw new Error('로그인이 필요합니다')
-  const code = Math.random().toString(36).slice(2, 8).toUpperCase()
-  const { error } = await sb.from('eyebody_invite_codes')
-    .insert({ code, owner_id: user.id, role })
-  if (error) throw error
-  return code
+  const { data, error } = await sb.rpc('create_invite_code', { p_child_id: childId, p_role: role })
+  if (error) throw new Error(error.message || '코드 생성에 실패했습니다')
+  return data as string
 }
 
-export async function acceptInviteCode(code: string): Promise<number> {
+// 초대코드 수락 — 등록된 자녀 이름 반환
+export async function acceptInviteCode(code: string): Promise<string> {
   const sb = createClient()
-  // 서버측 SECURITY DEFINER 함수로 검증·삽입·사용처리 (코드 전체공개 정책 제거 대응)
   const { data, error } = await sb.rpc('accept_invite_code', { p_code: code.toUpperCase().trim() })
   if (error) throw new Error(error.message || '코드 참여에 실패했습니다')
-  return (data as number) ?? 0
+  return data as string
 }

@@ -16,7 +16,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPen, faTrashCan, faPlus, faUserGroup, faKey, faRightFromBracket, faXmark, faChevronRight, faBell } from '@fortawesome/free-solid-svg-icons'
 
 export default function SettingsPage() {
-  const { children, activeChildId, deleteChild, refreshChildren } = useChild()
+  const { children, activeChildId, activeChild, deleteChild, refreshChildren } = useChild()
   const [childModal, setChildModal] = useState<{ open: boolean; editing: Child | null }>({ open: false, editing: null })
   const [inviteModal, setInviteModal] = useState(false)
   const [joinModal, setJoinModal] = useState(false)
@@ -72,12 +72,13 @@ export default function SettingsPage() {
   }
 
   const handleGenerateInvite = async () => {
+    if (!activeChildId) { toast.error('자녀를 선택해주세요'); return }
     setGenerating(true)
     try {
-      const code = await q.createInviteCode('editor')
+      const code = await q.createInviteCode(activeChildId, 'editor')
       setInviteCode(code)
-    } catch {
-      toast.error('코드 생성에 실패했습니다')
+    } catch (e: any) {
+      toast.error(e.message || '코드 생성에 실패했습니다')
     } finally {
       setGenerating(false)
     }
@@ -86,8 +87,8 @@ export default function SettingsPage() {
   const handleJoin = async () => {
     if (joinCode.length < 6) { toast.error('코드를 입력해주세요'); return }
     try {
-      const n = await q.acceptInviteCode(joinCode)
-      toast.success(`자녀 ${n}명의 보호자로 등록되었습니다`)
+      const name = await q.acceptInviteCode(joinCode)
+      toast.success(`${name} 보호자로 등록되었습니다`)
       setJoinModal(false)
       setJoinCode('')
       await refreshChildren()
@@ -279,10 +280,10 @@ export default function SettingsPage() {
           <div className="absolute inset-0 bg-black/40" onClick={() => { setInviteModal(false); setInviteCode('') }} />
           <div className="relative z-10 w-full max-w-[480px] bg-white rounded-t-2xl sm:rounded-2xl p-5 pb-8">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold">보호자 초대</h2>
+              <h2 className="text-lg font-bold">{activeChild?.name ? `${activeChild.name} 보호자 초대` : '보호자 초대'}</h2>
               <button onClick={() => { setInviteModal(false); setInviteCode('') }} className="text-gray-400 text-xl"><FontAwesomeIcon icon={faXmark} /></button>
             </div>
-            <p className="text-sm text-gray-500 mb-4">코드를 생성해 상대방에게 공유하세요. 내 계정의 모든 자녀가 공유됩니다.</p>
+            <p className="text-sm text-gray-500 mb-4">코드를 생성해 상대방에게 공유하세요. <b className="text-gray-700">{activeChild?.name ?? '이 자녀'}</b> 프로필만 공유되며, 다른 자녀는 보이지 않습니다.</p>
             {inviteCode ? (
               <div className="bg-teal-50 rounded-xl p-4 flex items-center justify-between mb-4">
                 <span className="text-2xl font-bold tracking-widest text-teal-700">{inviteCode}</span>
