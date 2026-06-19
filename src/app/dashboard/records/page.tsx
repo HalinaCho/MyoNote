@@ -205,7 +205,7 @@ export default function RecordsPage() {
                   <span className="text-sm font-medium text-gray-700">굴절 도수 (D)</span>
                   <button type="button" onClick={() => setShowCRInfo(v => !v)}
                     className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full transition-colors
-                      ${showCRInfo ? 'bg-teal-500 text-white' : 'bg-teal-50 text-teal-500 hover:bg-teal-100'}`}>
+                      ${showCRInfo ? 'bg-[#10bcad] text-white' : 'bg-teal-50 text-teal-500 hover:bg-teal-100'}`}>
                     <FontAwesomeIcon icon={faCircleInfo} />
                     조절마비(CR)검사 결과 우선
                   </button>

@@ -345,7 +345,7 @@ export default function HomePage() {
                   toast.success('예약일이 수정되었습니다')
                 } catch { toast.error('수정에 실패했습니다') }
                 setEditingAppt(false)
-              }} className="bg-teal-600 text-white text-sm px-3 py-2 rounded-lg font-medium">
+              }} className="bg-[#10bcad] hover:bg-teal-600 text-white text-sm px-3 py-2 rounded-lg font-medium transition-colors">
                 저장
               </button>
               <button onClick={() => setEditingAppt(false)}
@@ -420,7 +420,7 @@ export default function HomePage() {
                 </div>
               </div>
               <button type="submit" disabled={lifeSaving}
-                className="w-full bg-teal-600 disabled:bg-teal-200 text-white font-semibold py-3 rounded-xl">
+                className="w-full bg-[#10bcad] hover:bg-teal-600 disabled:bg-teal-200 text-white font-semibold py-3 rounded-xl transition-colors">
                 {lifeSaving ? '저장 중...' : '저장'}
               </button>
             </form>

@@ -294,7 +294,7 @@ export default function SettingsPage() {
             ) : (
               <button
                 onClick={handleGenerateInvite} disabled={generating}
-                className="w-full bg-teal-600 disabled:bg-teal-300 text-white font-semibold py-3 rounded-xl mb-4"
+                className="w-full bg-[#10bcad] hover:bg-teal-600 disabled:bg-teal-300 text-white font-semibold py-3 rounded-xl mb-4 transition-colors"
               >
                 {generating ? '생성 중...' : '코드 생성'}
               </button>
@@ -321,7 +321,7 @@ export default function SettingsPage() {
               value={joinCode}
               onChange={e => setJoinCode(e.target.value.toUpperCase())}
             />
-            <button onClick={handleJoin} className="w-full bg-teal-600 text-white font-semibold py-3 rounded-xl">
+            <button onClick={handleJoin} className="w-full bg-[#10bcad] hover:bg-teal-600 text-white font-semibold py-3 rounded-xl transition-colors">
               참여하기
             </button>
           </div>
