@@ -45,10 +45,10 @@ function GoalStepper({ icon, iconCls, label, dir, value, onChange }: {
       </span>
       <div className="flex items-center gap-2">
         <button type="button" onClick={() => onChange(Math.max(0, value - 0.5))}
-          className="w-7 h-7 rounded-full bg-teal-50 text-teal-500 hover:bg-teal-100 flex items-center justify-center font-bold text-base leading-none transition-colors">−</button>
+          className="w-7 h-7 rounded-full bg-teal-100 text-teal-700 hover:bg-teal-200 flex items-center justify-center font-bold text-base leading-none transition-colors">−</button>
         <span className="text-sm font-semibold text-gray-800 w-14 text-center">{value}시간</span>
         <button type="button" onClick={() => onChange(Math.min(12, value + 0.5))}
-          className="w-7 h-7 rounded-full bg-teal-50 text-teal-500 hover:bg-teal-100 flex items-center justify-center font-bold text-base leading-none transition-colors">+</button>
+          className="w-7 h-7 rounded-full bg-teal-100 text-teal-700 hover:bg-teal-200 flex items-center justify-center font-bold text-base leading-none transition-colors">+</button>
       </div>
     </div>
   )

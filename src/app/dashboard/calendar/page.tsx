@@ -208,7 +208,7 @@ export default function CalendarPage() {
                     hours={lifeForm.outdoorH} minutes={lifeForm.outdoorM}
                     onHour={v => setLifeForm(f => ({ ...f, outdoorH: v }))}
                     onMinute={v => setLifeForm(f => ({ ...f, outdoorM: v }))}
-                    btnCls="bg-teal-200 text-teal-700 hover:bg-teal-300"
+                    btnCls="bg-teal-100 text-teal-700 hover:bg-teal-200"
                     textCls="text-teal-700"
                   />
                   <p className="text-xs text-teal-400 mt-2 text-center">권장 2시간↑</p>
@@ -222,7 +222,7 @@ export default function CalendarPage() {
                     hours={lifeForm.phoneH} minutes={lifeForm.phoneM}
                     onHour={v => setLifeForm(f => ({ ...f, phoneH: v }))}
                     onMinute={v => setLifeForm(f => ({ ...f, phoneM: v }))}
-                    btnCls="bg-amber-200 text-amber-700 hover:bg-amber-300"
+                    btnCls="bg-amber-100 text-amber-700 hover:bg-amber-200"
                     textCls="text-amber-700"
                   />
                   <p className="text-xs text-amber-400 mt-2 text-center">권장 2시간↓</p>

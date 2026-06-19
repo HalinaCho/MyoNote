@@ -211,7 +211,7 @@ export default function RecordsPage() {
                   </button>
                 </div>
                 {showCRInfo && (
-                  <div className="bg-teal-50 border border-teal-100 rounded-xl p-3 mb-3 text-xs space-y-1.5 text-teal-900">
+                  <div className="bg-teal-50 border border-teal-100 rounded-xl p-3 mb-3 text-xs space-y-1.5 text-teal-700">
                     <p className="font-semibold">조절마비검사(CR검사)란?</p>
                     <p>CR(Cycloplegic Refraction)은 조절마비 안약을 점안해 눈의 조절 기능을 일시적으로 풀어준 상태에서 굴절이상을 측정하는 검사입니다.</p>
                     <p>어린이는 조절력이 강해 일반 검사만으로는 실제 근시 도수가 낮게 측정될 수 있습니다. CR검사 결과가 실제 굴절 상태를 더 정확하게 반영하므로, 입력 시 CR검사 수치를 우선 입력해주세요.</p>
