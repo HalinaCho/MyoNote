@@ -180,9 +180,9 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
             </div>
           </div>
 
-          {/* ── 진행 중인 난시케어 ── */}
+          {/* ── 진행 중인 근시케어 ── */}
           <section className="rounded-2xl border border-gray-100 p-4">
-            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2.5">진행 중인 난시케어</h3>
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2.5">진행 중인 근시케어</h3>
 
             {/* 활성 케어 목록 — 프리셋·직접입력 동일 행 + 휴지통 */}
             {treatments.length > 0 && (
