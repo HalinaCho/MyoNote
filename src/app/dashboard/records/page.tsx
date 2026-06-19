@@ -122,7 +122,7 @@ export default function RecordsPage() {
               <div className="space-y-1.5 text-sm">
                 {(e.axOD || e.axOS) && (
                   <div className="flex justify-between bg-teal-50 rounded-lg px-3 py-2">
-                    <span className="text-teal-600 font-medium">안축장 (OD/OS)</span>
+                    <span className="text-teal-700 font-medium">안축장 (OD/OS)</span>
                     <span className="font-bold text-teal-700">{e.axOD||'—'} / {e.axOS||'—'} mm</span>
                   </div>
                 )}

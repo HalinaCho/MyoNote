@@ -137,7 +137,7 @@ export default function CalendarPage() {
                 disabled={!clickable}
                 onClick={() => clickable && openDay(ds)}
                 className={`aspect-square flex flex-col items-center justify-between py-1.5 rounded-lg transition-colors
-                  ${bg} ${isToday ? 'ring-2 ring-teal-400' : ''} ${clickable ? 'hover:opacity-80 active:scale-95' : ''}`}
+                  ${bg} ${isToday ? 'ring-2 ring-teal-500' : ''} ${clickable ? 'hover:opacity-80 active:scale-95' : ''}`}
               >
                 <span className="text-sm sm:text-base font-semibold leading-none">{d}</span>
                 <div className="h-1.5 flex items-center justify-center">
