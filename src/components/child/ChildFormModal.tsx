@@ -162,19 +162,25 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
               </button>
               <span className="text-[11px] text-gray-400">{form.gender === 'F' ? '여자' : '남자'}</span>
             </div>
-            <div className="flex-1 min-w-0 space-y-2">
-              <input
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#10bcad]"
-                placeholder="자녀 이름"
-                value={form.name}
-                onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-              />
-              <input
-                type="date"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#10bcad] accent-[#10bcad]"
-                value={form.birth}
-                onChange={e => setForm(f => ({ ...f, birth: e.target.value }))}
-              />
+            <div className="flex-1 min-w-0 grid grid-cols-2 gap-2">
+              <div className="min-w-0">
+                <label className="block text-[11px] text-gray-400 mb-0.5">이름</label>
+                <input
+                  className="w-full min-w-0 border border-gray-200 rounded-lg px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#10bcad]"
+                  placeholder="이름"
+                  value={form.name}
+                  onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                />
+              </div>
+              <div className="min-w-0">
+                <label className="block text-[11px] text-gray-400 mb-0.5">생년월일</label>
+                <input
+                  type="date"
+                  className="w-full min-w-0 border border-gray-200 rounded-lg px-2.5 py-2 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#10bcad] accent-[#10bcad]"
+                  value={form.birth}
+                  onChange={e => setForm(f => ({ ...f, birth: e.target.value }))}
+                />
+              </div>
             </div>
           </div>
 
