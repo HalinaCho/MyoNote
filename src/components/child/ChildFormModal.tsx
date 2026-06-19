@@ -8,7 +8,7 @@ import { calcAgeLabel } from '@/lib/utils/date'
 import ConfirmModal from '@/components/ui/ConfirmModal'
 import type { Child } from '@/types'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faXmark, faTree, faMobileScreen, faPlus, faTrashCan, faArrowsRotate } from '@fortawesome/free-solid-svg-icons'
+import { faXmark, faTree, faMobileScreen, faPlus, faTrashCan, faArrowsRotate, faCheck } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 
 interface Props {
@@ -45,10 +45,10 @@ function GoalStepper({ icon, iconCls, label, dir, value, onChange }: {
       </span>
       <div className="flex items-center gap-2">
         <button type="button" onClick={() => onChange(Math.max(0, value - 0.5))}
-          className="w-7 h-7 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-bold text-base leading-none">−</button>
+          className="w-7 h-7 rounded-full bg-teal-50 text-[#10bcad] hover:bg-teal-100 flex items-center justify-center font-bold text-base leading-none transition-colors">−</button>
         <span className="text-sm font-semibold text-gray-800 w-14 text-center">{value}시간</span>
         <button type="button" onClick={() => onChange(Math.min(12, value + 0.5))}
-          className="w-7 h-7 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-bold text-base leading-none">+</button>
+          className="w-7 h-7 rounded-full bg-teal-50 text-[#10bcad] hover:bg-teal-100 flex items-center justify-center font-bold text-base leading-none transition-colors">+</button>
       </div>
     </div>
   )
@@ -187,13 +187,18 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
 
           {/* ── 진행 중인 근시케어 ── */}
           <section>
-            <h3 className="text-sm font-semibold text-gray-700 mb-2">진행 중인 근시케어</h3>
-            <div className="rounded-2xl bg-teal-50 border-2 border-teal-100 p-3">
-              {/* 활성 케어 목록 — 프리셋·직접입력 동일 행 + 휴지통 */}
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+              <span className="w-1 h-4 rounded-full bg-[#10bcad]" />진행 중인 근시케어
+            </h3>
+            <div className="rounded-2xl border border-gray-100 p-3">
+              {/* 활성 케어 목록 — teal 체크 = 활성 표시 */}
               {treatments.length > 0 && (
                 <div className="space-y-2 mb-2.5">
                   {treatments.map(t => (
-                    <div key={t.key} className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white">
+                    <div key={t.key} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-gray-50">
+                      <span className="w-5 h-5 rounded-full bg-[#10bcad] text-white flex items-center justify-center text-[10px] flex-shrink-0">
+                        <FontAwesomeIcon icon={faCheck} />
+                      </span>
                       <span className="flex-1 text-sm font-medium text-gray-700">{t.name}</span>
                       {t.schedule && <span className="text-xs text-gray-400">{t.schedule}</span>}
                       <button type="button" onClick={() => removeTreatment(t.key)}
@@ -207,13 +212,13 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
               <div className="flex flex-wrap gap-2">
                 {availablePresets.map(({ preset, name, schedule }) => (
                   <button key={preset} type="button" onClick={() => togglePreset(preset, name, schedule)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-teal-200 text-sm text-teal-700 hover:bg-teal-100 transition-colors">
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-gray-200 text-sm text-gray-600 hover:border-[#10bcad] hover:text-[#10bcad] transition-colors">
                     <FontAwesomeIcon icon={faPlus} className="text-xs" /> {name}
                   </button>
                 ))}
                 <button type="button" onClick={() => setShowCustom(v => !v)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm transition-colors
-                    ${showCustom ? 'bg-[#10bcad] text-white border-[#10bcad]' : 'bg-white border-teal-200 text-teal-700 hover:bg-teal-100'}`}>
+                    ${showCustom ? 'bg-[#10bcad] text-white border-[#10bcad]' : 'bg-white border-gray-200 text-gray-600 hover:border-[#10bcad] hover:text-[#10bcad]'}`}>
                   <FontAwesomeIcon icon={faPlus} className="text-xs" /> 직접입력
                 </button>
               </div>
@@ -247,16 +252,14 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
 
           {/* ── 생활습관 권장 목표 ── */}
           <section>
-            <h3 className="text-sm font-semibold text-gray-700 mb-2">생활습관 권장 목표 <span className="text-xs font-normal text-gray-400">(일 기준)</span></h3>
-            <div className="space-y-2">
-              <div className="bg-amber-50 border-2 border-amber-100 rounded-2xl px-3">
-                <GoalStepper icon={faMobileScreen} iconCls="text-amber-500" label="스마트폰" dir="이하"
-                  value={form.phoneGoal}  onChange={v => setForm(f => ({ ...f, phoneGoal: v }))} />
-              </div>
-              <div className="bg-teal-50 border-2 border-teal-100 rounded-2xl px-3">
-                <GoalStepper icon={faTree} iconCls="text-[#10bcad]" label="야외활동" dir="이상"
-                  value={form.outdoorGoal} onChange={v => setForm(f => ({ ...f, outdoorGoal: v }))} />
-              </div>
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+              <span className="w-1 h-4 rounded-full bg-[#10bcad]" />생활습관 권장 목표 <span className="text-xs font-normal text-gray-400">(일 기준)</span>
+            </h3>
+            <div className="rounded-2xl border border-gray-100 px-3">
+              <GoalStepper icon={faMobileScreen} iconCls="text-gray-400" label="스마트폰" dir="이하"
+                value={form.phoneGoal}  onChange={v => setForm(f => ({ ...f, phoneGoal: v }))} />
+              <GoalStepper icon={faTree} iconCls="text-gray-400" label="야외활동" dir="이상"
+                value={form.outdoorGoal} onChange={v => setForm(f => ({ ...f, outdoorGoal: v }))} />
             </div>
           </section>
           </div>
