@@ -7,7 +7,7 @@ import { TREATMENT_PRESETS, makeTreatmentKey } from '@/lib/treatments'
 import ConfirmModal from '@/components/ui/ConfirmModal'
 import type { Child } from '@/types'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faXmark, faTree, faMobileScreen, faPlus, faTrashCan, faArrowsRotate } from '@fortawesome/free-solid-svg-icons'
+import { faXmark, faTree, faMobileScreen, faPlus, faTrashCan, faArrowsRotate, faEye, faHeart } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 
 interface Props {
@@ -182,13 +182,19 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
 
           {/* ── 진행 중인 근시케어 ── */}
           <section className="rounded-2xl border border-gray-100 p-4">
-            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2.5">진행 중인 근시케어</h3>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-7 h-7 rounded-lg bg-teal-50 flex items-center justify-center text-[#10bcad] text-sm">
+                <FontAwesomeIcon icon={faEye} />
+              </div>
+              <h3 className="text-sm font-semibold text-gray-700">진행 중인 근시케어</h3>
+            </div>
 
             {/* 활성 케어 목록 — 프리셋·직접입력 동일 행 + 휴지통 */}
             {treatments.length > 0 && (
               <div className="space-y-2 mb-2.5">
                 {treatments.map(t => (
-                  <div key={t.key} className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-gray-50">
+                  <div key={t.key} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-gray-50">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#10bcad] flex-shrink-0" />
                     <span className="flex-1 text-sm font-medium text-gray-700">{t.name}</span>
                     {t.schedule && <span className="text-xs text-gray-400">{t.schedule}</span>}
                     <button type="button" onClick={() => removeTreatment(t.key)}
@@ -241,7 +247,12 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
 
           {/* ── 생활습관 권장 목표 ── */}
           <section className="rounded-2xl border border-gray-100 p-4">
-            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">생활습관 권장 목표 <span className="normal-case font-normal">(일 기준)</span></h3>
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className="w-7 h-7 rounded-lg bg-teal-50 flex items-center justify-center text-[#10bcad] text-sm">
+                <FontAwesomeIcon icon={faHeart} />
+              </div>
+              <h3 className="text-sm font-semibold text-gray-700">생활습관 권장 목표 <span className="text-xs font-normal text-gray-400">(일 기준)</span></h3>
+            </div>
             <GoalStepper icon={faMobileScreen} iconCls="text-gray-500" label="스마트폰" dir="이하"
               value={form.phoneGoal}  onChange={v => setForm(f => ({ ...f, phoneGoal: v }))} />
             <GoalStepper icon={faTree} iconCls="text-gray-500" label="야외활동" dir="이상"
