@@ -286,28 +286,8 @@ export async function createInviteCode(role: 'editor' | 'viewer' = 'editor'): Pr
 
 export async function acceptInviteCode(code: string): Promise<number> {
   const sb = createClient()
-  const { data: { user } } = await sb.auth.getUser()
-  if (!user) throw new Error('로그인이 필요합니다')
-
-  const { data: invite, error: e1 } = await sb.from('eyebody_invite_codes')
-    .select('id, owner_id, role').eq('code', code.toUpperCase().trim())
-    .is('used_at', null).gt('expires_at', new Date().toISOString()).single()
-  if (e1 || !invite) throw new Error('유효하지 않은 코드입니다')
-  if (invite.owner_id === user.id) throw new Error('자신의 초대 코드는 사용할 수 없습니다')
-
-  const { data: ownerChildren } = await sb.from('eyebody_child_guardians')
-    .select('child_id').eq('user_id', invite.owner_id).eq('role', 'owner')
-  if (!ownerChildren?.length) throw new Error('초대자의 자녀 정보를 찾을 수 없습니다')
-
-  let added = 0
-  for (const { child_id } of ownerChildren) {
-    const { data: existing } = await sb.from('eyebody_child_guardians')
-      .select('id').eq('child_id', child_id).eq('user_id', user.id).maybeSingle()
-    if (existing) continue
-    await sb.from('eyebody_child_guardians').insert({ child_id, user_id: user.id, role: invite.role })
-    added++
-  }
-  await sb.from('eyebody_invite_codes')
-    .update({ used_at: new Date().toISOString(), used_by: user.id }).eq('id', invite.id)
-  return added
+  // 서버측 SECURITY DEFINER 함수로 검증·삽입·사용처리 (코드 전체공개 정책 제거 대응)
+  const { data, error } = await sb.rpc('accept_invite_code', { p_code: code.toUpperCase().trim() })
+  if (error) throw new Error(error.message || '코드 참여에 실패했습니다')
+  return (data as number) ?? 0
 }
