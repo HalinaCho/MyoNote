@@ -45,22 +45,17 @@ export async function fetchChildren(): Promise<Child[]> {
 
 export async function addChild(input: AddChildInput): Promise<Child> {
   const sb = createClient()
-  const { data: { user } } = await sb.auth.getUser()
-  if (!user) throw new Error('로그인이 필요합니다')
-
-  const id = crypto.randomUUID()
-  const { error: e1 } = await sb.from('eyebody_children').insert({
-    id, name: input.name, birth_date: input.birth, gender: input.gender,
-    treatments: input.treatments,
-    treat_atropine: hasOpenPreset(input.treatments, 'atropine'),
-    treat_dreamlens: hasOpenPreset(input.treatments, 'dreamlens'),
-    outdoor_goal: input.outdoorGoal ?? 2, phone_goal: input.phoneGoal ?? 2,
+  // 자녀 행 + owner 보호자 행을 서버측에서 원자적으로 생성 (보호자 셀프추가 차단 대응)
+  const { data, error } = await sb.rpc('create_child', {
+    p_name: input.name, p_birth: input.birth, p_gender: input.gender,
+    p_treatments: input.treatments,
+    p_treat_atropine: hasOpenPreset(input.treatments, 'atropine'),
+    p_treat_dreamlens: hasOpenPreset(input.treatments, 'dreamlens'),
+    p_outdoor_goal: input.outdoorGoal ?? 2, p_phone_goal: input.phoneGoal ?? 2,
   })
-  if (e1) throw e1
-  const { error: e2 } = await sb.from('eyebody_child_guardians')
-    .insert({ child_id: id, user_id: user.id, role: 'owner' })
-  if (e2) throw e2
+  if (error) throw error
 
+  const id = data as string
   return { id, ...input, outdoorGoal: input.outdoorGoal ?? 2, phoneGoal: input.phoneGoal ?? 2, role: 'owner' }
 }
 

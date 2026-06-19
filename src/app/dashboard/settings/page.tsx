@@ -137,7 +137,7 @@ export default function SettingsPage() {
               <div className="text-xs text-gray-400">{calcAgeLabel(c.birth)} · {c.birth}</div>
             </div>
             <button onClick={() => setChildModal({ open: true, editing: c })} className="text-gray-400 hover:text-gray-600 p-1"><FontAwesomeIcon icon={faPen} /></button>
-            {children.length > 1 && (
+            {children.length > 1 && c.role === 'owner' && (
               <button onClick={() => handleDeleteChild(c)} className="text-gray-400 hover:text-rose-500 p-1"><FontAwesomeIcon icon={faTrashCan} /></button>
             )}
           </div>
