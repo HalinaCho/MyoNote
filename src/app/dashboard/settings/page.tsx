@@ -16,7 +16,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPen, faTrashCan, faPlus, faUserGroup, faKey, faRightFromBracket, faXmark, faChevronRight, faBell } from '@fortawesome/free-solid-svg-icons'
 
 export default function SettingsPage() {
-  const { children, activeChildId, activeChild, deleteChild, refreshChildren } = useChild()
+  const { children, activeChildId, deleteChild, refreshChildren } = useChild()
   const [childModal, setChildModal] = useState<{ open: boolean; editing: Child | null }>({ open: false, editing: null })
   const [inviteModal, setInviteModal] = useState(false)
   const [joinModal, setJoinModal] = useState(false)
@@ -120,25 +120,6 @@ export default function SettingsPage() {
 
   return (
     <>
-      {/* 현재 자녀 프로필 */}
-      {activeChild && (
-        <section className="bg-white rounded-2xl p-3 mb-2 shadow-sm flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-white border-2 border-[#10bcad] flex items-center justify-center text-2xl">
-            {activeChild.gender === 'F' ? '👧' : '👦'}
-          </div>
-          <div className="flex-1">
-            <div className="font-bold text-gray-800">{activeChild.name}</div>
-            <div className="text-sm text-gray-400">{calcAgeLabel(activeChild.birth)} · {activeChild.birth}</div>
-          </div>
-          <button
-            onClick={() => setChildModal({ open: true, editing: activeChild })}
-            className="text-sm text-teal-600 font-medium px-3 py-1.5 rounded-lg bg-teal-50"
-          >
-            편집
-          </button>
-        </section>
-      )}
-
       {/* 자녀 관리 */}
       <section className="bg-white rounded-2xl overflow-hidden mb-2 shadow-sm">
         <div className="px-4 pt-3 pb-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wide">자녀 관리</div>
@@ -153,7 +134,7 @@ export default function SettingsPage() {
               <div className="text-sm font-semibold text-gray-800">{c.name}
                 {c.id === activeChildId && <span className="ml-2 text-xs bg-white border border-[#10bcad] text-[#10bcad] px-1.5 py-0.5 rounded-full">현재</span>}
               </div>
-              <div className="text-xs text-gray-400">{calcAgeLabel(c.birth)}</div>
+              <div className="text-xs text-gray-400">{calcAgeLabel(c.birth)} · {c.birth}</div>
             </div>
             <button onClick={() => setChildModal({ open: true, editing: c })} className="text-gray-400 hover:text-gray-600 p-1"><FontAwesomeIcon icon={faPen} /></button>
             {children.length > 1 && (
