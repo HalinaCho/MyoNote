@@ -8,7 +8,7 @@ import ChildFormModal from '@/components/child/ChildFormModal'
 const FEATURES = [
   {
     icon: faEye,
-    iconColor: 'text-[#10bcad]',
+    iconColor: 'text-teal-500',
     bg: 'bg-[#edf7f6]',
     title: '근시 진행 추적',
     desc: '안축장·굴절도수 변화를 차트로 한눈에',
@@ -37,7 +37,7 @@ export default function OnboardingFlow() {
       <div className="flex flex-col items-center justify-center min-h-[72vh] px-1">
         {/* 앱 아이콘 */}
         <div className="w-20 h-20 rounded-3xl bg-[#edf7f6] flex items-center justify-center mb-5 shadow-sm">
-          <FontAwesomeIcon icon={faEye} className="text-4xl text-[#10bcad]" />
+          <FontAwesomeIcon icon={faEye} className="text-4xl text-teal-500" />
         </div>
 
         {/* 환영 텍스트 */}
@@ -64,7 +64,7 @@ export default function OnboardingFlow() {
         {/* CTA */}
         <button
           onClick={() => setAddOpen(true)}
-          className="w-full bg-[#10bcad] hover:bg-teal-600 active:bg-teal-700 text-white font-semibold py-3.5 rounded-2xl flex items-center justify-center gap-2 transition-colors shadow-sm"
+          className="w-full bg-teal-500 hover:bg-teal-600 active:bg-teal-700 text-white font-semibold py-3.5 rounded-2xl flex items-center justify-center gap-2 transition-colors shadow-sm"
         >
           자녀 등록하고 시작하기
           <FontAwesomeIcon icon={faArrowRight} className="text-sm" />

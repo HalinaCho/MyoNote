@@ -98,7 +98,7 @@ function BarRow({ icon, iconCls, label, values, monthLabels, goal, isOverBad }: 
                 className={`w-full rounded-t-sm transition-opacity ${v != null ? 'cursor-pointer' : ''} ${isActive ? 'opacity-70' : ''} ${
                   v == null ? 'bg-gray-100'
                   : isBad ? (isOverBad ? 'bg-rose-300' : 'bg-amber-300')
-                  : 'bg-[#10bcad]'
+                  : 'bg-teal-500'
                 }`}
                 style={{ height: h }}
               />

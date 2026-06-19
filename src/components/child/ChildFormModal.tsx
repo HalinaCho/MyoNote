@@ -45,10 +45,10 @@ function GoalStepper({ icon, iconCls, label, dir, value, onChange }: {
       </span>
       <div className="flex items-center gap-2">
         <button type="button" onClick={() => onChange(Math.max(0, value - 0.5))}
-          className="w-7 h-7 rounded-full bg-teal-50 text-[#10bcad] hover:bg-teal-100 flex items-center justify-center font-bold text-base leading-none transition-colors">−</button>
+          className="w-7 h-7 rounded-full bg-teal-50 text-teal-500 hover:bg-teal-100 flex items-center justify-center font-bold text-base leading-none transition-colors">−</button>
         <span className="text-sm font-semibold text-gray-800 w-14 text-center">{value}시간</span>
         <button type="button" onClick={() => onChange(Math.min(12, value + 0.5))}
-          className="w-7 h-7 rounded-full bg-teal-50 text-[#10bcad] hover:bg-teal-100 flex items-center justify-center font-bold text-base leading-none transition-colors">+</button>
+          className="w-7 h-7 rounded-full bg-teal-50 text-teal-500 hover:bg-teal-100 flex items-center justify-center font-bold text-base leading-none transition-colors">+</button>
       </div>
     </div>
   )
@@ -152,11 +152,11 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
             <button
               type="button"
               onClick={() => setForm(f => ({ ...f, gender: f.gender === 'M' ? 'F' : 'M' }))}
-              className="relative w-16 h-16 rounded-full bg-teal-50 border-2 border-[#10bcad] flex items-center justify-center text-3xl flex-shrink-0 active:scale-95 transition-transform"
+              className="relative w-16 h-16 rounded-full bg-teal-50 border-2 border-teal-500 flex items-center justify-center text-3xl flex-shrink-0 active:scale-95 transition-transform"
               aria-label="성별 전환"
             >
               {form.gender === 'F' ? '👧' : '👦'}
-              <span className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-[#10bcad] text-white text-[9px] flex items-center justify-center border-2 border-white">
+              <span className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-teal-500 text-white text-[9px] flex items-center justify-center border-2 border-white">
                 <FontAwesomeIcon icon={faArrowsRotate} />
               </span>
             </button>
@@ -168,7 +168,7 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
               />
               <div className="flex items-center gap-1.5 mt-0.5 text-sm leading-none">
-                {form.birth && <span className="text-[#10bcad] font-medium">{calcAgeLabel(form.birth)}</span>}
+                {form.birth && <span className="text-teal-500 font-medium">{calcAgeLabel(form.birth)}</span>}
                 {form.birth && <span className="text-gray-300">·</span>}
                 <span className="relative inline-flex items-center gap-1">
                   <span className={form.birth ? 'text-gray-500' : 'text-gray-300'}>{form.birth || '생년월일 입력'}</span>
@@ -188,7 +188,7 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
           {/* ── 진행 중인 근시케어 ── */}
           <section>
             <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-              <span className="w-1 h-4 rounded-full bg-[#10bcad]" />케어 항목
+              <span className="w-1 h-4 rounded-full bg-teal-500" />케어 항목
             </h3>
             <div className="rounded-2xl border border-gray-100 p-3">
               {/* 활성 케어 목록 — teal 체크 = 활성 표시 */}
@@ -196,7 +196,7 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
                 <div className="space-y-2 mb-2.5">
                   {treatments.map(t => (
                     <div key={t.key} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-teal-50">
-                      <span className="w-5 h-5 rounded-full bg-[#10bcad] text-white flex items-center justify-center text-[10px] flex-shrink-0">
+                      <span className="w-5 h-5 rounded-full bg-teal-500 text-white flex items-center justify-center text-[10px] flex-shrink-0">
                         <FontAwesomeIcon icon={faCheck} />
                       </span>
                       <span className="flex-1 text-sm font-medium text-gray-700">{t.name}</span>
@@ -212,13 +212,13 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
               <div className="flex flex-wrap gap-2">
                 {availablePresets.map(({ preset, name, schedule }) => (
                   <button key={preset} type="button" onClick={() => togglePreset(preset, name, schedule)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-gray-200 text-sm text-gray-600 hover:border-[#10bcad] hover:text-[#10bcad] transition-colors">
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-gray-200 text-sm text-gray-600 hover:border-teal-500 hover:text-teal-500 transition-colors">
                     <FontAwesomeIcon icon={faPlus} className="text-xs" /> {name}
                   </button>
                 ))}
                 <button type="button" onClick={() => setShowCustom(v => !v)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm transition-colors
-                    ${showCustom ? 'bg-[#10bcad] text-white border-[#10bcad]' : 'bg-white border-gray-200 text-gray-600 hover:border-[#10bcad] hover:text-[#10bcad]'}`}>
+                    ${showCustom ? 'bg-teal-500 text-white border-teal-500' : 'bg-white border-gray-200 text-gray-600 hover:border-teal-500 hover:text-teal-500'}`}>
                   <FontAwesomeIcon icon={faPlus} className="text-xs" /> 직접입력
                 </button>
               </div>
@@ -227,21 +227,21 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
               {showCustom && (
                 <div className="mt-2.5 space-y-2">
                   <input
-                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#10bcad]"
+                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                     placeholder="케어 이름 (예: 마이사이트)"
                     value={customName}
                     onChange={e => setCustomName(e.target.value)}
                   />
                   <div className="flex gap-2">
                     <input
-                      className="flex-1 min-w-0 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#10bcad]"
+                      className="flex-1 min-w-0 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                       placeholder="스케줄 (예: 주간 착용)"
                       value={customSchedule}
                       onChange={e => setCustomSchedule(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustom() } }}
                     />
                     <button type="button" onClick={addCustom}
-                      className="flex-shrink-0 flex items-center gap-1 px-3 py-2 rounded-lg bg-[#10bcad] text-white text-sm font-medium whitespace-nowrap">
+                      className="flex-shrink-0 flex items-center gap-1 px-3 py-2 rounded-lg bg-teal-500 text-white text-sm font-medium whitespace-nowrap">
                       <FontAwesomeIcon icon={faPlus} /> 추가
                     </button>
                   </div>
@@ -253,7 +253,7 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
           {/* ── 생활습관 권장 목표 ── */}
           <section>
             <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-              <span className="w-1 h-4 rounded-full bg-[#10bcad]" />
+              <span className="w-1 h-4 rounded-full bg-teal-500" />
               <span>생활습관 목표 <span className="text-xs font-normal text-gray-400">(일 기준)</span></span>
             </h3>
             <div className="rounded-2xl border border-gray-100 px-3">
@@ -269,7 +269,7 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
           <div className="px-5 py-3 border-t border-gray-100 bg-white rounded-b-2xl">
             <button
               type="submit" disabled={saving}
-              className="w-full bg-[#10bcad] hover:bg-teal-600 disabled:bg-teal-300 text-white font-semibold py-3 rounded-xl transition-colors"
+              className="w-full bg-teal-500 hover:bg-teal-600 disabled:bg-teal-300 text-white font-semibold py-3 rounded-xl transition-colors"
             >
               {saving ? '저장 중...' : (editing ? '수정하기' : '추가하기')}
             </button>

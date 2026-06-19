@@ -71,7 +71,7 @@ export default function SerTab() {
   const yMax = Math.ceil((Math.max(...allVals) + 0.3) * 2) / 2
 
   const allDatasets = [
-    { label: '우안(OD)', data: odData, borderColor: '#10bcad', backgroundColor: 'rgba(16,188,173,0.08)', pointBackgroundColor: '#10bcad', tension: 0.4, pointRadius: 4, fill: true },
+    { label: '우안(OD)', data: odData, borderColor: '#14b8a6', backgroundColor: 'rgba(20,184,166,0.08)', pointBackgroundColor: '#14b8a6', tension: 0.4, pointRadius: 4, fill: true },
     { label: '좌안(OS)', data: osData, borderColor: '#9CA3AF', backgroundColor: 'rgba(156,163,175,.08)', pointBackgroundColor: '#9CA3AF', tension: 0.4, pointRadius: 4, fill: true },
   ]
   const datasets = allDatasets.filter((_, i) => (i === 0 ? showOD : showOS))
@@ -118,11 +118,11 @@ export default function SerTab() {
               onClick={() => { if (showOD && !showOS) { setShowOS(true) } else { setShowOD(true); setShowOS(false) } }}
               className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-all ${
                 showOD
-                  ? 'bg-teal-50 text-[#10bcad] border border-[#10bcad]/30'
+                  ? 'bg-teal-50 text-teal-500 border border-teal-500/30'
                   : 'bg-gray-100 text-gray-300 border border-transparent'
               }`}
             >
-              <span className={`w-2 h-2 rounded-full transition-all ${showOD ? 'bg-[#10bcad]' : 'bg-gray-300'}`} />
+              <span className={`w-2 h-2 rounded-full transition-all ${showOD ? 'bg-teal-500' : 'bg-gray-300'}`} />
               우안
             </button>
             <button
@@ -175,7 +175,7 @@ export default function SerTab() {
                     <div className="text-[10px] text-gray-500 leading-tight">{activeExam.date.replace(/-/g, '.')}</div>
                     <div className="flex items-center justify-center gap-1.5 leading-tight mt-0.5 text-[11px] font-bold text-gray-800">
                       {showOD && !isNaN(activeOD) && (
-                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#10bcad]" />{activeOD.toFixed(2)}</span>
+                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-teal-500" />{activeOD.toFixed(2)}</span>
                       )}
                       {showOS && !isNaN(activeOS) && (
                         <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-gray-400" />{activeOS.toFixed(2)}</span>

@@ -32,7 +32,7 @@ export default function ConfirmModal({
       <div className="relative z-10 w-full max-w-[320px] bg-white rounded-2xl p-5 shadow-xl">
         <div className="flex flex-col items-center text-center">
           <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${
-            danger ? 'bg-rose-50 text-rose-500' : 'bg-teal-50 text-[#10bcad]'
+            danger ? 'bg-rose-50 text-rose-500' : 'bg-teal-50 text-teal-500'
           }`}>
             <FontAwesomeIcon icon={faTriangleExclamation} className="text-xl" />
           </div>
@@ -51,7 +51,7 @@ export default function ConfirmModal({
           <button
             onClick={onConfirm}
             className={`flex-1 py-2.5 rounded-xl text-white font-semibold text-sm transition-colors ${
-              danger ? 'bg-rose-500 hover:bg-rose-600' : 'bg-[#10bcad] hover:bg-teal-600'
+              danger ? 'bg-rose-500 hover:bg-rose-600' : 'bg-teal-500 hover:bg-teal-600'
             }`}
           >
             {confirmLabel}

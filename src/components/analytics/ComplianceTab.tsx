@@ -58,7 +58,7 @@ export default function ComplianceTab({ year, half, bare }: Props) {
             data,
             backgroundColor: months.map((m, i) =>
               !hasLogs(m.year, m.month) ? '#F3F4F6'
-              : data[i] >= 90 ? '#10bcad'
+              : data[i] >= 90 ? '#14b8a6'
               : data[i] >= 70 ? '#fde68a'
               : '#fda4af'
             ),

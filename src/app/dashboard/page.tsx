@@ -16,7 +16,7 @@ import OnboardingFlow from '@/components/onboarding/OnboardingFlow'
 import TabSkeleton from '@/components/ui/TabSkeleton'
 import LifestyleTab from '@/components/analytics/LifestyleTab'
 
-const INPUT = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 accent-[#10bcad]'
+const INPUT = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 accent-teal-500'
 
 export default function HomePage() {
   const router = useRouter()
@@ -174,9 +174,9 @@ export default function HomePage() {
               return (
                 <button key={t.key} onClick={() => toggleTreatment(t.key)}
                   className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left
-                    ${done ? 'border-[#10bcad]/30 bg-teal-50' : 'border-gray-100 bg-gray-50/60 hover:border-teal-100'}`}>
+                    ${done ? 'border-teal-500/30 bg-teal-50' : 'border-gray-100 bg-gray-50/60 hover:border-teal-100'}`}>
                   <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm flex-shrink-0
-                    ${done ? 'bg-[#10bcad] text-white' : 'bg-white border-2 border-gray-200 text-gray-300'}`}>
+                    ${done ? 'bg-teal-500 text-white' : 'bg-white border-2 border-gray-200 text-gray-300'}`}>
                     <FontAwesomeIcon icon={done ? faCheck : faCircle} />
                   </div>
                   <div className="flex-1">
@@ -184,7 +184,7 @@ export default function HomePage() {
                     {t.schedule && <div className="text-xs text-gray-400">{t.schedule}</div>}
                   </div>
                   <span className={`text-xs font-semibold px-2.5 py-1 rounded-full
-                    ${done ? 'bg-[#10bcad]/15 text-teal-700' : 'bg-gray-100 text-gray-400'}`}>
+                    ${done ? 'bg-teal-500/15 text-teal-700' : 'bg-gray-100 text-gray-400'}`}>
                     {done ? '완료' : '미완료'}
                   </span>
                 </button>
@@ -201,7 +201,7 @@ export default function HomePage() {
 
           <div className="flex justify-around mb-4">
             <div className="text-center">
-              <div className={`text-2xl font-bold ${streak >= 7 ? 'text-[#10bcad]' : 'text-gray-800'}`}>
+              <div className={`text-2xl font-bold ${streak >= 7 ? 'text-teal-500' : 'text-gray-800'}`}>
                 {streak}일
               </div>
               <div className="text-xs text-gray-400 mt-0.5 flex items-center justify-center gap-1">
@@ -210,7 +210,7 @@ export default function HomePage() {
             </div>
             <div className="w-px bg-gray-100" />
             <div className="text-center">
-              <div className={`text-2xl font-bold ${monthPct >= 90 ? 'text-[#10bcad]' : monthPct >= 70 ? 'text-amber-500' : 'text-gray-800'}`}>
+              <div className={`text-2xl font-bold ${monthPct >= 90 ? 'text-teal-500' : monthPct >= 70 ? 'text-amber-500' : 'text-gray-800'}`}>
                 {monthPct}%
               </div>
               <div className="text-xs text-gray-400 mt-0.5">이번 달</div>
@@ -225,20 +225,20 @@ export default function HomePage() {
             {weekDays.map(({ d, ds, status }) => {
               const isToday = ds === todayStr
               const dotBg =
-                status === 'done'    ? 'bg-[#10bcad]' :
+                status === 'done'    ? 'bg-teal-500' :
                 status === 'partial' ? 'bg-[#fde68a]' :
                 status === 'missed'  ? 'bg-[#fda4af]' : 'bg-gray-100'
               return (
                 <div key={ds} className="flex-1 flex flex-col items-center gap-1">
                   <span className="text-xs text-gray-400">{DAY_KO[d.getDay()]}</span>
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${dotBg}
-                    ${isToday ? 'ring-2 ring-[#10bcad] ring-offset-1' : ''}`}>
+                    ${isToday ? 'ring-2 ring-teal-500 ring-offset-1' : ''}`}>
                     {status === 'done'    ? <FontAwesomeIcon icon={faCheck}  className="text-white text-xs" />
                     : status === 'partial' ? <FontAwesomeIcon icon={faMinus}  className="text-amber-700 text-xs" />
                     : status === 'missed'  ? <FontAwesomeIcon icon={faXmark}  className="text-rose-500 text-xs" />
                     : null}
                   </div>
-                  <span className={`text-xs ${isToday ? 'font-bold text-[#10bcad]' : 'text-gray-500'}`}>
+                  <span className={`text-xs ${isToday ? 'font-bold text-teal-500' : 'text-gray-500'}`}>
                     {d.getDate()}
                   </span>
                 </div>
@@ -284,14 +284,14 @@ export default function HomePage() {
                   ${!hasData
                     ? 'border-gray-100 bg-gray-50/60 hover:border-teal-100'
                     : good
-                      ? 'border-[#10bcad]/30 bg-teal-50'
+                      ? 'border-teal-500/30 bg-teal-50'
                       : item.badBg}`}
               >
                 <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm flex-shrink-0
                   ${!hasData
                     ? 'bg-white border-2 border-gray-200 text-gray-300'
                     : good
-                      ? 'bg-teal-100 text-[#10bcad]'
+                      ? 'bg-teal-100 text-teal-500'
                       : item.badIconCls}`}>
                   <FontAwesomeIcon icon={item.icon} />
                 </div>
@@ -307,7 +307,7 @@ export default function HomePage() {
                   ${!hasData
                     ? 'bg-gray-100 text-gray-400'
                     : good
-                      ? 'bg-[#10bcad]/15 text-teal-700'
+                      ? 'bg-teal-500/15 text-teal-700'
                       : item.badBadgeCls}`}>
                   {!hasData ? '미기록' : good ? item.badgeGood : item.badgeBad}
                 </span>
@@ -337,7 +337,7 @@ export default function HomePage() {
           {editingAppt ? (
             <div className="mt-2 flex items-center gap-2">
               <input type="date" value={apptDate} onChange={e => setApptDate(e.target.value)}
-                className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 accent-[#10bcad]" />
+                className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 accent-teal-500" />
               <button onClick={async () => {
                 if (!apptDate) return
                 try {
@@ -345,7 +345,7 @@ export default function HomePage() {
                   toast.success('예약일이 수정되었습니다')
                 } catch { toast.error('수정에 실패했습니다') }
                 setEditingAppt(false)
-              }} className="bg-[#10bcad] hover:bg-teal-600 text-white text-sm px-3 py-2 rounded-lg font-medium transition-colors">
+              }} className="bg-teal-500 hover:bg-teal-600 text-white text-sm px-3 py-2 rounded-lg font-medium transition-colors">
                 저장
               </button>
               <button onClick={() => setEditingAppt(false)}
@@ -362,7 +362,7 @@ export default function HomePage() {
               <span className={`text-base font-bold px-3 py-1 rounded-full
                 ${dDays! <= 3 ? 'bg-rose-50 text-rose-500'
                   : dDays! <= 7 ? 'bg-[#fde68a]/40 text-amber-600'
-                  : 'bg-teal-50 text-[#10bcad]'}`}>
+                  : 'bg-teal-50 text-teal-500'}`}>
                 {dDays === 0 ? 'D-Day' : `D-${dDays}`}
               </span>
             </div>
@@ -392,7 +392,7 @@ export default function HomePage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-teal-50 rounded-2xl p-4 border-2 border-teal-100">
                   <div className="flex items-center gap-1.5 mb-4">
-                    <FontAwesomeIcon icon={faTree} className="text-xl text-[#10bcad]" />
+                    <FontAwesomeIcon icon={faTree} className="text-xl text-teal-500" />
                     <span className="text-xs font-semibold text-gray-700">야외활동</span>
                   </div>
                   <TimeSpinner
@@ -420,7 +420,7 @@ export default function HomePage() {
                 </div>
               </div>
               <button type="submit" disabled={lifeSaving}
-                className="w-full bg-[#10bcad] hover:bg-teal-600 disabled:bg-teal-200 text-white font-semibold py-3 rounded-xl transition-colors">
+                className="w-full bg-teal-500 hover:bg-teal-600 disabled:bg-teal-200 text-white font-semibold py-3 rounded-xl transition-colors">
                 {lifeSaving ? '저장 중...' : '저장'}
               </button>
             </form>

@@ -61,7 +61,7 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
   const yMax = Math.ceil((Math.max(...allVals) + 0.3) * 2) / 2
 
   const allDatasets = [
-    { label: '우안(OD)', data: odData, borderColor: '#10bcad', backgroundColor: 'rgba(16,188,173,0.08)', pointBackgroundColor: '#10bcad', tension: 0.4, fill: true, pointRadius: 4 },
+    { label: '우안(OD)', data: odData, borderColor: '#14b8a6', backgroundColor: 'rgba(20,184,166,0.08)', pointBackgroundColor: '#14b8a6', tension: 0.4, fill: true, pointRadius: 4 },
     { label: '좌안(OS)', data: osData, borderColor: '#9CA3AF', backgroundColor: 'rgba(156,163,175,.08)', pointBackgroundColor: '#9CA3AF', tension: 0.4, fill: true, pointRadius: 4 },
   ]
   const datasets = allDatasets.filter((_, i) => (i === 0 ? showOD : showOS))
@@ -138,11 +138,11 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
               onClick={() => { if (showOD && !showOS) { setShowOS(true) } else { setShowOD(true); setShowOS(false) } }}
               className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-all ${
                 showOD
-                  ? 'bg-teal-50 text-[#10bcad] border border-[#10bcad]/30'
+                  ? 'bg-teal-50 text-teal-500 border border-teal-500/30'
                   : 'bg-gray-100 text-gray-300 border border-transparent'
               }`}
             >
-              <span className={`w-2 h-2 rounded-full transition-all ${showOD ? 'bg-[#10bcad]' : 'bg-gray-300'}`} />
+              <span className={`w-2 h-2 rounded-full transition-all ${showOD ? 'bg-teal-500' : 'bg-gray-300'}`} />
               우안
             </button>
             <button
@@ -197,7 +197,7 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
                     <div className="text-[10px] text-gray-500 leading-tight">{activeExam.date.replace(/-/g, '.')}</div>
                     <div className="flex items-center justify-center gap-1.5 leading-tight mt-0.5 text-[11px] font-bold text-gray-800">
                       {showOD && !isNaN(activeOD) && (
-                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#10bcad]" />{activeOD.toFixed(2)}</span>
+                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-teal-500" />{activeOD.toFixed(2)}</span>
                       )}
                       {showOS && !isNaN(activeOS) && (
                         <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-gray-400" />{activeOS.toFixed(2)}</span>
@@ -273,7 +273,7 @@ function PctView({
             <h3 className="font-bold text-gray-800">또래 안축장 백분위 비교</h3>
             <div className="flex items-center gap-2 text-xs text-gray-500">
             <span className="flex items-center gap-1">
-              <span className="w-3 h-0.5 rounded bg-[#10bcad] inline-block"/>우안
+              <span className="w-3 h-0.5 rounded bg-teal-500 inline-block"/>우안
             </span>
             <span className="flex items-center gap-1">
               <span className="w-3 h-0.5 rounded bg-gray-400 inline-block"/>좌안
@@ -330,7 +330,7 @@ function PctView({
               // 아이 실측값
               {
                 label: '우안(OD)', data: childOD,
-                borderColor: '#10bcad', backgroundColor: '#10bcad',
+                borderColor: '#14b8a6', backgroundColor: '#14b8a6',
                 borderWidth: 1, pointRadius: 2, pointHoverRadius: 4,
                 fill: false, tension: 0.3,
               },
@@ -400,7 +400,7 @@ function PctView({
             onClick={() => setShowPctInfo(v => !v)}
             className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
           >
-            <FontAwesomeIcon icon={faCircleInfo} className="text-[#10bcad]" />
+            <FontAwesomeIcon icon={faCircleInfo} className="text-teal-500" />
             백분위(P)란?
             <FontAwesomeIcon icon={showPctInfo ? faChevronUp : faChevronDown} className="text-[9px] text-gray-400" />
           </button>
@@ -427,9 +427,9 @@ function PctBar({ pct }: { pct: number }) {
   return (
     <div className="mt-2.5">
       <div className="relative h-1 bg-white rounded-full overflow-visible">
-        <div className="h-full bg-[#10bcad] rounded-full opacity-40" style={{ width: `${pct}%` }} />
+        <div className="h-full bg-teal-500 rounded-full opacity-40" style={{ width: `${pct}%` }} />
         <div
-          className="absolute top-1/2 w-2.5 h-2.5 bg-[#10bcad] rounded-full border-2 border-white shadow-sm"
+          className="absolute top-1/2 w-2.5 h-2.5 bg-teal-500 rounded-full border-2 border-white shadow-sm"
           style={{ left: `${Math.min(pct, 97)}%`, transform: 'translate(-50%, -50%)' }}
         />
       </div>
@@ -476,7 +476,7 @@ function PctSummaryInline({
             <div className="text-xl font-black text-gray-800 leading-none">
               {mm.toFixed(2)}<span className="text-xs font-normal text-gray-400 ml-0.5">mm</span>
             </div>
-            <div className="mt-2 text-xl font-black text-[#10bcad] leading-none">
+            <div className="mt-2 text-xl font-black text-teal-500 leading-none">
               {l.prefix} {l.value}
             </div>
             <PctBar pct={pct} />

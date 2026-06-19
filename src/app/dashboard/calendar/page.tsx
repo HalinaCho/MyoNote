@@ -185,7 +185,7 @@ export default function CalendarPage() {
                         <span className="text-sm font-medium text-gray-700">{t.name}</span>
                         <div className="relative">
                           <input type="checkbox" checked={done} onChange={e => handleCareToggle(dayModal, t.key, e.target.checked)} className="sr-only peer" />
-                          <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-[#10bcad] transition-colors" />
+                          <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-teal-500 transition-colors" />
                           <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform peer-checked:translate-x-5" />
                         </div>
                       </label>
@@ -201,7 +201,7 @@ export default function CalendarPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-teal-50 rounded-2xl p-3 border-2 border-teal-100">
                   <div className="flex items-center gap-1.5 mb-3">
-                    <FontAwesomeIcon icon={faTree} className="text-[#10bcad]" />
+                    <FontAwesomeIcon icon={faTree} className="text-teal-500" />
                     <span className="text-xs font-semibold text-teal-700">야외활동</span>
                   </div>
                   <TimeSpinner
@@ -232,7 +232,7 @@ export default function CalendarPage() {
 
             <button
               onClick={handleLifeSave} disabled={lifeSaving}
-              className="w-full bg-[#10bcad] hover:bg-teal-600 disabled:bg-teal-300 text-white font-semibold py-3 rounded-xl transition-colors"
+              className="w-full bg-teal-500 hover:bg-teal-600 disabled:bg-teal-300 text-white font-semibold py-3 rounded-xl transition-colors"
             >
               {lifeSaving ? '저장 중...' : '저장'}
             </button>
@@ -265,7 +265,7 @@ export default function CalendarPage() {
           {([['care', '근시케어'], ['lifestyle', '생활습관']] as const).map(([t, label]) => (
             <button key={t} onClick={() => setStatsTab(t)}
               className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors
-                ${statsTab === t ? 'bg-[#10bcad] text-white' : 'text-gray-500'}`}>
+                ${statsTab === t ? 'bg-teal-500 text-white' : 'text-gray-500'}`}>
               {label}
             </button>
           ))}

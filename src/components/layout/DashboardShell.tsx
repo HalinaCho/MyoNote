@@ -40,7 +40,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           style: { maxWidth: 360, fontSize: 14 },
           duration: 2200,
           success: {
-            iconTheme: { primary: '#10bcad', secondary: '#fff' },
+            iconTheme: { primary: '#14b8a6', secondary: '#fff' },
           },
         }}
       />

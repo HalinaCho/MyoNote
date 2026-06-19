@@ -21,7 +21,7 @@ export default function Header() {
             alt=""
             className="h-9 w-auto"
           />
-          <span className="font-bold text-[#10bcad] text-lg">마이오노트</span>
+          <span className="font-bold text-teal-500 text-lg">마이오노트</span>
         </Link>
 
         <button

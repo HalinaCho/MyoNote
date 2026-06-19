@@ -23,7 +23,7 @@ const stripMinus = (v: string) => v.replace(/^-/, '')
 const fmtD = (v: string) => { const n = parseFloat(v); return isNaN(n) ? '—' : n.toFixed(2) }
 
 const EMPTY_EXAM = { date: today(), clinic: '', axOD: '', axOS: '', sphOD: '', sphOS: '', cylOD: '', cylOS: '', note: '', nextAppointment: '' }
-const INPUT = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 accent-[#10bcad]'
+const INPUT = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 accent-teal-500'
 
 export default function RecordsPage() {
   const { exams, isLoading, saveExam, updateExam, deleteExam } = useChild()
@@ -102,7 +102,7 @@ export default function RecordsPage() {
             <select
               value={activeYear}
               onChange={e => setSelectedYear(e.target.value)}
-              className="text-sm font-semibold text-gray-700 border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#10bcad]"
+              className="text-sm font-semibold text-gray-700 border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
               {years.map(y => (
                 <option key={y} value={y}>{y}년</option>
@@ -160,7 +160,7 @@ export default function RecordsPage() {
       {/* FAB */}
       <button
         onClick={openAdd}
-        className="fixed bottom-24 z-30 w-14 h-14 bg-[#10bcad] hover:bg-teal-600 text-white rounded-full shadow-lg flex items-center justify-center transition-colors active:scale-95"
+        className="fixed bottom-24 z-30 w-14 h-14 bg-teal-500 hover:bg-teal-600 text-white rounded-full shadow-lg flex items-center justify-center transition-colors active:scale-95"
         style={{ right: 'max(1rem, calc((100vw - 480px) / 2 + 1rem))' }}
       >
         <FontAwesomeIcon icon={faPlus} className="text-xl" />
@@ -205,7 +205,7 @@ export default function RecordsPage() {
                   <span className="text-sm font-medium text-gray-700">굴절 도수 (D)</span>
                   <button type="button" onClick={() => setShowCRInfo(v => !v)}
                     className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full transition-colors
-                      ${showCRInfo ? 'bg-[#10bcad] text-white' : 'bg-teal-50 text-teal-500 hover:bg-teal-100'}`}>
+                      ${showCRInfo ? 'bg-teal-500 text-white' : 'bg-teal-50 text-teal-500 hover:bg-teal-100'}`}>
                     <FontAwesomeIcon icon={faCircleInfo} />
                     조절마비(CR)검사 결과 우선
                   </button>
@@ -240,7 +240,7 @@ export default function RecordsPage() {
               <Field label="다음 예약일">
                 <input type="date" value={form.nextAppointment} onChange={e=>setForm(f=>({...f,nextAppointment:e.target.value}))} className={INPUT}/>
               </Field>
-              <button type="submit" disabled={saving} className="w-full bg-[#10bcad] hover:bg-teal-600 disabled:bg-teal-300 text-white font-semibold py-3 rounded-xl transition-colors">
+              <button type="submit" disabled={saving} className="w-full bg-teal-500 hover:bg-teal-600 disabled:bg-teal-300 text-white font-semibold py-3 rounded-xl transition-colors">
                 {saving ? '저장 중...' : editing ? '수정하기' : '저장'}
               </button>
             </form>

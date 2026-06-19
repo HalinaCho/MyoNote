@@ -56,13 +56,13 @@ export default function PrivacyPage() {
             사용자는 언제든지 서비스 내 설정에서 계정 및 데이터 삭제를 요청할 수 있습니다.
             문의사항은 아래 이메일로 연락 바랍니다.
           </p>
-          <p className="text-sm text-[#10bcad] font-medium">jhl8397@gmail.com</p>
+          <p className="text-sm text-teal-500 font-medium">jhl8397@gmail.com</p>
         </section>
 
         <section className="space-y-2">
           <h2 className="text-sm font-semibold text-gray-800">6. 개인정보 보호책임자</h2>
           <p className="text-sm text-gray-600">담당자: 마이오노트 운영팀</p>
-          <p className="text-sm text-[#10bcad] font-medium">jhl8397@gmail.com</p>
+          <p className="text-sm text-teal-500 font-medium">jhl8397@gmail.com</p>
         </section>
       </div>
     </div>
