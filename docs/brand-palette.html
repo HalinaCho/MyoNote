@@ -1,0 +1,99 @@
+<title>마이오노트 브랜드 팔레트</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    background: #f7faf9; color: #1f2937; padding: 32px 20px 64px; line-height: 1.5;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; }
+  header { margin-bottom: 8px; }
+  h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; }
+  .sub { color: #6b7280; font-size: 14px; margin-top: 4px; }
+  h2 {
+    font-size: 13px; font-weight: 700; color: #6b7280; text-transform: uppercase;
+    letter-spacing: 0.06em; margin: 36px 0 14px; display: flex; align-items: center; gap: 8px;
+  }
+  .bar { width: 4px; height: 16px; border-radius: 2px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .sw { border-radius: 14px; overflow: hidden; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 14px -8px rgba(17,24,39,.12); }
+  .chip { height: 76px; display: flex; align-items: flex-end; justify-content: space-between; padding: 10px 12px; }
+  .chip .star { font-size: 13px; font-weight: 800; }
+  .chip .hex { font-size: 12px; font-weight: 700; font-feature-settings: "tnum"; opacity: .92; }
+  .meta { padding: 10px 12px 12px; }
+  .tok { font-size: 13px; font-weight: 700; color: #111827; }
+  .role { font-size: 12px; color: #6b7280; margin-top: 2px; }
+  .note { font-size: 13px; color: #6b7280; margin: 6px 0 0; }
+  .states .chip { height: 56px; }
+  .legendline { font-size: 13px; color: #4b5563; margin-top: 10px; padding: 12px 14px; background: #fff; border-radius: 12px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+  .legendline b { color: #111827; }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>마이오노트 브랜드 팔레트</h1>
+    <p class="sub">Tailwind 기준 · accent 3색은 4역할(50 / 100 / 500 / 700)로 통일 · 모바일 우선(hover 최소)</p>
+  </header>
+
+  <!-- 역할 안내 -->
+  <div class="legendline">
+    <b>역할 구조</b> &nbsp;·&nbsp; <b>50</b> 틴트 배경 &nbsp;·&nbsp; <b>100</b> 채움/배지 &nbsp;·&nbsp; <b>500</b> 메인 솔리드 &nbsp;·&nbsp; <b>700</b> 틴트 위 텍스트
+    <br>상태색: <b style="color:#0f766e">완료=teal</b> / <b style="color:#b45309">부분=amber</b> / <b style="color:#be123c">미완료=rose</b> (각 100 배경 + 700 텍스트)
+  </div>
+
+  <!-- TEAL -->
+  <h2><span class="bar" style="background:#14b8a6"></span>Teal — 브랜드 / 성공</h2>
+  <div class="grid">
+    <div class="sw"><div class="chip" style="background:#f0fdfa;color:#0f766e"><span></span><span class="hex">#f0fdfa</span></div><div class="meta"><div class="tok">teal-50</div><div class="role">틴트 배경</div></div></div>
+    <div class="sw"><div class="chip" style="background:#ccfbf1;color:#0f766e"><span></span><span class="hex">#ccfbf1</span></div><div class="meta"><div class="tok">teal-100</div><div class="role">채움 / 배지 / 완료</div></div></div>
+    <div class="sw"><div class="chip" style="background:#14b8a6;color:#fff"><span class="star">★ 메인</span><span class="hex">#14b8a6</span></div><div class="meta"><div class="tok">teal-500</div><div class="role">버튼·아이콘·포커스링·차트</div></div></div>
+    <div class="sw"><div class="chip" style="background:#0f766e;color:#fff"><span></span><span class="hex">#0f766e</span></div><div class="meta"><div class="tok">teal-700</div><div class="role">틴트 위 텍스트</div></div></div>
+  </div>
+
+  <!-- AMBER -->
+  <h2><span class="bar" style="background:#f59e0b"></span>Amber — 주의 / 경고</h2>
+  <div class="grid">
+    <div class="sw"><div class="chip" style="background:#fffbeb;color:#b45309"><span></span><span class="hex">#fffbeb</span></div><div class="meta"><div class="tok">amber-50</div><div class="role">틴트 배경</div></div></div>
+    <div class="sw"><div class="chip" style="background:#fef3c7;color:#b45309"><span></span><span class="hex">#fef3c7</span></div><div class="meta"><div class="tok">amber-100</div><div class="role">채움 / 배지 / 부분</div></div></div>
+    <div class="sw"><div class="chip" style="background:#f59e0b;color:#1f2937"><span class="star">메인</span><span class="hex">#f59e0b</span></div><div class="meta"><div class="tok">amber-500</div><div class="role">아이콘·강조 텍스트</div></div></div>
+    <div class="sw"><div class="chip" style="background:#b45309;color:#fff"><span></span><span class="hex">#b45309</span></div><div class="meta"><div class="tok">amber-700</div><div class="role">틴트 위 텍스트</div></div></div>
+  </div>
+
+  <!-- ROSE -->
+  <h2><span class="bar" style="background:#f43f5e"></span>Rose — 위험 / 나쁨</h2>
+  <div class="grid">
+    <div class="sw"><div class="chip" style="background:#fff1f2;color:#be123c"><span></span><span class="hex">#fff1f2</span></div><div class="meta"><div class="tok">rose-50</div><div class="role">틴트 배경</div></div></div>
+    <div class="sw"><div class="chip" style="background:#ffe4e6;color:#be123c"><span></span><span class="hex">#ffe4e6</span></div><div class="meta"><div class="tok">rose-100</div><div class="role">채움 / 배지 / 미완료</div></div></div>
+    <div class="sw"><div class="chip" style="background:#f43f5e;color:#fff"><span class="star">메인</span><span class="hex">#f43f5e</span></div><div class="meta"><div class="tok">rose-500</div><div class="role">삭제 버튼·위험 아이콘</div></div></div>
+    <div class="sw"><div class="chip" style="background:#be123c;color:#fff"><span></span><span class="hex">#be123c</span></div><div class="meta"><div class="tok">rose-700</div><div class="role">틴트 위 텍스트</div></div></div>
+  </div>
+
+  <!-- GRAY -->
+  <h2><span class="bar" style="background:#9ca3af"></span>Gray — 중립 / 텍스트</h2>
+  <div class="grid">
+    <div class="sw"><div class="chip" style="background:#f9fafb;color:#374151"><span></span><span class="hex">#f9fafb</span></div><div class="meta"><div class="tok">gray-50</div><div class="role">연한 면</div></div></div>
+    <div class="sw"><div class="chip" style="background:#f3f4f6;color:#374151"><span></span><span class="hex">#f3f4f6</span></div><div class="meta"><div class="tok">gray-100</div><div class="role">카드 경계·배경</div></div></div>
+    <div class="sw"><div class="chip" style="background:#e5e7eb;color:#374151"><span></span><span class="hex">#e5e7eb</span></div><div class="meta"><div class="tok">gray-200</div><div class="role">입력 테두리</div></div></div>
+    <div class="sw"><div class="chip" style="background:#9ca3af;color:#fff"><span></span><span class="hex">#9ca3af</span></div><div class="meta"><div class="tok">gray-400</div><div class="role">보조 텍스트·아이콘</div></div></div>
+    <div class="sw"><div class="chip" style="background:#374151;color:#fff"><span></span><span class="hex">#374151</span></div><div class="meta"><div class="tok">gray-700</div><div class="role">본문</div></div></div>
+    <div class="sw"><div class="chip" style="background:#1f2937;color:#fff"><span></span><span class="hex">#1f2937</span></div><div class="meta"><div class="tok">gray-800</div><div class="role">제목</div></div></div>
+  </div>
+
+  <!-- CUSTOM BG -->
+  <h2><span class="bar" style="background:#d9efed"></span>커스텀 배경 (Tailwind 외)</h2>
+  <div class="grid">
+    <div class="sw"><div class="chip" style="background:#edf7f6;color:#0f766e"><span></span><span class="hex">#edf7f6</span></div><div class="meta"><div class="tok">card-bg</div><div class="role">카드 강조 배경</div></div></div>
+    <div class="sw"><div class="chip" style="background:#d9efed;color:#0f766e"><span></span><span class="hex">#d9efed</span></div><div class="meta"><div class="tok">page-bg</div><div class="role">페이지 전체 배경</div></div></div>
+  </div>
+
+  <!-- STATES -->
+  <h2 style="margin-top:40px"><span class="bar" style="background:#cbd5e1"></span>상태(State) — Canva 스와치 불필요 · 코드 자동 파생</h2>
+  <div class="grid states">
+    <div class="sw"><div class="chip" style="background:#99f6e4;color:#0f766e"><span></span><span class="hex">#99f6e4</span></div><div class="meta"><div class="tok">-200</div><div class="role">컨트롤 hover (+/−)</div></div></div>
+    <div class="sw"><div class="chip" style="background:#5eead4;color:#0f766e"><span></span><span class="hex">#5eead4</span></div><div class="meta"><div class="tok">teal-300</div><div class="role">버튼 비활성</div></div></div>
+    <div class="sw"><div class="chip" style="background:#0d9488;color:#fff"><span></span><span class="hex">#0d9488</span></div><div class="meta"><div class="tok">teal-600</div><div class="role">버튼 hover</div></div></div>
+    <div class="sw"><div class="chip" style="background:#fcd34d;color:#1f2937"><span></span><span class="hex">#fcd34d</span></div><div class="meta"><div class="tok">amber-300</div><div class="role">차트 fill</div></div></div>
+    <div class="sw"><div class="chip" style="background:#fda4af;color:#be123c"><span></span><span class="hex">#fda4af</span></div><div class="meta"><div class="tok">rose-300</div><div class="role">차트 fill</div></div></div>
+  </div>
+
+  <p class="note">★ 메인 브랜드 = <b>teal-500 #14b8a6</b>. 파랑 계열(blue/sky/indigo) 사용 금지. accent는 50/100/500/700 4역할 안에서만, 그 외 음영은 상태(state)로만.</p>
+</div>
