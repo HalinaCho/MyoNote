@@ -31,6 +31,7 @@ export default function SettingsPage() {
     title: string
     message: string
     confirmLabel?: string
+    danger?: boolean
     onConfirm: () => Promise<void> | void
   } | null>(null)
 
@@ -112,8 +113,28 @@ export default function SettingsPage() {
           setGuardians(prev => prev.filter(g => g.userId !== userId))
           toast.success(isSelf ? '보호자에서 나갔습니다' : '보호자를 제거했습니다')
           if (isSelf) await refreshChildren()
-        } catch {
-          toast.error('처리에 실패했습니다')
+        } catch (e: any) {
+          toast.error(e.message || '처리에 실패했습니다')
+        }
+      },
+    })
+  }
+
+  const handleTransferOwnership = (userId: string, name: string) => {
+    if (!activeChildId) return
+    setConfirmDialog({
+      title: '소유자 권한 양도',
+      message: `${name}님에게 소유자 권한을 넘깁니다.\n나는 편집자가 되며, 이후 자녀 삭제·양도 권한이 사라집니다.`,
+      confirmLabel: '양도',
+      danger: false,
+      onConfirm: async () => {
+        try {
+          await q.transferOwnership(activeChildId, userId)
+          toast.success(`${name}님에게 양도되었습니다`)
+          await refreshChildren()
+          setGuardians(await q.fetchGuardians(activeChildId))
+        } catch (e: any) {
+          toast.error(e.message || '양도에 실패했습니다')
         }
       },
     })
@@ -194,6 +215,14 @@ export default function SettingsPage() {
                   {roleLabel}
                 </span>
               </div>
+              {amOwner && !isMe && g.role !== 'owner' && (
+                <button
+                  onClick={() => handleTransferOwnership(g.userId, g.displayName)}
+                  className="text-xs text-teal-500 hover:text-teal-700 px-2 py-1 rounded-lg hover:bg-teal-50 flex-shrink-0"
+                >
+                  양도
+                </button>
+              )}
               {canRemove && (
                 <button
                   onClick={() => handleRemoveGuardian(g.userId)}
@@ -270,6 +299,7 @@ export default function SettingsPage() {
         title={confirmDialog?.title ?? ''}
         message={confirmDialog?.message}
         confirmLabel={confirmDialog?.confirmLabel}
+        danger={confirmDialog?.danger ?? true}
         onConfirm={async () => { await confirmDialog?.onConfirm(); setConfirmDialog(null) }}
         onCancel={() => setConfirmDialog(null)}
       />

@@ -266,6 +266,13 @@ export async function removeGuardian(childId: string, userId: string): Promise<v
   if (error) throw new Error(error.message || '처리에 실패했습니다')
 }
 
+// 소유자 양도 — 대상이 owner, 호출자는 editor로 (owner만 가능)
+export async function transferOwnership(childId: string, newOwnerUserId: string): Promise<void> {
+  const sb = createClient()
+  const { error } = await sb.rpc('transfer_ownership', { p_child_id: childId, p_new_owner: newOwnerUserId })
+  if (error) throw new Error(error.message || '양도에 실패했습니다')
+}
+
 // ── 초대 코드 ─────────────────────────────────────────────────
 
 // 자녀별 초대코드 생성 (그 자녀의 보호자 누구나) — 코드 문자열 반환
