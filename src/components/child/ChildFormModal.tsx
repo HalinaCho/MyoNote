@@ -7,7 +7,7 @@ import { TREATMENT_PRESETS, makeTreatmentKey } from '@/lib/treatments'
 import ConfirmModal from '@/components/ui/ConfirmModal'
 import type { Child } from '@/types'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faXmark, faTree, faMobileScreen, faPlus, faTrashCan } from '@fortawesome/free-solid-svg-icons'
+import { faXmark, faTree, faMobileScreen, faPlus, faTrashCan, faArrowsRotate } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 
 interface Props {
@@ -146,45 +146,37 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
         <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1">
           <div className="flex-1 overflow-y-auto px-5 pb-2 space-y-3">
 
-          {/* ── 기본 정보 ── */}
-          <section className="rounded-2xl border border-gray-100 p-4 space-y-3">
-            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">기본 정보</h3>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">이름</label>
+          {/* ── 헤더: 성별 아바타 + 이름/생년월일 ── */}
+          <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
+            <div className="flex flex-col items-center gap-1 flex-shrink-0">
+              <button
+                type="button"
+                onClick={() => setForm(f => ({ ...f, gender: f.gender === 'M' ? 'F' : 'M' }))}
+                className="relative w-16 h-16 rounded-full bg-teal-50 border-2 border-[#10bcad] flex items-center justify-center text-3xl active:scale-95 transition-transform"
+                aria-label="성별 전환"
+              >
+                {form.gender === 'F' ? '👧' : '👦'}
+                <span className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-[#10bcad] text-white text-[9px] flex items-center justify-center border-2 border-white">
+                  <FontAwesomeIcon icon={faArrowsRotate} />
+                </span>
+              </button>
+              <span className="text-[11px] text-gray-400">{form.gender === 'F' ? '여자' : '남자'}</span>
+            </div>
+            <div className="flex-1 min-w-0 space-y-2">
               <input
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#10bcad]"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#10bcad]"
                 placeholder="자녀 이름"
                 value={form.name}
                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">생년월일</label>
               <input
                 type="date"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#10bcad] accent-[#10bcad]"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#10bcad] accent-[#10bcad]"
                 value={form.birth}
                 onChange={e => setForm(f => ({ ...f, birth: e.target.value }))}
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">성별</label>
-              <div className="flex gap-2">
-                {(['M', 'F'] as const).map(g => (
-                  <button
-                    key={g} type="button"
-                    onClick={() => setForm(f => ({ ...f, gender: g }))}
-                    className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors
-                      ${form.gender === g
-                        ? 'bg-[#10bcad] text-white border-[#10bcad]'
-                        : 'bg-white text-gray-600 border-gray-200'}`}
-                  >
-                    {g === 'M' ? '👦 남자' : '👧 여자'}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </section>
+          </div>
 
           {/* ── 진행 중인 난시케어 ── */}
           <section className="rounded-2xl border border-gray-100 p-4">
