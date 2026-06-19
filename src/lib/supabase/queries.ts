@@ -261,9 +261,9 @@ export async function fetchGuardians(childId: string): Promise<Guardian[]> {
 
 export async function removeGuardian(childId: string, userId: string): Promise<void> {
   const sb = createClient()
-  const { error } = await sb.from('eyebody_child_guardians')
-    .delete().eq('child_id', childId).eq('user_id', userId)
-  if (error) throw error
+  // definer RPC로 권한 검증 후 삭제 (RLS 정책 우회 문제 회피, 실패 시 명확한 에러)
+  const { error } = await sb.rpc('remove_guardian', { p_child_id: childId, p_user_id: userId })
+  if (error) throw new Error(error.message || '처리에 실패했습니다')
 }
 
 // ── 초대 코드 ─────────────────────────────────────────────────
