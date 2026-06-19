@@ -168,19 +168,18 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
               />
               <div className="flex items-center gap-1.5 mt-0.5 text-sm leading-none">
-                {form.birth && <span className="text-[#10bcad] font-medium leading-none">{calcAgeLabel(form.birth)}</span>}
-                {form.birth && <span className="text-gray-300 leading-none">·</span>}
-                <span className="relative inline-flex items-center">
+                {form.birth && <span className="text-[#10bcad] font-medium">{calcAgeLabel(form.birth)}</span>}
+                {form.birth && <span className="text-gray-300">·</span>}
+                <span className="relative inline-flex items-center gap-1">
+                  <span className={form.birth ? 'text-gray-500' : 'text-gray-300'}>{form.birth || '생년월일 입력'}</span>
+                  <span className="text-gray-300 text-[10px]">▼</span>
                   <input
                     type="date"
-                    className={`date-bare appearance-none bg-transparent border-0 p-0 pr-2.5 text-sm leading-none focus:outline-none ${form.birth ? 'text-gray-500' : 'text-transparent w-28'}`}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     value={form.birth}
                     onChange={e => setForm(f => ({ ...f, birth: e.target.value }))}
+                    onClick={e => { try { (e.currentTarget as any).showPicker?.() } catch {} }}
                   />
-                  {!form.birth && (
-                    <span className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 text-gray-300">생년월일 입력</span>
-                  )}
-                  <span className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 text-gray-300 text-[10px]">▼</span>
                 </span>
               </div>
             </div>
