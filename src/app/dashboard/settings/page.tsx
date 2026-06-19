@@ -45,7 +45,7 @@ export default function SettingsPage() {
     setLoadingGuardians(true)
     q.fetchGuardians(activeChildId)
       .then(setGuardians)
-      .catch((e) => { setGuardians([]); toast.error('보호자 로딩 오류: ' + (e?.message ?? String(e))) })
+      .catch(() => setGuardians([]))
       .finally(() => setLoadingGuardians(false))
   }, [activeChildId])
 
