@@ -188,7 +188,7 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
           {/* ── 진행 중인 근시케어 ── */}
           <section>
             <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-              <span className="w-1 h-4 rounded-full bg-[#10bcad]" />진행 중인 근시케어
+              <span className="w-1 h-4 rounded-full bg-[#10bcad]" />근시케어
             </h3>
             <div className="rounded-2xl border border-gray-100 p-3">
               {/* 활성 케어 목록 — teal 체크 = 활성 표시 */}
@@ -253,7 +253,7 @@ export default function ChildFormModal({ open, onClose, editing }: Props) {
           {/* ── 생활습관 권장 목표 ── */}
           <section>
             <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-              <span className="w-1 h-4 rounded-full bg-[#10bcad]" />생활습관 권장 목표 <span className="text-xs font-normal text-gray-400">(일 기준)</span>
+              <span className="w-1 h-4 rounded-full bg-[#10bcad]" />생활습관 목표
             </h3>
             <div className="rounded-2xl border border-gray-100 px-3">
               <GoalStepper icon={faMobileScreen} iconCls="text-gray-400" label="스마트폰" dir="이하"
