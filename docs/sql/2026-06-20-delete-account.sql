@@ -59,6 +59,12 @@ begin
     end if;
   end loop;
 
+  -- 초대코드 정리 (eyebody_invite_codes 의 owner_id/used_by 가 프로필을 참조하므로 먼저 처리)
+  --   · 내가 생성한 코드  → 삭제
+  --   · 내가 수락한 코드  → 사용자 참조(used_by)만 해제 (다른 소유자의 기록은 유지)
+  delete from eyebody_invite_codes where owner_id = v_uid;
+  update eyebody_invite_codes set used_by = null where used_by = v_uid;
+
   -- 프로필 제거
   delete from eyebody_profiles where id = v_uid;
 
