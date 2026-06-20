@@ -30,9 +30,8 @@ export default function OnboardingFlow() {
     <>
       <div className="pt-7 pb-4">
         {/* 인사 */}
-        <div className="text-4xl mb-3">😊</div>
         <h1 className="text-xl font-bold text-gray-800 leading-snug mb-1.5">
-          환영합니다!<br />내 아이의 근시 관리를 체계적으로
+          환영합니다!<br />내 아이의 근시, 체계적으로 관리해요
         </h1>
         <p className="text-sm text-gray-400 mb-6">딱 3단계면 준비가 끝나요</p>
 
