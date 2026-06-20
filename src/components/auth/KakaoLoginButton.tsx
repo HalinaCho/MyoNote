@@ -3,11 +3,20 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
-export default function KakaoLoginButton() {
+interface Props {
+  /** 필수 동의 완료 여부 — false면 버튼 비활성 */
+  agreed?: boolean
+  /** 로그인 진행 직전 호출 (동의 기록 등) */
+  onProceed?: () => void
+}
+
+export default function KakaoLoginButton({ agreed = true, onProceed }: Props) {
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   const handleLogin = async () => {
+    if (!agreed) return
+    onProceed?.()
     setLoading(true)
     setErrorMsg(null)
     try {
@@ -33,8 +42,8 @@ export default function KakaoLoginButton() {
     <>
       <button
         onClick={handleLogin}
-        disabled={loading}
-        className="w-full flex items-center justify-center gap-2 bg-[#FEE500] hover:bg-[#F5DC00] active:bg-[#EDD200] disabled:opacity-60 text-[#191919] font-semibold py-3.5 px-4 rounded-xl transition-colors text-sm"
+        disabled={loading || !agreed}
+        className="w-full flex items-center justify-center gap-2 bg-[#FEE500] hover:bg-[#F5DC00] active:bg-[#EDD200] disabled:opacity-50 disabled:cursor-not-allowed text-[#191919] font-semibold py-3.5 px-4 rounded-xl transition-colors text-sm"
       >
         {loading ? (
           <span className="w-4 h-4 border-2 border-[#191919]/30 border-t-[#191919] rounded-full animate-spin" />

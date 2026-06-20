@@ -1,11 +1,12 @@
 'use client'
 
-import { Suspense } from 'react'
+import { Suspense, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import KakaoLoginButton from '@/components/auth/KakaoLoginButton'
+import { recordConsent } from '@/lib/consent'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faClipboardList, faChartLine, faUserGroup } from '@fortawesome/free-solid-svg-icons'
+import { faClipboardList, faChartLine, faUserGroup, faCheck } from '@fortawesome/free-solid-svg-icons'
 
 function ErrorMessage() {
   const searchParams = useSearchParams()
@@ -17,9 +18,42 @@ function ErrorMessage() {
   )
 }
 
-export default function LoginPage() {
+function Check({ checked, onToggle, children }: {
+  checked: boolean
+  onToggle: () => void
+  children: React.ReactNode
+}) {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#edf7f6] px-4">
+    <div className="flex items-start gap-2.5">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-pressed={checked}
+        className={`mt-0.5 w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 border transition-colors ${
+          checked ? 'bg-teal-500 border-teal-500 text-white' : 'bg-white border-gray-300 text-transparent'
+        }`}
+      >
+        <FontAwesomeIcon icon={faCheck} className="text-[10px]" />
+      </button>
+      <div onClick={onToggle} className="text-sm text-gray-600 leading-snug cursor-pointer select-none">
+        {children}
+      </div>
+    </div>
+  )
+}
+
+export default function LoginPage() {
+  const [privacy, setPrivacy] = useState(false)
+  const [sensitive, setSensitive] = useState(false)
+  const allAgreed = privacy && sensitive
+  const toggleAll = () => {
+    const next = !allAgreed
+    setPrivacy(next)
+    setSensitive(next)
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#edf7f6] px-4 py-10">
       <div className="w-full max-w-sm">
 
         {/* 로고 */}
@@ -37,7 +71,7 @@ export default function LoginPage() {
         </div>
 
         {/* 설명 */}
-        <div className="bg-white rounded-2xl p-5 mb-6 shadow-sm border border-gray-100 space-y-3">
+        <div className="bg-white rounded-2xl p-5 mb-4 shadow-sm border border-gray-100 space-y-3">
           {[
             { icon: faClipboardList, text: '케어 달성률을 매일 간편하게 기록' },
             { icon: faChartLine,     text: '안축장 변화를 차트로 한눈에' },
@@ -50,18 +84,33 @@ export default function LoginPage() {
           ))}
         </div>
 
+        {/* 동의 */}
+        <div className="bg-white rounded-2xl p-4 mb-4 shadow-sm border border-gray-100 space-y-3">
+          <Check checked={allAgreed} onToggle={toggleAll}>
+            <b className="text-gray-800 font-semibold">전체 동의</b>
+          </Check>
+          <div className="border-t border-gray-100" />
+          <Check checked={privacy} onToggle={() => setPrivacy(v => !v)}>
+            <span className="text-teal-600 font-medium">(필수)</span>{' '}
+            <Link href="/privacy" onClick={e => e.stopPropagation()} className="underline">개인정보 처리방침</Link>에 동의합니다
+          </Check>
+          <Check checked={sensitive} onToggle={() => setSensitive(v => !v)}>
+            <span className="text-teal-600 font-medium">(필수)</span>{' '}
+            자녀의 안과 검사 기록 등 <b className="text-gray-700">민감정보(건강정보)</b>의 수집·이용에 동의합니다
+          </Check>
+        </div>
+
         {/* 카카오 로그인 */}
-        <KakaoLoginButton />
+        <KakaoLoginButton agreed={allAgreed} onProceed={recordConsent} />
+
+        {!allAgreed && (
+          <p className="mt-2 text-center text-xs text-gray-400">필수 항목에 동의하면 시작할 수 있어요</p>
+        )}
 
         {/* 에러 메시지 */}
         <Suspense>
           <ErrorMessage />
         </Suspense>
-
-        <p className="mt-6 text-center text-xs text-gray-400">
-          로그인 시{' '}
-          <Link href="/privacy" className="underline">개인정보 처리방침</Link>에 동의하게 됩니다
-        </p>
       </div>
     </div>
   )
