@@ -290,3 +290,12 @@ export async function acceptInviteCode(code: string): Promise<string> {
   if (error) throw new Error(error.message || '코드 참여에 실패했습니다')
   return data as string
 }
+
+// ── 계정 ──────────────────────────────────────────────────────
+
+// 회원 탈퇴 — 본인 프로필·단독 소유 자녀 데이터·인증 계정까지 일괄 삭제 (RPC가 원자적 처리)
+export async function deleteAccount(): Promise<void> {
+  const sb = createClient()
+  const { error } = await sb.rpc('delete_account')
+  if (error) throw new Error(error.message || '탈퇴 처리에 실패했습니다')
+}

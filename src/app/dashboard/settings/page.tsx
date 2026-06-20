@@ -13,7 +13,7 @@ import { createClient } from '@/lib/supabase/client'
 import * as q from '@/lib/supabase/queries'
 import type { Guardian } from '@/lib/supabase/queries'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPen, faTrashCan, faPlus, faUserGroup, faKey, faRightFromBracket, faXmark, faChevronRight, faBell } from '@fortawesome/free-solid-svg-icons'
+import { faPen, faTrashCan, faPlus, faUserGroup, faKey, faRightFromBracket, faXmark, faChevronRight, faBell, faUserXmark } from '@fortawesome/free-solid-svg-icons'
 
 export default function SettingsPage() {
   const { children, activeChildId, activeChild, deleteChild, refreshChildren } = useChild()
@@ -115,6 +115,27 @@ export default function SettingsPage() {
           if (isSelf) await refreshChildren()
         } catch (e: any) {
           toast.error(e.message || '처리에 실패했습니다')
+        }
+      },
+    })
+  }
+
+  const handleDeleteAccount = () => {
+    setConfirmDialog({
+      title: '회원 탈퇴',
+      message:
+        '내 프로필과, 내가 단독 보호자인 자녀의 모든 기록(검사·케어·생활습관)이 영구 삭제됩니다.\n' +
+        '다른 보호자가 함께 있는 자녀는 소유권이 이전되고 데이터는 유지됩니다.\n' +
+        '이 작업은 되돌릴 수 없습니다.',
+      confirmLabel: '탈퇴',
+      onConfirm: async () => {
+        try {
+          await q.deleteAccount()
+          await signOut().catch(() => {})
+          toast.success('탈퇴가 완료되었습니다')
+          window.location.replace(`${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/login`)
+        } catch (e: any) {
+          toast.error(e.message || '탈퇴 처리에 실패했습니다')
         }
       },
     })
@@ -281,6 +302,12 @@ export default function SettingsPage() {
           className="w-full flex items-center gap-3 px-4 py-2.5 border-t border-gray-50 text-sm text-rose-500 hover:bg-rose-50"
         >
           <FontAwesomeIcon icon={faRightFromBracket} className="w-4" /> 로그아웃
+        </button>
+        <button
+          onClick={handleDeleteAccount}
+          className="w-full flex items-center gap-3 px-4 py-2.5 border-t border-gray-50 text-sm text-gray-400 hover:bg-gray-50"
+        >
+          <FontAwesomeIcon icon={faUserXmark} className="w-4" /> 회원 탈퇴
         </button>
       </section>
 
