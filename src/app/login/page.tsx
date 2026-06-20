@@ -6,7 +6,7 @@ import Link from 'next/link'
 import KakaoLoginButton from '@/components/auth/KakaoLoginButton'
 import { recordConsent } from '@/lib/consent'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faClipboardList, faChartLine, faUserGroup, faCheck } from '@fortawesome/free-solid-svg-icons'
+import { faCheck } from '@fortawesome/free-solid-svg-icons'
 
 function ErrorMessage() {
   const searchParams = useSearchParams()
@@ -70,19 +70,11 @@ export default function LoginPage() {
           <p className="mt-1 text-sm text-gray-500">내 아이 근시 관리</p>
         </div>
 
-        {/* 설명 */}
-        <div className="bg-white rounded-2xl p-5 mb-4 shadow-sm border border-gray-100 space-y-3">
-          {[
-            { icon: faClipboardList, text: '케어 달성률을 매일 간편하게 기록' },
-            { icon: faChartLine,     text: '안축장 변화를 차트로 한눈에' },
-            { icon: faUserGroup,     text: '보호자 여러 명이 함께 관리' },
-          ].map(({ icon, text }) => (
-            <div key={text} className="flex items-center gap-3 text-sm text-gray-600">
-              <FontAwesomeIcon icon={icon} className="text-base text-teal-500 w-4" />
-              <span>{text}</span>
-            </div>
-          ))}
-        </div>
+        {/* 한 줄 가치 제안 */}
+        <p className="text-center text-sm text-gray-500 leading-relaxed mb-7 px-2">
+          안축장 변화 추적부터 매일 케어 습관까지,<br />
+          내 아이 근시 관리를 한 곳에서 시작하세요
+        </p>
 
         {/* 동의 */}
         <div className="bg-white rounded-2xl p-4 mb-4 shadow-sm border border-gray-100 space-y-3">
