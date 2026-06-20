@@ -1,2 +1,2 @@
 :HL["/MyoNote/_next/static/chunks/3d5dyaitdr-d-.css","style"]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}},"staleTime":300,"buildId":"RYKbE2n5nPAt6d38xnOhJ"}
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}},"staleTime":300,"buildId":"u6Al9cFZq46DzHR-0tYBD"}
