@@ -30,9 +30,9 @@ export default function OnboardingFlow() {
     <>
       <div className="pt-7 pb-4">
         {/* 인사 */}
-        <div className="text-4xl mb-3">👋</div>
+        <div className="text-4xl mb-3">😊</div>
         <h1 className="text-xl font-bold text-gray-800 leading-snug mb-1.5">
-          반가워요!<br />내 아이 근시 관리를 함께 시작해요
+          환영합니다!<br />내 아이의 근시 관리를 체계적으로
         </h1>
         <p className="text-sm text-gray-400 mb-6">딱 3단계면 준비가 끝나요</p>
 
@@ -54,7 +54,7 @@ export default function OnboardingFlow() {
         {/* CTA */}
         <button
           onClick={() => setAddOpen(true)}
-          className="w-full bg-teal-500 hover:bg-teal-600 active:bg-teal-700 text-white font-semibold py-3.5 rounded-2xl flex items-center justify-center gap-2 transition-colors shadow-sm"
+          className="mx-auto w-fit flex items-center gap-2 bg-teal-500 hover:bg-teal-600 active:bg-teal-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors shadow-sm"
         >
           자녀 등록하고 시작하기
           <FontAwesomeIcon icon={faArrowRight} className="text-sm" />
