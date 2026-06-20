@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowRight, faChild, faPen, faChartLine } from '@fortawesome/free-solid-svg-icons'
+import { faArrowRight, faChildReaching, faPen, faChartLine } from '@fortawesome/free-solid-svg-icons'
 import ChildFormModal from '@/components/child/ChildFormModal'
 
 type Step = {
@@ -11,6 +11,7 @@ type Step = {
   tile: string
   icon: typeof faArrowRight
   iconColor: string
+  iconSize: string
 }
 
 const STEPS: Step[] = [
@@ -18,8 +19,9 @@ const STEPS: Step[] = [
     title: '자녀 등록',
     desc: '이름·생년월일과 진행 중인 케어를 입력해요',
     tile: 'bg-teal-50',
-    icon: faChild,
+    icon: faChildReaching,
     iconColor: 'text-teal-500',
+    iconSize: 'text-3xl',
   },
   {
     title: '기록하기',
@@ -27,6 +29,7 @@ const STEPS: Step[] = [
     tile: 'bg-amber-50',
     icon: faPen,
     iconColor: 'text-amber-500',
+    iconSize: 'text-2xl',
   },
   {
     title: '변화 확인',
@@ -34,6 +37,7 @@ const STEPS: Step[] = [
     tile: 'bg-rose-50',
     icon: faChartLine,
     iconColor: 'text-rose-400',
+    iconSize: 'text-2xl',
   },
 ]
 
@@ -54,7 +58,7 @@ export default function OnboardingFlow() {
           {STEPS.map(s => (
             <div key={s.title} className="flex items-center gap-4 bg-white rounded-2xl px-4 py-4 shadow-sm">
               <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${s.tile}`}>
-                <FontAwesomeIcon icon={s.icon} className={`text-xl ${s.iconColor}`} />
+                <FontAwesomeIcon icon={s.icon} className={`${s.iconSize} ${s.iconColor}`} />
               </div>
               <div>
                 <div className="text-[15px] font-semibold text-gray-800">{s.title}</div>
