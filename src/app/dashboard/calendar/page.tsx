@@ -199,20 +199,6 @@ export default function CalendarPage() {
             <div className="mb-5">
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">생활습관</p>
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-teal-50 rounded-2xl p-3 border-2 border-teal-100">
-                  <div className="flex items-center gap-1.5 mb-3">
-                    <FontAwesomeIcon icon={faTree} className="text-teal-500" />
-                    <span className="text-xs font-semibold text-teal-700">야외활동</span>
-                  </div>
-                  <TimeSpinner
-                    hours={lifeForm.outdoorH} minutes={lifeForm.outdoorM}
-                    onHour={v => setLifeForm(f => ({ ...f, outdoorH: v }))}
-                    onMinute={v => setLifeForm(f => ({ ...f, outdoorM: v }))}
-                    btnCls="bg-teal-100 text-teal-700 hover:bg-teal-200"
-                    textCls="text-teal-700"
-                  />
-                  <p className="text-xs text-teal-400 mt-2 text-center">권장 2시간↑</p>
-                </div>
                 <div className="bg-amber-50 rounded-2xl p-3 border-2 border-amber-100">
                   <div className="flex items-center gap-1.5 mb-3">
                     <FontAwesomeIcon icon={faMobileScreen} className="text-amber-500" />
@@ -226,6 +212,20 @@ export default function CalendarPage() {
                     textCls="text-amber-700"
                   />
                   <p className="text-xs text-amber-400 mt-2 text-center">권장 2시간↓</p>
+                </div>
+                <div className="bg-teal-50 rounded-2xl p-3 border-2 border-teal-100">
+                  <div className="flex items-center gap-1.5 mb-3">
+                    <FontAwesomeIcon icon={faTree} className="text-teal-500" />
+                    <span className="text-xs font-semibold text-teal-700">야외활동</span>
+                  </div>
+                  <TimeSpinner
+                    hours={lifeForm.outdoorH} minutes={lifeForm.outdoorM}
+                    onHour={v => setLifeForm(f => ({ ...f, outdoorH: v }))}
+                    onMinute={v => setLifeForm(f => ({ ...f, outdoorM: v }))}
+                    btnCls="bg-teal-100 text-teal-700 hover:bg-teal-200"
+                    textCls="text-teal-700"
+                  />
+                  <p className="text-xs text-teal-400 mt-2 text-center">권장 2시간↑</p>
                 </div>
               </div>
             </div>
