@@ -390,20 +390,6 @@ export default function HomePage() {
                   className={INPUT} />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-teal-50 rounded-2xl p-4 border-2 border-teal-100">
-                  <div className="flex items-center gap-1.5 mb-4">
-                    <FontAwesomeIcon icon={faTree} className="text-xl text-teal-500" />
-                    <span className="text-xs font-semibold text-gray-700">야외활동</span>
-                  </div>
-                  <TimeSpinner
-                    hours={lifeForm.outdoorH} minutes={lifeForm.outdoorM}
-                    onHour={v => setLifeForm(f => ({ ...f, outdoorH: v }))}
-                    onMinute={v => setLifeForm(f => ({ ...f, outdoorM: v }))}
-                    btnCls="bg-teal-100 text-teal-700 hover:bg-teal-200"
-                    textCls="text-gray-700"
-                  />
-                  <p className="text-xs text-gray-400 mt-3 text-center">권장 2시간↑</p>
-                </div>
                 <div className="bg-amber-50 rounded-2xl p-4 border-2 border-amber-100">
                   <div className="flex items-center gap-1.5 mb-4">
                     <FontAwesomeIcon icon={faMobileScreen} className="text-xl text-amber-500" />
@@ -417,6 +403,20 @@ export default function HomePage() {
                     textCls="text-gray-700"
                   />
                   <p className="text-xs text-gray-400 mt-3 text-center">권장 2시간↓</p>
+                </div>
+                <div className="bg-teal-50 rounded-2xl p-4 border-2 border-teal-100">
+                  <div className="flex items-center gap-1.5 mb-4">
+                    <FontAwesomeIcon icon={faTree} className="text-xl text-teal-500" />
+                    <span className="text-xs font-semibold text-gray-700">야외활동</span>
+                  </div>
+                  <TimeSpinner
+                    hours={lifeForm.outdoorH} minutes={lifeForm.outdoorM}
+                    onHour={v => setLifeForm(f => ({ ...f, outdoorH: v }))}
+                    onMinute={v => setLifeForm(f => ({ ...f, outdoorM: v }))}
+                    btnCls="bg-teal-100 text-teal-700 hover:bg-teal-200"
+                    textCls="text-gray-700"
+                  />
+                  <p className="text-xs text-gray-400 mt-3 text-center">권장 2시간↑</p>
                 </div>
               </div>
               <button type="submit" disabled={lifeSaving}
