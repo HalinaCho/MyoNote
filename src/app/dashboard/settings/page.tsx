@@ -13,7 +13,7 @@ import { createClient } from '@/lib/supabase/client'
 import * as q from '@/lib/supabase/queries'
 import type { Guardian } from '@/lib/supabase/queries'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPen, faTrashCan, faPlus, faUserGroup, faKey, faRightFromBracket, faXmark, faChevronRight, faBell, faUserXmark } from '@fortawesome/free-solid-svg-icons'
+import { faPen, faTrashCan, faPlus, faUserGroup, faKey, faRightFromBracket, faXmark, faChevronRight, faBell, faUserXmark, faShareNodes } from '@fortawesome/free-solid-svg-icons'
 
 export default function SettingsPage() {
   const { children, activeChildId, activeChild, deleteChild, refreshChildren } = useChild()
@@ -82,6 +82,26 @@ export default function SettingsPage() {
       toast.error(e.message || '코드 생성에 실패했습니다')
     } finally {
       setGenerating(false)
+    }
+  }
+
+  const handleShareInvite = async () => {
+    if (!inviteCode) return
+    const appUrl = 'https://HalinaCho.github.io/MyoNote'
+    const childName = activeChild?.name ?? '아이'
+    const message =
+      `${childName}의 근시 관리를 마이오노트에서 함께해요.\n\n` +
+      `아래 링크에서 마이오노트를 열고(설치) "코드로 참여하기"에 초대 코드를 입력하세요.\n` +
+      `초대 코드: ${inviteCode}\n(유효기간 7일)`
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: '마이오노트 보호자 초대', text: message, url: appUrl })
+      } catch (e: any) {
+        if (e?.name !== 'AbortError') toast.error('공유에 실패했습니다')
+      }
+    } else {
+      await navigator.clipboard.writeText(`${message}\n${appUrl}`)
+      toast.success('초대 메시지가 복사됐습니다')
     }
   }
 
@@ -342,13 +362,21 @@ export default function SettingsPage() {
             </div>
             <p className="text-sm text-gray-500 mb-4">코드를 생성해 상대방에게 공유하세요. <b className="text-gray-700">{activeChild?.name ?? '이 자녀'}</b> 프로필만 공유되며, 다른 자녀는 보이지 않습니다.</p>
             {inviteCode ? (
-              <div className="bg-teal-50 rounded-xl p-4 flex items-center justify-between mb-4">
-                <span className="text-2xl font-bold tracking-widest text-teal-700">{inviteCode}</span>
+              <>
+                <div className="bg-teal-50 rounded-xl p-4 flex items-center justify-between mb-3">
+                  <span className="text-2xl font-bold tracking-widest text-teal-700">{inviteCode}</span>
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(inviteCode); toast.success('복사됐습니다') }}
+                    className="text-sm text-teal-600 font-medium ml-3"
+                  >복사</button>
+                </div>
                 <button
-                  onClick={() => { navigator.clipboard.writeText(inviteCode); toast.success('복사됐습니다') }}
-                  className="text-sm text-teal-600 font-medium ml-3"
-                >복사</button>
-              </div>
+                  onClick={handleShareInvite}
+                  className="w-full flex items-center justify-center gap-2 bg-teal-500 hover:bg-teal-600 active:bg-teal-700 text-white font-semibold py-3 rounded-xl mb-4 transition-colors"
+                >
+                  <FontAwesomeIcon icon={faShareNodes} className="text-sm" /> 초대 메시지 공유하기
+                </button>
+              </>
             ) : (
               <button
                 onClick={handleGenerateInvite} disabled={generating}
