@@ -1,9 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import toast from 'react-hot-toast'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowRight, faChildReaching, faPen, faChartLine } from '@fortawesome/free-solid-svg-icons'
+import { faArrowRight, faChildReaching, faPen, faChartLine, faXmark } from '@fortawesome/free-solid-svg-icons'
 import ChildFormModal from '@/components/child/ChildFormModal'
+import { useChild } from '@/context/ChildContext'
+import * as q from '@/lib/supabase/queries'
 
 type Step = {
   title: string
@@ -42,7 +45,27 @@ const STEPS: Step[] = [
 ]
 
 export default function OnboardingFlow() {
+  const { refreshChildren } = useChild()
   const [addOpen, setAddOpen] = useState(false)
+  const [joinOpen, setJoinOpen] = useState(false)
+  const [joinCode, setJoinCode] = useState('')
+  const [joining, setJoining] = useState(false)
+
+  const handleJoin = async () => {
+    if (joinCode.length < 6) { toast.error('코드를 입력해주세요'); return }
+    setJoining(true)
+    try {
+      const name = await q.acceptInviteCode(joinCode)
+      toast.success(`${name} 보호자로 등록되었습니다`)
+      setJoinOpen(false)
+      setJoinCode('')
+      await refreshChildren()
+    } catch (e: any) {
+      toast.error(e.message || '코드 참여에 실패했습니다')
+    } finally {
+      setJoining(false)
+    }
+  }
 
   return (
     <>
@@ -76,6 +99,17 @@ export default function OnboardingFlow() {
           자녀 등록하고 시작하기
           <FontAwesomeIcon icon={faArrowRight} className="text-sm" />
         </button>
+
+        {/* 보조 동선: 초대 코드로 참여 */}
+        <p className="mt-4 text-center text-sm text-gray-400">
+          초대 코드를 받으셨나요?{' '}
+          <button
+            onClick={() => setJoinOpen(true)}
+            className="font-semibold text-teal-600 hover:text-teal-700 active:text-teal-800 transition-colors"
+          >
+            코드로 참여하기
+          </button>
+        </p>
       </div>
 
       <ChildFormModal
@@ -83,6 +117,35 @@ export default function OnboardingFlow() {
         onClose={() => setAddOpen(false)}
         editing={null}
       />
+
+      {/* 초대 코드 참여 모달 */}
+      {joinOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setJoinOpen(false)} />
+          <div className="relative z-10 w-full max-w-[480px] bg-white rounded-t-2xl sm:rounded-2xl p-5 pb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold">코드로 참여하기</h2>
+              <button onClick={() => setJoinOpen(false)} className="text-gray-400 text-xl"><FontAwesomeIcon icon={faXmark} /></button>
+            </div>
+            <p className="text-sm text-gray-500 mb-4">다른 보호자에게 받은 초대 코드를 입력하면 해당 자녀를 함께 관리할 수 있어요.</p>
+            <label className="block text-sm font-medium text-gray-700 mb-1">초대 코드</label>
+            <input
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-center text-lg tracking-widest font-bold uppercase focus:outline-none focus:ring-2 focus:ring-teal-500 mb-4"
+              placeholder="AB12CD"
+              maxLength={6}
+              value={joinCode}
+              onChange={e => setJoinCode(e.target.value.toUpperCase())}
+            />
+            <button
+              onClick={handleJoin}
+              disabled={joining}
+              className="w-full bg-teal-500 hover:bg-teal-600 active:bg-teal-700 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors"
+            >
+              {joining ? '참여 중...' : '참여하기'}
+            </button>
+          </div>
+        </div>
+      )}
     </>
   )
 }
