@@ -16,7 +16,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPen, faTrashCan, faPlus, faUserGroup, faKey, faRightFromBracket, faXmark, faChevronRight, faBell, faUserXmark, faShareNodes } from '@fortawesome/free-solid-svg-icons'
 
 export default function SettingsPage() {
-  const { children, activeChildId, activeChild, deleteChild, refreshChildren } = useChild()
+  const { children, activeChildId, activeChild, deleteChild, refreshChildren, switchChild } = useChild()
   const [childModal, setChildModal] = useState<{ open: boolean; editing: Child | null }>({ open: false, editing: null })
   const [inviteModal, setInviteModal] = useState(false)
   const [joinModal, setJoinModal] = useState(false)
@@ -189,16 +189,21 @@ export default function SettingsPage() {
 
         {children.map(c => (
           <div key={c.id} className="flex items-center gap-3 px-4 py-2.5 border-t border-gray-50">
-            <div className={`w-10 h-10 rounded-full bg-white border-2 flex items-center justify-center text-lg flex-shrink-0
-              ${c.id === activeChildId ? 'border-teal-500' : 'border-gray-200'}`}>
-              {c.gender === 'F' ? '👧' : '👦'}
-            </div>
-            <div className="flex-1">
-              <div className="text-sm font-semibold text-gray-800">{c.name}
-                {c.id === activeChildId && <span className="ml-2 text-xs bg-white border border-teal-500 text-teal-500 px-1.5 py-0.5 rounded-full">현재</span>}
+            <button
+              onClick={() => { if (c.id !== activeChildId) switchChild(c.id) }}
+              className="flex items-center gap-3 flex-1 text-left min-w-0"
+            >
+              <div className={`w-10 h-10 rounded-full bg-white border-2 flex items-center justify-center text-lg flex-shrink-0
+                ${c.id === activeChildId ? 'border-teal-500' : 'border-gray-200'}`}>
+                {c.gender === 'F' ? '👧' : '👦'}
               </div>
-              <div className="text-xs text-gray-400">{calcAgeLabel(c.birth)} · {c.birth}</div>
-            </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold text-gray-800">{c.name}
+                  {c.id === activeChildId && <span className="ml-2 text-xs bg-white border border-teal-500 text-teal-500 px-1.5 py-0.5 rounded-full">현재</span>}
+                </div>
+                <div className="text-xs text-gray-400">{calcAgeLabel(c.birth)} · {c.birth}</div>
+              </div>
+            </button>
             <button onClick={() => setChildModal({ open: true, editing: c })} className="text-gray-400 hover:text-gray-600 p-1"><FontAwesomeIcon icon={faPen} /></button>
             {children.length > 1 && c.role === 'owner' && (
               <button onClick={() => handleDeleteChild(c)} className="text-gray-400 hover:text-rose-500 p-1"><FontAwesomeIcon icon={faTrashCan} /></button>
