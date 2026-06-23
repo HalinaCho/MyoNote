@@ -35,7 +35,7 @@ export default function RecordsPage() {
   const [showCRInfo, setShowCRInfo] = useState(false)
   const [selectedYear, setSelectedYear] = useState('')
   const [deleting, setDeleting] = useState<ExamRecord | null>(null)
-  const [explains, setExplains] = useState<Record<string, { loading?: boolean; text?: string; error?: string; open?: boolean }>>({})
+  const [explains, setExplains] = useState<Record<string, { loading?: boolean; points?: { label: string; text: string }[]; error?: string; open?: boolean }>>({})
 
   const years = [...new Set(exams.map(e => e.date.slice(0, 4)))].sort().reverse()
   const activeYear = selectedYear || years[0] || ''
@@ -93,7 +93,7 @@ export default function RecordsPage() {
 
   const toggleExplain = async (exam: ExamRecord) => {
     const cur = explains[exam.id]
-    if (cur && (cur.text || cur.error)) {            // 이미 받아온 건 펼침/접힘만
+    if (cur && (cur.points || cur.error)) {          // 이미 받아온 건 펼침/접힘만
       setExplains(p => ({ ...p, [exam.id]: { ...cur, open: !cur.open } }))
       return
     }
@@ -109,7 +109,7 @@ export default function RecordsPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || '해설 생성에 실패했습니다.')
-      setExplains(p => ({ ...p, [exam.id]: { text: data.explanation, open: true } }))
+      setExplains(p => ({ ...p, [exam.id]: { points: data.explanation.points, open: true } }))
     } catch (err) {
       setExplains(p => ({ ...p, [exam.id]: { error: err instanceof Error ? err.message : '해설 생성 실패', open: true } }))
     }
@@ -197,8 +197,18 @@ export default function RecordsPage() {
                         <span className="text-rose-500">{explains[e.id]?.error}</span>
                       ) : (
                         <>
-                          <p className="whitespace-pre-line">{explains[e.id]?.text}</p>
-                          <p className="mt-2 text-[11px] text-gray-400">참고용 해설이며 진단이 아닙니다. 정확한 판단은 안과 전문의와 상담하세요.</p>
+                          <ul className="space-y-1.5">
+                            {explains[e.id]?.points?.map((pt, i) => (
+                              <li key={i} className="flex gap-2">
+                                <span className="text-teal-400 mt-0.5 select-none">•</span>
+                                <p className="flex-1">
+                                  <span className="font-semibold text-gray-800">{pt.label}</span>
+                                  <span className="text-gray-600"> — {pt.text}</span>
+                                </p>
+                              </li>
+                            ))}
+                          </ul>
+                          <p className="mt-2.5 text-[11px] text-gray-400">참고용 해설이며 진단이 아닙니다. 정확한 판단은 안과 전문의와 상담하세요.</p>
                         </>
                       )}
                     </div>

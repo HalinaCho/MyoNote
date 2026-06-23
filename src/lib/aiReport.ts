@@ -225,6 +225,11 @@ export interface ExamExplainContext {
   } | null
 }
 
+// AI가 돌려주는 검사 해설 — 핵심 내용별 불렛
+export interface ExamExplanation {
+  points: { label: string; text: string }[]
+}
+
 export function buildExamExplainContext(opts: {
   child: Child
   exams: ExamRecord[]
