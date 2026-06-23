@@ -1,6 +1,7 @@
 // RN 이식 시 createClient만 교체하면 전체 재사용 가능
 import { createClient } from './client'
 import type { Child, ExamRecord, TreatmentLogs, LifestyleLogs, TreatmentDef, DesiredTreatment } from '@/types'
+import type { AiReport } from '@/lib/aiReport'
 
 // 폼 입력 — treatments는 periods 없는 활성 집합 (context가 병합해 기간 부여)
 export interface ChildFormInput {
@@ -289,6 +290,74 @@ export async function acceptInviteCode(code: string): Promise<string> {
   const { data, error } = await sb.rpc('accept_invite_code', { p_code: code.toUpperCase().trim() })
   if (error) throw new Error(error.message || '코드 참여에 실패했습니다')
   return data as string
+}
+
+// ── AI 월간 리포트 ────────────────────────────────────────────
+
+export interface SavedReport {
+  id: string
+  periodLabel: string
+  periodFrom: string
+  periodTo: string
+  payload: AiReport
+  model: string
+  createdAt: string
+}
+
+// 가장 최근 저장된 리포트 1건 (없으면 null)
+export async function fetchLatestReport(childId: string): Promise<SavedReport | null> {
+  const sb = createClient()
+  const { data, error } = await sb
+    .from('eyebody_ai_reports')
+    .select('id, period_label, period_from, period_to, payload, model, created_at')
+    .eq('child_id', childId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (error) throw error
+  if (!data) return null
+  return {
+    id: data.id,
+    periodLabel: data.period_label,
+    periodFrom: data.period_from,
+    periodTo: data.period_to,
+    payload: data.payload as AiReport,
+    model: data.model,
+    createdAt: data.created_at,
+  }
+}
+
+export async function saveReport(
+  childId: string,
+  period: { label: string; from: string; to: string },
+  payload: AiReport,
+  model: string
+): Promise<SavedReport> {
+  const sb = createClient()
+  const { data: userData } = await sb.auth.getUser()
+  const { data, error } = await sb
+    .from('eyebody_ai_reports')
+    .insert({
+      child_id: childId,
+      period_from: period.from,
+      period_to: period.to,
+      period_label: period.label,
+      payload,
+      model,
+      created_by: userData.user?.id ?? null,
+    })
+    .select('id, period_label, period_from, period_to, payload, model, created_at')
+    .single()
+  if (error) throw error
+  return {
+    id: data.id,
+    periodLabel: data.period_label,
+    periodFrom: data.period_from,
+    periodTo: data.period_to,
+    payload: data.payload as AiReport,
+    model: data.model,
+    createdAt: data.created_at,
+  }
 }
 
 // ── 계정 ──────────────────────────────────────────────────────
