@@ -7,9 +7,10 @@ import TabSkeleton from '@/components/ui/TabSkeleton'
 import EmptyState from '@/components/ui/EmptyState'
 import ConfirmModal from '@/components/ui/ConfirmModal'
 import { today } from '@/lib/utils/date'
+import { buildExamExplainContext } from '@/lib/aiReport'
 import type { ExamRecord } from '@/types'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPen, faXmark, faCircleInfo, faCalendarDays, faPlus } from '@fortawesome/free-solid-svg-icons'
+import { faPen, faXmark, faCircleInfo, faCalendarDays, faPlus, faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons'
 
 function calcSeq(sph: string, cyl: string) {
   const s = parseFloat(sph)
@@ -26,7 +27,7 @@ const EMPTY_EXAM = { date: today(), clinic: '', axOD: '', axOS: '', sphOD: '', s
 const INPUT = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 accent-teal-500'
 
 export default function RecordsPage() {
-  const { exams, isLoading, saveExam, updateExam, deleteExam } = useChild()
+  const { exams, activeChild, isLoading, saveExam, updateExam, deleteExam } = useChild()
   const [modal, setModal]       = useState(false)
   const [editing, setEditing]   = useState<ExamRecord | null>(null)
   const [form, setForm]         = useState(EMPTY_EXAM)
@@ -34,6 +35,7 @@ export default function RecordsPage() {
   const [showCRInfo, setShowCRInfo] = useState(false)
   const [selectedYear, setSelectedYear] = useState('')
   const [deleting, setDeleting] = useState<ExamRecord | null>(null)
+  const [explains, setExplains] = useState<Record<string, { loading?: boolean; text?: string; error?: string; open?: boolean }>>({})
 
   const years = [...new Set(exams.map(e => e.date.slice(0, 4)))].sort().reverse()
   const activeYear = selectedYear || years[0] || ''
@@ -87,6 +89,30 @@ export default function RecordsPage() {
     try { await deleteExam(deleting.id); toast.success('삭제됐습니다') }
     catch { toast.error('삭제에 실패했습니다') }
     finally { setDeleting(null) }
+  }
+
+  const toggleExplain = async (exam: ExamRecord) => {
+    const cur = explains[exam.id]
+    if (cur && (cur.text || cur.error)) {            // 이미 받아온 건 펼침/접힘만
+      setExplains(p => ({ ...p, [exam.id]: { ...cur, open: !cur.open } }))
+      return
+    }
+    if (!activeChild) return
+    setExplains(p => ({ ...p, [exam.id]: { loading: true, open: true } }))
+    try {
+      const ctx = buildExamExplainContext({ child: activeChild, exams, examId: exam.id })
+      if (!ctx) throw new Error('해설을 만들 수 없습니다.')
+      const res = await fetch('/api/exam-explain', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ctx),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || '해설 생성에 실패했습니다.')
+      setExplains(p => ({ ...p, [exam.id]: { text: data.explanation, open: true } }))
+    } catch (err) {
+      setExplains(p => ({ ...p, [exam.id]: { error: err instanceof Error ? err.message : '해설 생성 실패', open: true } }))
+    }
   }
 
   if (isLoading) return <TabSkeleton />
@@ -152,6 +178,33 @@ export default function RecordsPage() {
                   </div>
                 )}
               </div>
+
+              {(e.axOD || e.axOS || e.serOD || e.serOS) && (
+                <div className="mt-2.5 pt-2.5 border-t border-gray-50">
+                  <button
+                    onClick={() => toggleExplain(e)}
+                    disabled={explains[e.id]?.loading}
+                    className="flex items-center gap-1.5 text-xs font-medium text-teal-600 disabled:opacity-50"
+                  >
+                    <FontAwesomeIcon icon={faWandMagicSparkles} className={explains[e.id]?.loading ? 'animate-pulse' : ''} />
+                    AI 해설
+                  </button>
+                  {explains[e.id]?.open && (
+                    <div className="mt-2 bg-teal-50/60 rounded-lg p-3 text-sm leading-relaxed text-gray-700">
+                      {explains[e.id]?.loading ? (
+                        <span className="text-gray-400">해설 생성 중…</span>
+                      ) : explains[e.id]?.error ? (
+                        <span className="text-rose-500">{explains[e.id]?.error}</span>
+                      ) : (
+                        <>
+                          {explains[e.id]?.text}
+                          <p className="mt-2 text-[11px] text-gray-400">참고용 해설이며 진단이 아닙니다. 정확한 판단은 안과 전문의와 상담하세요.</p>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>

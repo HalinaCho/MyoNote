@@ -207,3 +207,72 @@ export function buildReportContext(opts: {
     dataQuality: { examCount: exams.length, lifestyleDays: lifeEntries.length },
   }
 }
+
+// ── 검사 결과 즉시 해설 (검사 1건) ────────────────────────────
+// 분석탭 AI 요약(기간 종합)과 달리, 검사 기록 한 건에 초점.
+export interface ExamExplainContext {
+  child: { ageYears: number; gender: 'M' | 'F' }
+  exam: {
+    date: string
+    axial: { od: AxialEyeLatest; os: AxialEyeLatest } | null
+    ser: { od: number | null; os: number | null } | null
+  }
+  prev: {
+    date: string
+    months: number
+    axialDelta: { od: number | null; os: number | null } | null   // mm
+    serDelta: { od: number | null; os: number | null } | null     // D
+  } | null
+}
+
+export function buildExamExplainContext(opts: {
+  child: Child
+  exams: ExamRecord[]
+  examId: string
+}): ExamExplainContext | null {
+  const { child, exams, examId } = opts
+  const target = exams.find(e => e.id === examId)
+  if (!target) return null
+
+  const ageAtExam = calcAgeYears(child.birth, target.date)
+  const tod = num(target.axOD), tos = num(target.axOS)
+  const tserod = num(target.serOD), tseros = num(target.serOS)
+  const hasAxial = tod != null || tos != null
+  const hasSer = tserod != null || tseros != null
+
+  // 직전 검사 = target.date 보다 이전 중 가장 최근 검사
+  const prevExam = exams
+    .filter(e => e.id !== examId && e.date < target.date)
+    .sort((a, b) => b.date.localeCompare(a.date))[0] ?? null
+
+  let prev: ExamExplainContext['prev'] = null
+  if (prevExam) {
+    const pod = num(prevExam.axOD), pos = num(prevExam.axOS)
+    const pserod = num(prevExam.serOD), pseros = num(prevExam.serOS)
+    prev = {
+      date: prevExam.date,
+      months: round(monthsBetween(prevExam.date, target.date), 1),
+      axialDelta: hasAxial && (pod != null || pos != null) ? {
+        od: tod != null && pod != null ? round(tod - pod, 2) : null,
+        os: tos != null && pos != null ? round(tos - pos, 2) : null,
+      } : null,
+      serDelta: hasSer && (pserod != null || pseros != null) ? {
+        od: tserod != null && pserod != null ? round(tserod - pserod, 2) : null,
+        os: tseros != null && pseros != null ? round(tseros - pseros, 2) : null,
+      } : null,
+    }
+  }
+
+  return {
+    child: { ageYears: calcAgeYears(child.birth, target.date), gender: child.gender },
+    exam: {
+      date: target.date,
+      axial: hasAxial ? {
+        od: { value: tod, pct: tod != null ? calcPercentile(tod, ageAtExam) : null },
+        os: { value: tos, pct: tos != null ? calcPercentile(tos, ageAtExam) : null },
+      } : null,
+      ser: hasSer ? { od: tserod, os: tseros } : null,
+    },
+    prev,
+  }
+}
