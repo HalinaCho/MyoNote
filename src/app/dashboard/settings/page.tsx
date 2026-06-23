@@ -87,7 +87,7 @@ export default function SettingsPage() {
 
   const handleShareInvite = async () => {
     if (!inviteCode) return
-    const appUrl = 'https://HalinaCho.github.io/MyoNote'
+    const appUrl = process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin
     const childName = activeChild?.name ?? '아이'
     const message =
       `${childName}의 근시 관리를 마이오노트에서 함께해요.\n\n` +

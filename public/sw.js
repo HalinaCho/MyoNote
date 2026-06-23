@@ -1,5 +1,5 @@
-const CACHE = 'myonote-v1'
-const BASE = '/MyoNote'
+const CACHE = 'myonote-v2'
+const BASE = ''
 
 self.addEventListener('install', () => self.skipWaiting())
 

@@ -1,11 +1,9 @@
 import type { NextConfig } from "next";
 
-const isProd = process.env.NODE_ENV === 'production'
-
+// Vercel 배포: 정적 export(output:'export')·basePath 제거.
+// 라우트 핸들러(/api/*) 사용을 위해 서버리스 빌드로 전환. 루트 도메인 서빙.
 const nextConfig: NextConfig = {
-  output: 'export',
   images: { unoptimized: true },
-  ...(isProd ? { basePath: '/MyoNote' } : {}),
 };
 
 export default nextConfig;
