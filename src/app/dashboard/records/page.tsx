@@ -197,7 +197,7 @@ export default function RecordsPage() {
                         <span className="text-rose-500">{explains[e.id]?.error}</span>
                       ) : (
                         <>
-                          {explains[e.id]?.text}
+                          <p className="whitespace-pre-line">{explains[e.id]?.text}</p>
                           <p className="mt-2 text-[11px] text-gray-400">참고용 해설이며 진단이 아닙니다. 정확한 판단은 안과 전문의와 상담하세요.</p>
                         </>
                       )}
