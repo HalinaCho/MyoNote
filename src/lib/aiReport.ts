@@ -122,10 +122,11 @@ export function buildReportContext(opts: {
         os: os != null && pos != null ? round(os - pos, 2) : null,
         months: round(months, 1),
       }
-      axial.annualized = {
+      // 검사 간격이 3개월 미만이면 연간 환산은 의미 없음(노이즈 증폭) → 제공 안 함
+      axial.annualized = months >= 3 ? {
         od: od != null && pod != null ? round((od - pod) / years, 2) : null,
         os: os != null && pos != null ? round((os - pos) / years, 2) : null,
-      }
+      } : null
     }
   }
 
