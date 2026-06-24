@@ -39,12 +39,6 @@ const REFRACTION_SCHEMA = {
   },
 }
 
-const GUIDE: Record<string, string> = {
-  axial: '다음은 안축장(Axial Length) 검사 결과지입니다. 오른쪽(R/OD)·왼쪽(L/OS) 안축장(mm)과 검사일을 추출하세요.',
-  refraction:
-    '다음은 굴절검사(오토레프락토미터/검영) 결과지입니다. 오른쪽(R/OD)·왼쪽(L/OS)의 구면(S, Sphere)·원주(C, Cylinder) 도수를 결과지에 표기된 부호 그대로 추출하세요. 여러 번 측정된 값이 있으면 대표값(평균/AVG 또는 최종값)을 기준으로 하세요. 검사일도 함께 추출하세요.',
-}
-
 export async function POST(req: Request) {
   const apiKey = process.env.UPSTAGE_API_KEY
   if (!apiKey) {
@@ -74,13 +68,11 @@ export async function POST(req: Request) {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({
         model: IE_MODEL,
+        // IE는 content에 문서(이미지) 1개만 허용. 추출 지침은 스키마 필드 description에.
         messages: [
           {
             role: 'user',
-            content: [
-              { type: 'text', text: GUIDE[type] },
-              { type: 'image_url', image_url: { url: body.image } },
-            ],
+            content: [{ type: 'image_url', image_url: { url: body.image } }],
           },
         ],
         response_format: { type: 'json_schema', json_schema: schema },
