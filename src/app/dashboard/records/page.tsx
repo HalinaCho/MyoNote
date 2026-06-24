@@ -12,7 +12,7 @@ import { downscaleImage, extractExam, axialToPatch, refractionToPatch } from '@/
 import type { AxialFields, RefractionFields } from '@/lib/examExtract'
 import type { ExamRecord } from '@/types'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPen, faXmark, faCircleInfo, faCalendarDays, faPlus, faWandMagicSparkles, faCamera, faArrowsRotate, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons'
+import { faPen, faXmark, faCircleInfo, faCalendarDays, faPlus, faWandMagicSparkles, faCamera, faArrowsRotate, faChevronDown, faChevronUp, faArrowUpFromBracket } from '@fortawesome/free-solid-svg-icons'
 
 // Sph는 부호 있는 값(+/−), Cyl은 minus-cyl 크기(양수, 실제값은 음수).
 // SEQ = Sph + (−Cyl)/2 = Sph − Cyl크기/2
@@ -320,11 +320,9 @@ export default function RecordsPage() {
               </div>
               <div className="border border-gray-100 rounded-xl p-3">
                 <p className="text-sm font-medium text-gray-700 mb-2">안축장 (mm)</p>
-                <div className="grid gap-2 items-center mb-2" style={{gridTemplateColumns:'4.5rem 1fr'}}>
+                <div className="grid gap-2 items-center" style={{gridTemplateColumns:'4.5rem 1fr 4.5rem 1fr'}}>
                   <span className="text-xs text-center text-gray-500 font-medium">우안(OD)</span>
                   <input type="number" step="0.01" placeholder="24.82" value={form.axOD} onChange={e=>setForm(f=>({...f,axOD:e.target.value}))} className={INPUT}/>
-                </div>
-                <div className="grid gap-2 items-center" style={{gridTemplateColumns:'4.5rem 1fr'}}>
                   <span className="text-xs text-center text-gray-500 font-medium">좌안(OS)</span>
                   <input type="number" step="0.01" placeholder="24.91" value={form.axOS} onChange={e=>setForm(f=>({...f,axOS:e.target.value}))} className={INPUT}/>
                 </div>
@@ -472,7 +470,7 @@ function ExtractButton({ label, type, extracting, onFile }: {
   return (
     <label className={`flex items-center justify-center gap-1.5 text-xs font-medium border rounded-lg py-2.5 px-2 transition-colors
       ${disabled ? 'border-gray-200 text-gray-400 cursor-not-allowed' : 'border-teal-300 text-teal-600 bg-white cursor-pointer active:bg-teal-50'}`}>
-      <FontAwesomeIcon icon={busy ? faArrowsRotate : faCamera} className={busy ? 'animate-spin' : ''} />
+      <FontAwesomeIcon icon={busy ? faArrowsRotate : faArrowUpFromBracket} className={busy ? 'animate-spin' : ''} />
       {busy ? '인식 중…' : label}
       <input
         type="file" accept="image/*" className="hidden" disabled={disabled}
