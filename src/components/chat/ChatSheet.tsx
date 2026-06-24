@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useChild } from '@/context/ChildContext'
 import { buildReportContext } from '@/lib/aiReport'
-import { getChatStyle, setChatStyle, CHAT_STYLE_LABEL, type ChatStyle } from '@/lib/chatPrefs'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faXmark, faPaperPlane, faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons'
 
@@ -20,16 +19,11 @@ export default function ChatSheet({ open, onClose }: { open: boolean; onClose: (
   const [messages, setMessages] = useState<Msg[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [style, setStyle] = useState<ChatStyle>('short')
   const scrollRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => { setStyle(getChatStyle()) }, [])  // 저장된 스타일 로드 (하이드레이션 안전)
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
   }, [messages, loading])
-
-  const changeStyle = (s: ChatStyle) => { setStyle(s); setChatStyle(s) }
 
   if (!open) return null
 
@@ -47,7 +41,7 @@ export default function ChatSheet({ open, onClose }: { open: boolean; onClose: (
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: next, child, style }),
+        body: JSON.stringify({ messages: next, child }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || '응답을 받지 못했어요.')
@@ -71,18 +65,6 @@ export default function ChatSheet({ open, onClose }: { open: boolean; onClose: (
           <button onClick={onClose} className="text-white/80 hover:text-white text-xl" aria-label="닫기">
             <FontAwesomeIcon icon={faXmark} />
           </button>
-        </div>
-
-        {/* 답변 스타일 선택 */}
-        <div className="flex items-center gap-1.5 px-4 py-2 bg-white border-b border-gray-100 shrink-0">
-          <span className="text-[11px] text-gray-400 mr-1">답변</span>
-          {(['short', 'normal', 'detailed'] as ChatStyle[]).map(s => (
-            <button key={s} type="button" onClick={() => changeStyle(s)}
-              className={`text-xs px-2.5 py-1 rounded-full transition-colors
-                ${style === s ? 'bg-teal-500 text-white' : 'bg-gray-100 text-gray-500'}`}>
-              {CHAT_STYLE_LABEL[s]}
-            </button>
-          ))}
         </div>
 
         {/* 메시지 */}
