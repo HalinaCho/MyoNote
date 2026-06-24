@@ -275,12 +275,33 @@ export default function RecordsPage() {
       {modal && (
         <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
           <div className="absolute inset-0 bg-black/40" onClick={closeModal} />
-          <div className="relative z-10 w-full max-w-[480px] bg-white rounded-t-2xl sm:rounded-2xl p-5 pb-8 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold">{editing ? '검사기록 수정' : '검사기록 추가'}</h2>
-              <button onClick={closeModal} className="text-gray-400 text-xl"><FontAwesomeIcon icon={faXmark} /></button>
-            </div>
-            <form onSubmit={handleSave} className="space-y-3">
+          <div className="relative z-10 w-full max-w-[480px] bg-white rounded-t-2xl sm:rounded-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            <form onSubmit={handleSave} className="flex flex-col min-h-0 flex-1">
+              {/* 고정 헤더: 제목 + 닫기 + 검사일·안과 */}
+              <div className="px-5 pt-5 pb-3 border-b border-gray-100">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-lg font-bold">{editing ? '검사기록 수정' : '검사기록 추가'}</h2>
+                  <button type="button" onClick={closeModal} className="text-gray-400 text-xl"><FontAwesomeIcon icon={faXmark} /></button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[11px] font-medium text-gray-400 mb-1">검사일</label>
+                    <div className="relative">
+                      <FontAwesomeIcon icon={faCalendarDays} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-300 text-xs pointer-events-none" />
+                      <input type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))}
+                        className="w-full border border-gray-200 rounded-lg pl-7 pr-2 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-500"/>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-gray-400 mb-1">안과</label>
+                    <input placeholder="병원명" value={form.clinic} onChange={e=>setForm(f=>({...f,clinic:e.target.value}))}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"/>
+                  </div>
+                </div>
+              </div>
+
+              {/* 스크롤 본문 */}
+              <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-3">
               <div className="bg-teal-50/60 rounded-xl p-3">
                 <p className="text-xs font-semibold text-teal-700 mb-2">
                   <FontAwesomeIcon icon={faCamera} className="mr-1" />
@@ -300,12 +321,6 @@ export default function RecordsPage() {
                   <p className="text-[11px] text-gray-400 mt-1">사진은 측정값 추출을 위해 외부 AI(Upstage)로 전송되며 저장되지 않습니다.</p>
                 )}
               </div>
-              <Field label="검사일">
-                <input type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))} className={INPUT}/>
-              </Field>
-              <Field label="안과">
-                <input placeholder="병원명" value={form.clinic} onChange={e=>setForm(f=>({...f,clinic:e.target.value}))} className={INPUT}/>
-              </Field>
               <div className="border border-gray-100 rounded-xl p-3">
                 <p className="text-sm font-medium text-gray-700 mb-2">안축장 (mm)</p>
                 <div className="grid grid-cols-2 gap-2">
@@ -367,10 +382,14 @@ export default function RecordsPage() {
                     onChange={e=>setForm(f=>({...f,note:e.target.value}))} className={`${INPUT} mt-2`}/>
                 )}
               </div>
+              </div>
 
-              <button type="submit" disabled={saving} className="w-full bg-teal-500 hover:bg-teal-600 disabled:bg-teal-300 text-white font-semibold py-3 rounded-xl transition-colors">
-                {saving ? '저장 중...' : editing ? '수정하기' : '저장'}
-              </button>
+              {/* 고정 저장 바 */}
+              <div className="px-5 py-3 border-t border-gray-100">
+                <button type="submit" disabled={saving} className="w-full bg-teal-500 hover:bg-teal-600 disabled:bg-teal-300 text-white font-semibold py-3 rounded-xl transition-colors">
+                  {saving ? '저장 중...' : editing ? '수정하기' : '저장'}
+                </button>
+              </div>
             </form>
           </div>
         </div>
