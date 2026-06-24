@@ -12,11 +12,13 @@ import type { ExamRecord } from '@/types'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPen, faXmark, faCircleInfo, faCalendarDays, faPlus, faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons'
 
-function calcSeq(sph: string, cyl: string) {
-  const s = parseFloat(sph)
+// Sph는 부호 있는 값(+/−), Cyl은 minus-cyl 크기(양수, 실제값은 음수).
+// SEQ = Sph + (−Cyl)/2 = Sph − Cyl크기/2
+function calcSeq(sphSigned: string, cylMag: string) {
+  const s = parseFloat(sphSigned)
   if (isNaN(s)) return '—'
-  const c = parseFloat(cyl) || 0
-  return (-(s + c / 2)).toFixed(2)
+  const c = parseFloat(cylMag) || 0
+  return (s - c / 2).toFixed(2)
 }
 
 const withMinus  = (v: string) => v ? `-${v}` : ''
@@ -53,8 +55,8 @@ export default function RecordsPage() {
     setEditing(e)
     setForm({
       date: e.date, clinic: e.clinic, axOD: e.axOD, axOS: e.axOS,
-      sphOD: stripMinus(e.sphOD), sphOS: stripMinus(e.sphOS),
-      cylOD: stripMinus(e.cylOD), cylOS: stripMinus(e.cylOS),
+      sphOD: e.sphOD, sphOS: e.sphOS,                       // Sph: 부호 유지(+/−)
+      cylOD: stripMinus(e.cylOD), cylOS: stripMinus(e.cylOS), // Cyl: 크기로(음수 표기 제거)
       note: e.note, nextAppointment: e.nextAppointment ?? '',
     })
     setModal(true)
@@ -68,7 +70,7 @@ export default function RecordsPage() {
     try {
       const signedForm = {
         ...form,
-        sphOD: withMinus(form.sphOD), sphOS: withMinus(form.sphOS),
+        // Sph는 form에 이미 부호 포함(+/−). Cyl은 minus-cyl이라 크기→음수.
         cylOD: withMinus(form.cylOD), cylOS: withMinus(form.cylOS),
         serOD: '', serOS: '',
       }
@@ -285,13 +287,13 @@ export default function RecordsPage() {
                 </div>
                 <div className="grid gap-2 items-center mb-2" style={{gridTemplateColumns:'4.5rem 1fr 1fr 1fr'}}>
                   <span className="text-xs text-center text-gray-500 font-medium">우안(OD)</span>
-                  <NegInput value={form.sphOD} onChange={v=>setForm(f=>({...f,sphOD:v}))} placeholder="3.00"/>
+                  <SignedInput value={form.sphOD} onChange={v=>setForm(f=>({...f,sphOD:v}))} placeholder="3.00"/>
                   <NegInput value={form.cylOD} onChange={v=>setForm(f=>({...f,cylOD:v}))} placeholder="0.50"/>
                   <div className="h-10 flex items-center justify-center bg-teal-50 rounded-lg text-sm font-bold text-teal-700">{seqOD}</div>
                 </div>
                 <div className="grid gap-2 items-center" style={{gridTemplateColumns:'4.5rem 1fr 1fr 1fr'}}>
                   <span className="text-xs text-center text-gray-500 font-medium">좌안(OS)</span>
-                  <NegInput value={form.sphOS} onChange={v=>setForm(f=>({...f,sphOS:v}))} placeholder="3.00"/>
+                  <SignedInput value={form.sphOS} onChange={v=>setForm(f=>({...f,sphOS:v}))} placeholder="3.00"/>
                   <NegInput value={form.cylOS} onChange={v=>setForm(f=>({...f,cylOS:v}))} placeholder="0.50"/>
                   <div className="h-10 flex items-center justify-center bg-teal-50 rounded-lg text-sm font-bold text-teal-700">{seqOS}</div>
                 </div>
@@ -338,6 +340,43 @@ function NegInput({ value, onChange, placeholder }: { value: string; onChange: (
         onChange={e => onChange(e.target.value)}
         onBlur={handleBlur}
         className="w-full border border-gray-200 rounded-lg pl-6 pr-2 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+      />
+    </div>
+  )
+}
+
+// Sph용: 부호(+/−) 토글 + 크기 입력. value는 부호 포함 문자열("-3.00"/"+1.00"/"").
+// 근시가 흔하므로 기본 부호는 '−'. 음수만 가능한 게 아니라 +도 선택 가능(난시 큰 경우 등).
+function SignedInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
+  const initSign = (): '-' | '+' => {
+    const n = parseFloat(value)
+    if (!value || isNaN(n)) return '-'
+    return n < 0 ? '-' : '+'
+  }
+  const [sign, setSign] = useState<'-' | '+'>(initSign())
+  const mag = value.replace(/^[+-]/, '')
+  const emit = (s: '-' | '+', m: string) => onChange(m === '' ? '' : `${s}${m}`)
+  const handleBlur = () => {
+    if (mag === '') return
+    const n = parseFloat(mag)
+    if (!isNaN(n)) emit(sign, Math.abs(n).toFixed(2))
+  }
+  return (
+    <div className="flex border border-gray-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-teal-500">
+      <button
+        type="button"
+        onClick={() => { const ns = sign === '-' ? '+' : '-'; setSign(ns); emit(ns, mag) }}
+        className="w-8 shrink-0 bg-gray-50 text-gray-600 font-bold border-r border-gray-200 active:bg-gray-100 select-none"
+        aria-label="부호 전환"
+      >
+        {sign}
+      </button>
+      <input
+        type="text" inputMode="decimal" placeholder={placeholder}
+        value={mag}
+        onChange={e => emit(sign, e.target.value)}
+        onBlur={handleBlur}
+        className="w-full px-2 py-2.5 text-sm focus:outline-none"
       />
     </div>
   )
