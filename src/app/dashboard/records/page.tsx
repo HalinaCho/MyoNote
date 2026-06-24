@@ -278,24 +278,24 @@ export default function RecordsPage() {
           <div className="relative z-10 w-full max-w-[480px] bg-white rounded-t-2xl sm:rounded-2xl max-h-[90vh] flex flex-col overflow-hidden">
             <form onSubmit={handleSave} className="flex flex-col min-h-0 flex-1">
               {/* 고정 헤더: 제목 + 닫기 + 검사일·안과 */}
-              <div className="px-5 pt-5 pb-3 border-b border-gray-100">
+              <div className="px-5 pt-5 pb-4 bg-teal-50 border-b border-teal-100">
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-lg font-bold">{editing ? '검사기록 수정' : '검사기록 추가'}</h2>
-                  <button type="button" onClick={closeModal} className="text-gray-400 text-xl"><FontAwesomeIcon icon={faXmark} /></button>
+                  <h2 className="text-lg font-bold text-teal-800">{editing ? '검사기록 수정' : '검사기록 추가'}</h2>
+                  <button type="button" onClick={closeModal} className="text-teal-400 hover:text-teal-600 text-xl"><FontAwesomeIcon icon={faXmark} /></button>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-[11px] font-medium text-gray-400 mb-1">검사일</label>
+                    <label className="block text-[11px] font-medium text-teal-600 mb-1">검사일</label>
                     <div className="relative">
-                      <FontAwesomeIcon icon={faCalendarDays} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-300 text-xs pointer-events-none" />
+                      <FontAwesomeIcon icon={faCalendarDays} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-teal-400 text-xs pointer-events-none" />
                       <input type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))}
-                        className="w-full border border-gray-200 rounded-lg pl-7 pr-2 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-500"/>
+                        className="w-full bg-white border border-teal-200 rounded-lg pl-7 pr-2 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-500"/>
                     </div>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-medium text-gray-400 mb-1">안과</label>
+                    <label className="block text-[11px] font-medium text-teal-600 mb-1">안과</label>
                     <input placeholder="병원명" value={form.clinic} onChange={e=>setForm(f=>({...f,clinic:e.target.value}))}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"/>
+                      className="w-full bg-white border border-teal-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"/>
                   </div>
                 </div>
               </div>
