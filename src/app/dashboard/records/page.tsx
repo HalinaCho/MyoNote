@@ -8,9 +8,11 @@ import EmptyState from '@/components/ui/EmptyState'
 import ConfirmModal from '@/components/ui/ConfirmModal'
 import { today } from '@/lib/utils/date'
 import { buildExamExplainContext } from '@/lib/aiReport'
+import { downscaleImage, extractExam, axialToPatch, refractionToPatch } from '@/lib/examExtract'
+import type { AxialFields, RefractionFields } from '@/lib/examExtract'
 import type { ExamRecord } from '@/types'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPen, faXmark, faCircleInfo, faCalendarDays, faPlus, faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons'
+import { faPen, faXmark, faCircleInfo, faCalendarDays, faPlus, faWandMagicSparkles, faCamera, faArrowsRotate } from '@fortawesome/free-solid-svg-icons'
 
 // Sph는 부호 있는 값(+/−), Cyl은 minus-cyl 크기(양수, 실제값은 음수).
 // SEQ = Sph + (−Cyl)/2 = Sph − Cyl크기/2
@@ -40,6 +42,7 @@ export default function RecordsPage() {
   const [selectedYear, setSelectedYear] = useState('')
   const [deleting, setDeleting] = useState<ExamRecord | null>(null)
   const [explains, setExplains] = useState<Record<string, { loading?: boolean; points?: { label: string; text: string }[]; error?: string; open?: boolean }>>({})
+  const [extracting, setExtracting] = useState<'axial' | 'refraction' | null>(null)
 
   const years = [...new Set(exams.map(e => e.date.slice(0, 4)))].sort().reverse()
   const activeYear = selectedYear || years[0] || ''
@@ -86,6 +89,28 @@ export default function RecordsPage() {
       closeModal()
     } catch { toast.error('저장에 실패했습니다') }
     finally { setSaving(false) }
+  }
+
+  const handleExtract = async (type: 'axial' | 'refraction', file: File | undefined) => {
+    if (!file || extracting) return
+    setExtracting(type)
+    try {
+      const img = await downscaleImage(file)
+      const fields = await extractExam(type, img)
+      const patch = type === 'axial'
+        ? axialToPatch(fields as AxialFields)
+        : refractionToPatch(fields as RefractionFields)
+      if (Object.keys(patch).length === 0) {
+        toast.error('검사지에서 값을 읽지 못했어요. 더 선명한 사진으로 시도해주세요.')
+        return
+      }
+      setForm(f => ({ ...f, ...patch }))   // 추출된 필드만 채움 (나머지 유지)
+      toast.success('자동 입력했어요. 저장 전 꼭 확인해주세요.')
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : '추출에 실패했습니다.')
+    } finally {
+      setExtracting(null)
+    }
   }
 
   const confirmDelete = async () => {
@@ -252,6 +277,17 @@ export default function RecordsPage() {
               <button onClick={closeModal} className="text-gray-400 text-xl"><FontAwesomeIcon icon={faXmark} /></button>
             </div>
             <form onSubmit={handleSave} className="space-y-3">
+              <div className="bg-teal-50/60 rounded-xl p-3">
+                <p className="text-xs font-semibold text-teal-700 mb-2">
+                  <FontAwesomeIcon icon={faCamera} className="mr-1" />
+                  검사지 사진으로 자동 채우기
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <ExtractButton label="안축장 검사지" type="axial" extracting={extracting} onFile={handleExtract} />
+                  <ExtractButton label="굴절 검사지" type="refraction" extracting={extracting} onFile={handleExtract} />
+                </div>
+                <p className="text-[11px] text-gray-400 mt-2">안축장·굴절 검사지를 각각 올리세요. 인식 결과는 저장 전 꼭 확인·수정하세요.</p>
+              </div>
               <Field label="검사일">
                 <input type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))} className={INPUT}/>
               </Field>
@@ -381,5 +417,26 @@ function SignedInput({ value, onChange, placeholder }: { value: string; onChange
         className="w-full px-2 py-2.5 text-sm focus:outline-none"
       />
     </div>
+  )
+}
+
+function ExtractButton({ label, type, extracting, onFile }: {
+  label: string
+  type: 'axial' | 'refraction'
+  extracting: 'axial' | 'refraction' | null
+  onFile: (type: 'axial' | 'refraction', file: File | undefined) => void
+}) {
+  const busy = extracting === type
+  const disabled = extracting !== null
+  return (
+    <label className={`flex items-center justify-center gap-1.5 text-xs font-medium border rounded-lg py-2.5 px-2 transition-colors
+      ${disabled ? 'border-gray-200 text-gray-400 cursor-not-allowed' : 'border-teal-300 text-teal-600 bg-white cursor-pointer active:bg-teal-50'}`}>
+      <FontAwesomeIcon icon={busy ? faArrowsRotate : faCamera} className={busy ? 'animate-spin' : ''} />
+      {busy ? '인식 중…' : label}
+      <input
+        type="file" accept="image/*" className="hidden" disabled={disabled}
+        onChange={e => { onFile(type, e.target.files?.[0]); e.currentTarget.value = '' }}
+      />
+    </label>
   )
 }
