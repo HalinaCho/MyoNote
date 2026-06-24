@@ -287,6 +287,7 @@ export default function RecordsPage() {
                   <ExtractButton label="굴절 검사지" type="refraction" extracting={extracting} onFile={handleExtract} />
                 </div>
                 <p className="text-[11px] text-gray-400 mt-2">안축장·굴절 검사지를 각각 올리세요. 인식 결과는 저장 전 꼭 확인·수정하세요.</p>
+                <p className="text-[11px] text-gray-400">사진은 측정값 추출을 위해 외부 AI(Upstage)로 전송되며 저장되지 않습니다.</p>
               </div>
               <Field label="검사일">
                 <input type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))} className={INPUT}/>

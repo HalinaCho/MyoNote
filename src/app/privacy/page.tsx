@@ -3,7 +3,7 @@ export default function PrivacyPage() {
     <div className="min-h-screen bg-[#edf7f6] px-4 py-10">
       <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-6">
         <h1 className="text-xl font-bold text-gray-900">개인정보 처리방침</h1>
-        <p className="text-xs text-gray-400">최종 수정일: 2026년 6월 20일</p>
+        <p className="text-xs text-gray-400">최종 수정일: 2026년 6월 24일</p>
 
         <p className="text-sm text-gray-600 leading-relaxed">
           마이오노트(이하 &quot;서비스&quot;)는 자녀의 근시 케어 기록을 보호자가 관리하는 서비스로,
@@ -30,6 +30,11 @@ export default function PrivacyPage() {
             <li>근시 케어 기록(아트로핀·드림렌즈 등 수행 여부), 생활습관 기록(야외활동·전자기기·수면 시간)</li>
             <li>병원 예약일 등 사용자가 입력한 정보</li>
           </ul>
+          <p className="text-sm text-gray-600 leading-relaxed">
+            <b className="text-gray-700">(3) 검사지 사진(선택)</b> — 검사지 자동입력 기능 사용 시 업로드한
+            검사 결과지 이미지. 이 이미지는 측정값 추출(텍스트 인식) 목적으로만 처리되며,
+            <b className="text-gray-700"> 서비스에 저장하지 않습니다</b>(추출 후 폐기).
+          </p>
         </section>
 
         <section className="space-y-2">
@@ -39,6 +44,7 @@ export default function PrivacyPage() {
             <li>자녀 근시 케어 기록 저장 및 분석(변화 추이 차트 등)</li>
             <li>병원 예약 알림 등 서비스 기능 제공</li>
             <li>보호자 간 자녀 정보 공유(초대받은 보호자에 한함)</li>
+            <li><b className="text-gray-700">AI 기반 기록 요약·해설 및 검사지 자동입력 제공</b>(아래 6조 위탁 참조)</li>
           </ul>
         </section>
 
@@ -78,8 +84,20 @@ export default function PrivacyPage() {
           </p>
           <ul className="text-sm text-gray-600 list-disc list-inside space-y-1">
             <li>Supabase Inc. — 데이터베이스 호스팅, 인증, 백업(데이터는 암호화되어 저장)</li>
+            <li>Vercel Inc. — 애플리케이션 호스팅</li>
             <li>Kakao Corp. — 소셜 로그인</li>
+            <li>
+              <b className="text-gray-700">Upstage AI — AI 기능 처리</b>
+              <ul className="list-[circle] list-inside ml-4 mt-1 space-y-1">
+                <li>① 기록 요약·해설: 측정값(안축장·굴절도수 등)·생활습관·케어 통계 전송 — <b className="text-gray-700">자녀 이름 등 직접 식별정보 미포함</b></li>
+                <li>② 검사지 자동입력: 업로드한 검사지 이미지 전송 — <b className="text-gray-700">이미지에 인쇄된 이름·병원명 등이 포함될 수 있으며</b>, 측정값 추출 목적으로만 처리되고 서비스에 저장하지 않습니다</li>
+              </ul>
+              위탁 데이터의 보관·이용은 수탁사(Upstage)의 데이터 처리정책을 따릅니다.
+            </li>
           </ul>
+          <p className="text-xs text-gray-400 leading-relaxed">
+            ※ AI가 생성한 요약·해설은 참고용이며 의료적 진단·처방이 아닙니다. 정확한 판단은 안과 전문의와 상담하세요.
+          </p>
         </section>
 
         <section className="space-y-2">

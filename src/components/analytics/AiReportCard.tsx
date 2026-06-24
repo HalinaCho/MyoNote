@@ -129,6 +129,7 @@ export default function AiReportCard() {
                   className={generating ? 'animate-spin' : ''} />
                 {generating ? '생성 중…' : '리포트 생성'}
               </button>
+              <p className="text-[11px] text-gray-400 mt-3">생성 시 익명화된 측정값이 외부 AI(Upstage)로 전송됩니다.</p>
             </>
           ) : (
             <p className="text-sm text-gray-400">
