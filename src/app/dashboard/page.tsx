@@ -10,11 +10,12 @@ import { today, formatDate } from '@/lib/utils/date'
 import { calcStreak, calcMonthCompliance, getDayStatus } from '@/lib/utils/compliance'
 import { getAlertDay } from '@/lib/notificationPrefs'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheck, faMinus, faFire, faXmark, faTree, faMobileScreen, faCalendarDays, faPen, faBell, faHospital } from '@fortawesome/free-solid-svg-icons'
+import { faCheck, faMinus, faFire, faXmark, faTree, faMobileScreen, faCalendarDays, faPen, faBell, faHospital, faCommentDots } from '@fortawesome/free-solid-svg-icons'
 import { faCircle } from '@fortawesome/free-regular-svg-icons'
 import OnboardingFlow from '@/components/onboarding/OnboardingFlow'
 import TabSkeleton from '@/components/ui/TabSkeleton'
 import LifestyleTab from '@/components/analytics/LifestyleTab'
+import ChatSheet from '@/components/chat/ChatSheet'
 
 const INPUT = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 accent-teal-500'
 
@@ -25,6 +26,7 @@ export default function HomePage() {
   const [showLifestyle, setShowLifestyle] = useState(false)
   const [alertDay, setAlertDayState] = useState<number | null>(null)
   const [dismissedBanners, setDismissedBanners] = useState<Set<string>>(new Set())
+  const [showChat, setShowChat] = useState(false)
 
   useEffect(() => { setAlertDayState(getAlertDay()) }, [])
 
@@ -427,6 +429,17 @@ export default function HomePage() {
           </div>
         </div>
       )}
+
+      {/* AI 상담 챗 버블 */}
+      <button
+        onClick={() => setShowChat(true)}
+        className="fixed bottom-24 z-40 w-14 h-14 bg-teal-500 hover:bg-teal-600 text-white rounded-full shadow-lg flex items-center justify-center transition-colors active:scale-95"
+        style={{ right: 'max(1rem, calc((100vw - 480px) / 2 + 1rem))' }}
+        aria-label="AI 상담"
+      >
+        <FontAwesomeIcon icon={faCommentDots} className="text-xl" />
+      </button>
+      <ChatSheet open={showChat} onClose={() => setShowChat(false)} />
     </>
   )
 }
