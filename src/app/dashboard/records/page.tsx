@@ -12,7 +12,7 @@ import { downscaleImage, extractExam, axialToPatch, refractionToPatch } from '@/
 import type { AxialFields, RefractionFields } from '@/lib/examExtract'
 import type { ExamRecord } from '@/types'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPen, faXmark, faCircleInfo, faCalendarDays, faPlus, faWandMagicSparkles, faCamera, faArrowsRotate } from '@fortawesome/free-solid-svg-icons'
+import { faPen, faXmark, faCircleInfo, faCalendarDays, faPlus, faWandMagicSparkles, faCamera, faArrowsRotate, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons'
 
 // Sph는 부호 있는 값(+/−), Cyl은 minus-cyl 크기(양수, 실제값은 음수).
 // SEQ = Sph + (−Cyl)/2 = Sph − Cyl크기/2
@@ -39,6 +39,8 @@ export default function RecordsPage() {
   const [form, setForm]         = useState(EMPTY_EXAM)
   const [saving, setSaving]     = useState(false)
   const [showCRInfo, setShowCRInfo] = useState(false)
+  const [showOcrInfo, setShowOcrInfo] = useState(false)
+  const [showMemo, setShowMemo] = useState(false)
   const [selectedYear, setSelectedYear] = useState('')
   const [deleting, setDeleting] = useState<ExamRecord | null>(null)
   const [explains, setExplains] = useState<Record<string, { loading?: boolean; points?: { label: string; text: string }[]; error?: string; open?: boolean }>>({})
@@ -54,6 +56,7 @@ export default function RecordsPage() {
   const openAdd = () => {
     setEditing(null)
     setForm({ ...EMPTY_EXAM, clinic: exams[0]?.clinic ?? '' })
+    setShowMemo(false)
     setModal(true)
   }
   const openEdit = (e: ExamRecord) => {
@@ -64,6 +67,7 @@ export default function RecordsPage() {
       cylOD: stripMinus(e.cylOD), cylOS: stripMinus(e.cylOS), // Cyl: 크기로(음수 표기 제거)
       note: e.note, nextAppointment: e.nextAppointment ?? '',
     })
+    setShowMemo(!!e.note)   // 메모 있으면 펼쳐서 보이게
     setModal(true)
   }
   const closeModal = () => { setModal(false); setEditing(null); setForm(EMPTY_EXAM) }
@@ -286,8 +290,15 @@ export default function RecordsPage() {
                   <ExtractButton label="안축장 검사지" type="axial" extracting={extracting} onFile={handleExtract} />
                   <ExtractButton label="굴절 검사지" type="refraction" extracting={extracting} onFile={handleExtract} />
                 </div>
-                <p className="text-[11px] text-gray-400 mt-2">안축장·굴절 검사지를 각각 올리세요. 인식 결과는 저장 전 꼭 확인·수정하세요.</p>
-                <p className="text-[11px] text-gray-400">사진은 측정값 추출을 위해 외부 AI(Upstage)로 전송되며 저장되지 않습니다.</p>
+                <div className="flex items-start gap-1.5 mt-2">
+                  <p className="flex-1 text-[11px] text-gray-400">각각 올리면 자동으로 채워져요. 저장 전 꼭 확인·수정하세요.</p>
+                  <button type="button" onClick={() => setShowOcrInfo(v => !v)} className="shrink-0 text-gray-400 mt-px" aria-label="안내">
+                    <FontAwesomeIcon icon={faCircleInfo} className="text-[11px]" />
+                  </button>
+                </div>
+                {showOcrInfo && (
+                  <p className="text-[11px] text-gray-400 mt-1">사진은 측정값 추출을 위해 외부 AI(Upstage)로 전송되며 저장되지 않습니다.</p>
+                )}
               </div>
               <Field label="검사일">
                 <input type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))} className={INPUT}/>
@@ -295,16 +306,19 @@ export default function RecordsPage() {
               <Field label="안과">
                 <input placeholder="병원명" value={form.clinic} onChange={e=>setForm(f=>({...f,clinic:e.target.value}))} className={INPUT}/>
               </Field>
-              <div className="grid grid-cols-2 gap-2">
-                <Field label="안축장 우안 (mm)">
-                  <input type="number" step="0.01" placeholder="24.82" value={form.axOD} onChange={e=>setForm(f=>({...f,axOD:e.target.value}))} className={INPUT}/>
-                </Field>
-                <Field label="안축장 좌안 (mm)">
-                  <input type="number" step="0.01" placeholder="24.91" value={form.axOS} onChange={e=>setForm(f=>({...f,axOS:e.target.value}))} className={INPUT}/>
-                </Field>
+              <div className="border border-gray-100 rounded-xl p-3">
+                <p className="text-sm font-medium text-gray-700 mb-2">안축장 (mm)</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <Field label="우안 (OD)">
+                    <input type="number" step="0.01" placeholder="24.82" value={form.axOD} onChange={e=>setForm(f=>({...f,axOD:e.target.value}))} className={INPUT}/>
+                  </Field>
+                  <Field label="좌안 (OS)">
+                    <input type="number" step="0.01" placeholder="24.91" value={form.axOS} onChange={e=>setForm(f=>({...f,axOS:e.target.value}))} className={INPUT}/>
+                  </Field>
+                </div>
               </div>
 
-              <div>
+              <div className="border border-gray-100 rounded-xl p-3">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-gray-700">굴절 도수 (D)</span>
                   <button type="button" onClick={() => setShowCRInfo(v => !v)}
@@ -338,12 +352,22 @@ export default function RecordsPage() {
                 </div>
               </div>
 
-              <Field label="메모">
-                <textarea rows={2} placeholder="특이사항 등" value={form.note} onChange={e=>setForm(f=>({...f,note:e.target.value}))} className={INPUT}/>
-              </Field>
               <Field label="다음 예약일">
                 <input type="date" value={form.nextAppointment} onChange={e=>setForm(f=>({...f,nextAppointment:e.target.value}))} className={INPUT}/>
               </Field>
+
+              <div>
+                <button type="button" onClick={() => setShowMemo(v => !v)}
+                  className="flex items-center gap-1.5 text-sm font-medium text-gray-500">
+                  <FontAwesomeIcon icon={showMemo ? faChevronUp : faChevronDown} className="text-xs" />
+                  추가 정보 (선택)
+                </button>
+                {showMemo && (
+                  <textarea rows={2} placeholder="메모 — 특이사항 등" value={form.note}
+                    onChange={e=>setForm(f=>({...f,note:e.target.value}))} className={`${INPUT} mt-2`}/>
+                )}
+              </div>
+
               <button type="submit" disabled={saving} className="w-full bg-teal-500 hover:bg-teal-600 disabled:bg-teal-300 text-white font-semibold py-3 rounded-xl transition-colors">
                 {saving ? '저장 중...' : editing ? '수정하기' : '저장'}
               </button>
