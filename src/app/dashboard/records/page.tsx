@@ -24,6 +24,8 @@ function calcSeq(sphSigned: string, cylMag: string) {
 const withMinus  = (v: string) => v ? `-${v}` : ''
 const stripMinus = (v: string) => v.replace(/^-/, '')
 const fmtD = (v: string) => { const n = parseFloat(v); return isNaN(n) ? '—' : n.toFixed(2) }
+// 양수면 + 기호 표시 (Sph·SEQ 등 부호가 의미 있는 값용). 음수는 toFixed가 −를 포함.
+const fmtSigned = (v: string) => { const n = parseFloat(v); return isNaN(n) ? '—' : (n > 0 ? '+' : '') + n.toFixed(2) }
 
 const EMPTY_EXAM = { date: today(), clinic: '', axOD: '', axOS: '', sphOD: '', sphOS: '', cylOD: '', cylOS: '', note: '', nextAppointment: '' }
 const INPUT = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 accent-teal-500'
@@ -157,7 +159,7 @@ export default function RecordsPage() {
                 {(e.sphOD || e.sphOS) && (
                   <div className="flex justify-between bg-gray-50 rounded-lg px-3 py-2">
                     <span className="text-gray-500">Sph (OD/OS)</span>
-                    <span className="font-medium">{fmtD(e.sphOD)} / {fmtD(e.sphOS)} D</span>
+                    <span className="font-medium">{fmtSigned(e.sphOD)} / {fmtSigned(e.sphOS)} D</span>
                   </div>
                 )}
                 {(e.cylOD || e.cylOS) && (
@@ -169,7 +171,7 @@ export default function RecordsPage() {
                 {(e.serOD || e.serOS) && (
                   <div className="flex justify-between bg-amber-50 rounded-lg px-3 py-2">
                     <span className="text-amber-600 font-medium">SEQ (OD/OS)</span>
-                    <span className="font-bold text-amber-700">{fmtD(e.serOD)} / {fmtD(e.serOS)} D</span>
+                    <span className="font-bold text-amber-700">{fmtSigned(e.serOD)} / {fmtSigned(e.serOS)} D</span>
                   </div>
                 )}
                 {e.note && <div className="text-xs text-gray-400 px-1">{e.note}</div>}
