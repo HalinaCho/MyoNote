@@ -286,11 +286,8 @@ export default function RecordsPage() {
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="block text-[11px] font-medium text-teal-50 mb-1">검사일</label>
-                    <div className="relative">
-                      <FontAwesomeIcon icon={faCalendarDays} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-teal-400 text-xs pointer-events-none" />
-                      <input type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))}
-                        className="w-full bg-white border border-transparent rounded-lg pl-7 pr-2 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-white/70"/>
-                    </div>
+                    <input type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))}
+                      className="w-full bg-white border border-transparent rounded-lg px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-white/70"/>
                   </div>
                   <div>
                     <label className="block text-[11px] font-medium text-teal-50 mb-1">안과</label>
@@ -323,13 +320,13 @@ export default function RecordsPage() {
               </div>
               <div className="border border-gray-100 rounded-xl p-3">
                 <p className="text-sm font-medium text-gray-700 mb-2">안축장 (mm)</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <Field label="우안 (OD)">
-                    <input type="number" step="0.01" placeholder="24.82" value={form.axOD} onChange={e=>setForm(f=>({...f,axOD:e.target.value}))} className={INPUT}/>
-                  </Field>
-                  <Field label="좌안 (OS)">
-                    <input type="number" step="0.01" placeholder="24.91" value={form.axOS} onChange={e=>setForm(f=>({...f,axOS:e.target.value}))} className={INPUT}/>
-                  </Field>
+                <div className="grid gap-2 items-center mb-2" style={{gridTemplateColumns:'4.5rem 1fr'}}>
+                  <span className="text-xs text-center text-gray-500 font-medium">우안(OD)</span>
+                  <input type="number" step="0.01" placeholder="24.82" value={form.axOD} onChange={e=>setForm(f=>({...f,axOD:e.target.value}))} className={INPUT}/>
+                </div>
+                <div className="grid gap-2 items-center" style={{gridTemplateColumns:'4.5rem 1fr'}}>
+                  <span className="text-xs text-center text-gray-500 font-medium">좌안(OS)</span>
+                  <input type="number" step="0.01" placeholder="24.91" value={form.axOS} onChange={e=>setForm(f=>({...f,axOS:e.target.value}))} className={INPUT}/>
                 </div>
               </div>
 
