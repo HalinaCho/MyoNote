@@ -43,6 +43,7 @@ export default function RecordsPage() {
   const [showMemo, setShowMemo] = useState(false)
   const [selectedYear, setSelectedYear] = useState('')
   const [deleting, setDeleting] = useState<ExamRecord | null>(null)
+  const [confirmPosSph, setConfirmPosSph] = useState<string | null>(null)  // 양수 Sph 저장 전 확인
   const [explains, setExplains] = useState<Record<string, { loading?: boolean; points?: { label: string; text: string }[]; error?: string; open?: boolean }>>({})
   const [extracting, setExtracting] = useState<'axial' | 'refraction' | null>(null)
 
@@ -72,9 +73,25 @@ export default function RecordsPage() {
   }
   const closeModal = () => { setModal(false); setEditing(null); setForm(EMPTY_EXAM) }
 
+  // 근시 앱에서 Sph 양수(원시)는 드물어, −를 깜빡한 실수일 가능성이 큼 → 저장 전 확인
+  const positiveSph = () => {
+    const labels: string[] = []
+    const od = parseFloat(form.sphOD), os = parseFloat(form.sphOS)
+    if (!isNaN(od) && od > 0) labels.push(`우안(OD) +${od.toFixed(2)}`)
+    if (!isNaN(os) && os > 0) labels.push(`좌안(OS) +${os.toFixed(2)}`)
+    return labels
+  }
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.date) { toast.error('검사일을 입력해주세요'); return }
+    const pos = positiveSph()
+    if (pos.length > 0) { setConfirmPosSph(pos.join(', ')); return }   // 양수 Sph → 확인 모달
+    await doSave()
+  }
+
+  const doSave = async () => {
+    setConfirmPosSph(null)
     setSaving(true)
     try {
       const signedForm = {
@@ -272,6 +289,17 @@ export default function RecordsPage() {
         onCancel={() => setDeleting(null)}
       />
 
+      <ConfirmModal
+        open={!!confirmPosSph}
+        danger={false}
+        title="Sph 부호가 맞나요?"
+        message={confirmPosSph ? `${confirmPosSph} 가 양수(+, 원시)로 입력되어 있어요.\n근시는 음수(−)입니다. 입력한 부호가 맞나요?` : ''}
+        confirmLabel="네, 맞아요"
+        cancelLabel="다시 확인"
+        onConfirm={doSave}
+        onCancel={() => setConfirmPosSph(null)}
+      />
+
       {modal && (
         <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
           <div className="absolute inset-0 bg-black/40" onClick={closeModal} />
@@ -350,16 +378,19 @@ export default function RecordsPage() {
                 </div>
                 <div className="grid gap-2 items-center mb-2" style={{gridTemplateColumns:'4.5rem 1fr 1fr 1fr'}}>
                   <span className="text-xs text-center text-gray-500 font-medium">우안(OD)</span>
-                  <SignedInput value={form.sphOD} onChange={v=>setForm(f=>({...f,sphOD:v}))} placeholder="3.00"/>
+                  <SignedInput value={form.sphOD} onChange={v=>setForm(f=>({...f,sphOD:v}))} placeholder="-3.00"/>
                   <NegInput value={form.cylOD} onChange={v=>setForm(f=>({...f,cylOD:v}))} placeholder="0.50"/>
                   <div className="h-10 flex items-center justify-center bg-teal-50 rounded-lg text-sm font-bold text-teal-700">{seqOD}</div>
                 </div>
                 <div className="grid gap-2 items-center" style={{gridTemplateColumns:'4.5rem 1fr 1fr 1fr'}}>
                   <span className="text-xs text-center text-gray-500 font-medium">좌안(OS)</span>
-                  <SignedInput value={form.sphOS} onChange={v=>setForm(f=>({...f,sphOS:v}))} placeholder="3.00"/>
+                  <SignedInput value={form.sphOS} onChange={v=>setForm(f=>({...f,sphOS:v}))} placeholder="-3.00"/>
                   <NegInput value={form.cylOS} onChange={v=>setForm(f=>({...f,cylOS:v}))} placeholder="0.50"/>
                   <div className="h-10 flex items-center justify-center bg-teal-50 rounded-lg text-sm font-bold text-teal-700">{seqOS}</div>
                 </div>
+                <p className="text-[11px] text-gray-400 mt-2 leading-snug">
+                  Sph는 근시면 <span className="font-medium text-gray-500">−</span>(예: −3.00), 원시면 <span className="font-medium text-gray-500">+</span>를 붙여 입력해주세요.
+                </p>
               </div>
 
               <Field label="다음 예약일">
@@ -422,40 +453,27 @@ function NegInput({ value, onChange, placeholder }: { value: string; onChange: (
   )
 }
 
-// Sph용: 부호(+/−) 토글 + 크기 입력. value는 부호 포함 문자열("-3.00"/"+1.00"/"").
-// 근시가 흔하므로 기본 부호는 '−'. 음수만 가능한 게 아니라 +도 선택 가능(난시 큰 경우 등).
+// Sph용: 부호 포함 자유 입력. value는 부호 포함 문자열("-3.00"/"+1.00"/"").
+// 메인 입력경로는 OCR 자동입력(부호 포함)이라 토글 없이 단순 입력으로 충분 — 입력칸을 넓게 씀.
+// 부호는 사용자가 입력한 그대로 보존(자동 변환 없음) — 근시는 −를 직접 입력. 크기만 소수 2자리 정규화.
+// −를 깜빡해 양수가 되는 실수는 저장 시 양수(+) 확인 모달로 잡는다.
 function SignedInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
-  const initSign = (): '-' | '+' => {
-    const n = parseFloat(value)
-    if (!value || isNaN(n)) return '-'
-    return n < 0 ? '-' : '+'
-  }
-  const [sign, setSign] = useState<'-' | '+'>(initSign())
-  const mag = value.replace(/^[+-]/, '')
-  const emit = (s: '-' | '+', m: string) => onChange(m === '' ? '' : `${s}${m}`)
   const handleBlur = () => {
-    if (mag === '') return
-    const n = parseFloat(mag)
-    if (!isNaN(n)) emit(sign, Math.abs(n).toFixed(2))
+    const raw = value.trim()
+    if (raw === '') { if (value !== '') onChange(''); return }
+    const n = parseFloat(raw)
+    if (isNaN(n)) return
+    const sign = n < 0 ? '-' : raw.startsWith('+') ? '+' : ''   // 입력한 부호 그대로 유지
+    onChange(`${sign}${Math.abs(n).toFixed(2)}`)
   }
   return (
-    <div className="flex border border-gray-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-teal-500">
-      <button
-        type="button"
-        onClick={() => { const ns = sign === '-' ? '+' : '-'; setSign(ns); emit(ns, mag) }}
-        className="w-8 shrink-0 bg-gray-50 text-gray-600 font-bold border-r border-gray-200 active:bg-gray-100 select-none"
-        aria-label="부호 전환"
-      >
-        {sign}
-      </button>
-      <input
-        type="text" inputMode="decimal" placeholder={placeholder}
-        value={mag}
-        onChange={e => emit(sign, e.target.value)}
-        onBlur={handleBlur}
-        className="w-full px-2 py-2.5 text-sm focus:outline-none"
-      />
-    </div>
+    <input
+      type="text" inputMode="decimal" placeholder={placeholder}
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      onBlur={handleBlur}
+      className="w-full border border-gray-200 rounded-lg px-2 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+    />
   )
 }
 
