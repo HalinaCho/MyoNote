@@ -21,6 +21,17 @@ function interpNorm(key: string, age: number): number {
   return v[i] + (v[i + 1] - v[i]) * t
 }
 
+/** P50(중앙값) 안축장(mm) at given age — 예측 감속 곡선용 */
+export function normP50(age: number): number {
+  return interpNorm('p50', age)
+}
+
+/** P50 곡선의 국소 기울기(mm/년) — 나이별 진행 감속 비율 산출용 */
+export function normSlope(age: number): number {
+  const d = 0.5
+  return (interpNorm('p50', age + d) - interpNorm('p50', age - d)) / (2 * d)
+}
+
 /** Returns age in decimal years given ISO date strings */
 export function calcAgeYears(birthDate: string, examDate: string): number {
   return (new Date(examDate).getTime() - new Date(birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000)

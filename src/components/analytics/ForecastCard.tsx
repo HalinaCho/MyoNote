@@ -12,21 +12,23 @@ import {
 import { buildForecast, type EyeForecast } from '@/lib/forecast'
 import { normCurve } from '@/lib/axialPercentile'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChartLine, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
+import { faChartLine, faTriangleExclamation, faRotateLeft } from '@fortawesome/free-solid-svg-icons'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler)
 
 const EYE_LABEL = { OD: '우안(OD)', OS: '좌안(OS)' } as const
 
 const DISCLAIMER =
-  '이 예측은 통계 모델 기반 추정치이며 개인의 실제 경과와 다를 수 있습니다(개별 예측 95% 신뢰구간 ±0.9D 이상). 측정·진단이 아닌 기록 기반 교육용 참고 자료이며, 정확한 판단은 안과 전문의와 상담하세요.'
+  '이 예측은 통계 모델 기반 추정치이며 개인의 실제 경과와 다를 수 있습니다(개별 예측 95% 신뢰구간 ±0.9D 이상). 음영은 추정 불확실성 범위이고, 측정·진단이 아닌 기록 기반 교육용 참고 자료입니다. 정확한 판단은 안과 전문의와 상담하세요.'
 
 const SOURCE =
-  '근거: 안축장 또래 기준(Tideman 2018·동아시아 코호트) · 케어 감속효과(LAMP·MiYOSMART·Ortho-K RCT 평균) · 모델 한계(BHVI Myopia Calculator 검증연구).'
+  '근거: 안축장 또래 기준(Tideman 2018·동아시아 코호트) · 케어 감속효과(LAMP·MiYOSMART·Ortho-K RCT 평균) · 모델 한계(BHVI Myopia Calculator 검증연구). 예측은 나이에 따른 자연 감속을 반영합니다.'
 
 export default function ForecastCard() {
   const { activeChild, exams, activeTreatments, isLoading } = useChild()
   const [eye, setEye] = useState<'OD' | 'OS'>('OD')
+  const [effOverride, setEffOverride] = useState<number | null>(null)  // 0~1
+  const [horizon, setHorizon] = useState(3)
 
   if (isLoading) return <TabSkeleton />
   if (!activeChild?.birth) {
@@ -37,7 +39,10 @@ export default function ForecastCard() {
     )
   }
 
-  const forecast = buildForecast({ child: activeChild, exams, activeTreatments })
+  const forecast = buildForecast({
+    child: activeChild, exams, activeTreatments,
+    efficacy: effOverride ?? undefined, horizon,
+  })
   if (!forecast.OD && !forecast.OS) {
     return <EmptyState message="안축장 검사가 2회 이상 있어야 진행을 예측할 수 있습니다." />
   }
@@ -46,6 +51,7 @@ export default function ForecastCard() {
   const preferred = forecast.fasterEye ?? 'OD'
   const active = forecast[eye] ?? forecast[preferred] ?? forecast.OD ?? forecast.OS!
   const shownEye = active.eye
+  const sliderVal = Math.round((effOverride ?? forecast.care.efficacy) * 100)
 
   return (
     <div className="bg-white rounded-2xl p-5 shadow-sm space-y-4">
@@ -83,7 +89,20 @@ export default function ForecastCard() {
       <Hero f={active} care={forecast.care} horizon={forecast.horizon} />
       <ForecastChart f={active} />
       <ProjectionTable f={active} horizon={forecast.horizon} />
-      <Assumptions f={active} careLabel={forecast.care.label} efficacy={forecast.care.efficacy} onCare={forecast.care.onCare} />
+
+      {/* 가정값 슬라이더 */}
+      <Sliders
+        effPct={sliderVal}
+        defaultEffPct={Math.round(forecast.care.efficacy * 100)}
+        overridden={effOverride !== null}
+        onCare={forecast.care.onCare}
+        horizon={horizon}
+        onEff={v => setEffOverride(v / 100)}
+        onResetEff={() => setEffOverride(null)}
+        onHorizon={setHorizon}
+      />
+
+      <Assumptions f={active} careLabel={forecast.care.label} efficacy={forecast.efficacy} onCare={forecast.care.onCare} />
 
       {!active.reliable && (
         <div className="flex gap-2 bg-amber-50 rounded-xl p-3">
@@ -146,14 +165,16 @@ function ForecastChart({ f }: { f: EyeForecast }) {
   const xMin = Math.max(6, Math.floor(firstAge - 0.5))
   const xMax = Math.min(19, Math.ceil(lastProjAge + 0.3))
 
-  // Y축 범위: 모든 값 기준 0.5 스냅
+  // Y축 범위: 신뢰구간(lo/hi) 포함 모든 값 기준 0.5 스냅
   const allAl = [
     ...f.history.map(h => h.al),
-    ...f.withCare.map(p => p.al),
-    ...f.withoutCare.map(p => p.al),
+    ...f.withCare.flatMap(p => [p.lo, p.hi]),
+    ...f.withoutCare.flatMap(p => [p.lo, p.hi]),
   ]
-  const yMin = Math.floor((Math.min(...allAl) - 0.3) * 2) / 2
-  const yMax = Math.ceil((Math.max(...allAl) + 0.3) * 2) / 2
+  const yMin = Math.floor((Math.min(...allAl) - 0.2) * 2) / 2
+  const yMax = Math.ceil((Math.max(...allAl) + 0.2) * 2) / 2
+
+  const pt = (v: { age: number }, y: number) => ({ x: v.age, y })
 
   return (
     <div>
@@ -163,24 +184,33 @@ function ForecastChart({ f }: { f: EyeForecast }) {
           data={{
             datasets: [
               // 또래 정상범위 밴드 (P25–P75)
-              { label: 'P25', data: normCurve('p25'), borderColor: 'rgba(13,148,136,0.25)', borderWidth: 1, borderDash: [4, 4], fill: '+1', backgroundColor: 'rgba(13,148,136,0.07)', pointRadius: 0, tension: 0.4 },
-              { label: 'P75', data: normCurve('p75'), borderColor: 'rgba(13,148,136,0.25)', borderWidth: 1, borderDash: [4, 4], fill: false, pointRadius: 0, tension: 0.4 },
-              { label: 'P50', data: normCurve('p50'), borderColor: 'rgba(13,148,136,0.5)', borderWidth: 1.5, borderDash: [6, 3], fill: false, pointRadius: 0, tension: 0.4 },
-              { label: 'P90', data: normCurve('p90'), borderColor: 'rgba(251,113,133,0.5)', borderWidth: 1, borderDash: [4, 3], fill: false, pointRadius: 0, tension: 0.4 },
-              // 케어 없음 예측 (rose 점선) — 0년차(현재점)는 실측과 겹치므로 점 숨김
-              { label: '케어 없음', data: f.withoutCare.map(p => ({ x: p.age, y: p.al })), borderColor: '#f43f5e', backgroundColor: '#f43f5e', borderWidth: 2.5, borderDash: [5, 4], pointRadius: f.withoutCare.map((_, i) => (i === 0 ? 0 : 3)), fill: false, tension: 0 },
-              // 케어 유지/시행 예측 (teal 점선)
-              { label: '케어 유지', data: f.withCare.map(p => ({ x: p.age, y: p.al })), borderColor: '#10bcad', backgroundColor: '#10bcad', borderWidth: 2.5, borderDash: [5, 4], pointRadius: f.withCare.map((_, i) => (i === 0 ? 0 : 3)), fill: false, tension: 0 },
+              { label: 'P25', data: normCurve('p25'), borderColor: 'rgba(13,148,136,0.22)', borderWidth: 1, borderDash: [4, 4], fill: '+1', backgroundColor: 'rgba(13,148,136,0.06)', pointRadius: 0, tension: 0.4 },
+              { label: 'P75', data: normCurve('p75'), borderColor: 'rgba(13,148,136,0.22)', borderWidth: 1, borderDash: [4, 4], fill: false, pointRadius: 0, tension: 0.4 },
+              { label: 'P50', data: normCurve('p50'), borderColor: 'rgba(13,148,136,0.45)', borderWidth: 1.5, borderDash: [6, 3], fill: false, pointRadius: 0, tension: 0.4 },
+              { label: 'P90', data: normCurve('p90'), borderColor: 'rgba(251,113,133,0.45)', borderWidth: 1, borderDash: [4, 3], fill: false, pointRadius: 0, tension: 0.4 },
+
+              // 신뢰구간 콘 — 케어 없음 (rose, hi가 lo로 fill)
+              { label: '_noCareHi', data: f.withoutCare.map(p => pt(p, p.hi)), borderWidth: 0, pointRadius: 0, fill: '+1', backgroundColor: 'rgba(244,63,94,0.09)', tension: 0 },
+              { label: '_noCareLo', data: f.withoutCare.map(p => pt(p, p.lo)), borderWidth: 0, pointRadius: 0, fill: false, tension: 0 },
+              // 신뢰구간 콘 — 케어 유지 (teal)
+              { label: '_careHi', data: f.withCare.map(p => pt(p, p.hi)), borderWidth: 0, pointRadius: 0, fill: '+1', backgroundColor: 'rgba(16,188,173,0.12)', tension: 0 },
+              { label: '_careLo', data: f.withCare.map(p => pt(p, p.lo)), borderWidth: 0, pointRadius: 0, fill: false, tension: 0 },
+
+              // 예측선 — 케어 없음 (rose 점선)
+              { label: '케어 없음', data: f.withoutCare.map(p => pt(p, p.al)), borderColor: '#f43f5e', backgroundColor: '#f43f5e', borderWidth: 2.5, borderDash: [5, 4], pointRadius: f.withoutCare.map((_, i) => (i === 0 ? 0 : 3)), fill: false, tension: 0 },
+              // 예측선 — 케어 유지 (teal 점선)
+              { label: '케어 유지', data: f.withCare.map(p => pt(p, p.al)), borderColor: '#10bcad', backgroundColor: '#10bcad', borderWidth: 2.5, borderDash: [5, 4], pointRadius: f.withCare.map((_, i) => (i === 0 ? 0 : 3)), fill: false, tension: 0 },
               // 실측 이력 (실선)
-              { label: '실측', data: f.history.map(h => ({ x: h.age, y: h.al })), borderColor: childColor, backgroundColor: childColor, borderWidth: 2, pointRadius: 3, pointHoverRadius: 4, fill: false, tension: 0.3 },
+              { label: '실측', data: f.history.map(h => pt(h, h.al)), borderColor: childColor, backgroundColor: childColor, borderWidth: 2, pointRadius: 3, pointHoverRadius: 4, fill: false, tension: 0.3 },
             ],
           }}
           options={{
-            responsive: true, aspectRatio: 1.5,
+            responsive: true, aspectRatio: 1.4,
             layout: { padding: { top: 16 } },
             plugins: {
               legend: { display: false },
               tooltip: {
+                filter: item => !(item.dataset.label ?? '').startsWith('_'),
                 callbacks: {
                   label: ctx => {
                     const n = ctx.dataset.label ?? ''
@@ -214,7 +244,8 @@ function ForecastChart({ f }: { f: EyeForecast }) {
         <span className="flex items-center gap-1"><span className="w-3 h-0.5 rounded inline-block" style={{ background: childColor }} />실측</span>
         <span className="flex items-center gap-1"><svg width="18" height="4"><line x1="0" y1="2" x2="18" y2="2" stroke="#10bcad" strokeWidth="2.5" strokeDasharray="5,4" /></svg>케어 유지</span>
         <span className="flex items-center gap-1"><svg width="18" height="4"><line x1="0" y1="2" x2="18" y2="2" stroke="#f43f5e" strokeWidth="2.5" strokeDasharray="5,4" /></svg>케어 없음</span>
-        <span className="flex items-center gap-1"><span className="w-4 h-2 rounded inline-block" style={{ backgroundColor: 'rgba(13,148,136,0.15)', border: '1px dashed rgba(13,148,136,0.4)' }} />또래(P25–75)</span>
+        <span className="flex items-center gap-1"><span className="w-4 h-2.5 rounded-sm inline-block" style={{ backgroundColor: 'rgba(16,188,173,0.18)' }} />예측 범위</span>
+        <span className="flex items-center gap-1"><span className="w-4 h-2 rounded inline-block" style={{ backgroundColor: 'rgba(13,148,136,0.12)', border: '1px dashed rgba(13,148,136,0.35)' }} />또래(P25–75)</span>
       </div>
     </div>
   )
@@ -250,18 +281,65 @@ function ProjectionTable({ f, horizon }: { f: EyeForecast; horizon: number }) {
   )
 }
 
+// ── 가정값 슬라이더 ──────────────────────────────────────────────
+function Sliders({
+  effPct, defaultEffPct, overridden, onCare, horizon,
+  onEff, onResetEff, onHorizon,
+}: {
+  effPct: number; defaultEffPct: number; overridden: boolean; onCare: boolean; horizon: number
+  onEff: (v: number) => void; onResetEff: () => void; onHorizon: (v: number) => void
+}) {
+  return (
+    <div className="bg-gray-50 rounded-xl p-3.5 space-y-3.5">
+      {/* 효과 슬라이더 */}
+      <div>
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-xs font-semibold text-gray-600">
+            {onCare ? '케어 감속 효과' : '케어 시작 시 효과'} <span className="text-teal-600">{effPct}%</span>
+          </span>
+          {overridden ? (
+            <button onClick={onResetEff} className="flex items-center gap-1 text-[11px] text-teal-600 font-medium">
+              <FontAwesomeIcon icon={faRotateLeft} className="text-[9px]" />
+              문헌값({defaultEffPct}%)
+            </button>
+          ) : (
+            <span className="text-[10px] text-teal-600 bg-teal-50 border border-teal-100 rounded-full px-1.5 py-0.5">문헌값</span>
+          )}
+        </div>
+        <input
+          type="range" min={20} max={65} step={5} value={effPct}
+          onChange={e => onEff(Number(e.target.value))}
+          className="w-full accent-teal-500"
+          aria-label="케어 효과"
+        />
+        <div className="flex justify-between text-[10px] text-gray-300 mt-0.5"><span>20%</span><span>65%</span></div>
+      </div>
+      {/* 기간 슬라이더 */}
+      <div>
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-xs font-semibold text-gray-600">예측 기간 <span className="text-teal-600">{horizon}년</span></span>
+        </div>
+        <input
+          type="range" min={1} max={5} step={1} value={horizon}
+          onChange={e => onHorizon(Number(e.target.value))}
+          className="w-full accent-teal-500"
+          aria-label="예측 기간"
+        />
+        <div className="flex justify-between text-[10px] text-gray-300 mt-0.5"><span>1년</span><span>5년</span></div>
+      </div>
+    </div>
+  )
+}
+
 // ── 예측 가정 ────────────────────────────────────────────────────
 function Assumptions({ f, careLabel, efficacy, onCare }: { f: EyeForecast; careLabel: string; efficacy: number; onCare: boolean }) {
   const rows: { k: string; v: React.ReactNode }[] = [
     { k: '현재 안축장', v: `${f.currentAL.toFixed(2)} mm` },
     { k: '실측 진행속도', v: `+${f.measuredRate.toFixed(2)} mm/년` },
     { k: '진행 중 케어', v: careLabel },
+    { k: onCare ? '케어 감속 효과' : '케어 시작 시 효과', v: `약 ${Math.round(efficacy * 100)}%` },
+    { k: '측정 기간', v: `${f.spanMonths}개월 · ${EYE_LABEL[f.eye]}` },
   ]
-  if (onCare || efficacy > 0) {
-    rows.push({ k: onCare ? '케어 감속 효과' : '케어 시작 시 효과', v: <span>약 {Math.round(efficacy * 100)}% <span className="text-[10px] text-teal-600 bg-teal-50 border border-teal-100 rounded-full px-1.5 py-0.5 ml-1">문헌값</span></span> })
-  }
-  rows.push({ k: '측정 기간', v: `${f.spanMonths}개월 · ${EYE_LABEL[f.eye]}` })
-
   return (
     <div className="bg-gray-50 rounded-xl p-3">
       <div className="text-xs font-semibold text-gray-500 mb-1.5">예측 가정 (자동 계산)</div>
