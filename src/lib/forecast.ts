@@ -112,7 +112,8 @@ function buildEye(
   eye: 'OD' | 'OS',
   exams: ExamRecord[],
   birth: string,
-  efficacy: number,
+  defaultEff: number,   // 문헌 기본 효과 — 케어 중 아이의 자연속도 역산 기준(고정)
+  appliedEff: number,   // 슬라이더 효과 — 케어 유지(treated) 선에 적용
   onCare: boolean,
   horizon: number,
 ): EyeForecast | null {
@@ -131,16 +132,13 @@ function buildEye(
   const measuredRate = Math.max(0, fit.slope)
   const sd = residualSD(xy, fit)
 
-  // 효과 역산: 케어 중이면 실측=치료된 속도이므로 자연속도를 역산한다
-  let naturalRate: number
-  let treatedRate: number
-  if (onCare) {
-    treatedRate = measuredRate
-    naturalRate = efficacy < 1 ? measuredRate / (1 - efficacy) : measuredRate
-  } else {
-    naturalRate = measuredRate
-    treatedRate = measuredRate * (1 - efficacy)
-  }
+  // 케어 없음(natural)을 고정 기준으로 삼고, 케어 유지(treated)에 슬라이더 효과를 적용한다.
+  // → "케어 감속 효과" 슬라이더는 항상 케어 유지(녹색) 선을 움직인다.
+  //  - 케어 중 아이: 실측은 이미 치료된 속도 → 문헌 기본효과로 자연속도를 1회 역산(고정).
+  //    슬라이더가 문헌값이면 treated가 실측과 정확히 일치한다.
+  //  - 케어 안 함: 실측이 곧 자연속도(고정).
+  const naturalRate = onCare && defaultEff < 1 ? measuredRate / (1 - defaultEff) : measuredRate
+  const treatedRate = naturalRate * (1 - appliedEff)
 
   // 나이별 감속: 또래 P50 곡선의 감속 비율로 미래 속도를 줄인다.
   // baseSlope가 너무 작으면(고연령) 선형으로 폴백.
@@ -199,8 +197,8 @@ export function buildForecast(opts: {
   const care = resolveCare(opts.activeTreatments)
   const efficacy = Math.min(0.95, Math.max(0, opts.efficacy ?? care.efficacy))
   const horizon = Math.min(5, Math.max(1, Math.round(opts.horizon ?? HORIZON_YEARS)))
-  const OD = buildEye('OD', opts.exams, opts.child.birth, efficacy, care.onCare, horizon)
-  const OS = buildEye('OS', opts.exams, opts.child.birth, efficacy, care.onCare, horizon)
+  const OD = buildEye('OD', opts.exams, opts.child.birth, care.efficacy, efficacy, care.onCare, horizon)
+  const OS = buildEye('OS', opts.exams, opts.child.birth, care.efficacy, efficacy, care.onCare, horizon)
   const fasterEye: 'OD' | 'OS' | null =
     OD && OS ? (OD.measuredRate >= OS.measuredRate ? 'OD' : 'OS') : OD ? 'OD' : OS ? 'OS' : null
   const decelerated = (OD ?? OS) ? normSlope((OD ?? OS)!.currentAge) > 0.05 : false

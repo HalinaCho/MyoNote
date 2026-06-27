@@ -165,11 +165,11 @@ function ForecastChart({ f }: { f: EyeForecast }) {
   const xMin = Math.max(6, Math.floor(firstAge - 0.5))
   const xMax = Math.min(19, Math.ceil(lastProjAge + 0.3))
 
-  // Y축 범위: 신뢰구간(lo/hi) 포함 모든 값 기준 0.5 스냅
+  // Y축 범위: 케어유지 신뢰구간(lo/hi) + 케어없음 선 기준 0.5 스냅
   const allAl = [
     ...f.history.map(h => h.al),
     ...f.withCare.flatMap(p => [p.lo, p.hi]),
-    ...f.withoutCare.flatMap(p => [p.lo, p.hi]),
+    ...f.withoutCare.map(p => p.al),
   ]
   const yMin = Math.floor((Math.min(...allAl) - 0.2) * 2) / 2
   const yMax = Math.ceil((Math.max(...allAl) + 0.2) * 2) / 2
@@ -189,10 +189,7 @@ function ForecastChart({ f }: { f: EyeForecast }) {
               { label: 'P50', data: normCurve('p50'), borderColor: 'rgba(13,148,136,0.45)', borderWidth: 1.5, borderDash: [6, 3], fill: false, pointRadius: 0, tension: 0.4 },
               { label: 'P90', data: normCurve('p90'), borderColor: 'rgba(251,113,133,0.45)', borderWidth: 1, borderDash: [4, 3], fill: false, pointRadius: 0, tension: 0.4 },
 
-              // 신뢰구간 콘 — 케어 없음 (rose, hi가 lo로 fill)
-              { label: '_noCareHi', data: f.withoutCare.map(p => pt(p, p.hi)), borderWidth: 0, pointRadius: 0, fill: '+1', backgroundColor: 'rgba(244,63,94,0.09)', tension: 0 },
-              { label: '_noCareLo', data: f.withoutCare.map(p => pt(p, p.lo)), borderWidth: 0, pointRadius: 0, fill: false, tension: 0 },
-              // 신뢰구간 콘 — 케어 유지 (teal)
+              // 신뢰구간 콘 — 케어 유지 (teal)만 표시 (겹침 방지)
               { label: '_careHi', data: f.withCare.map(p => pt(p, p.hi)), borderWidth: 0, pointRadius: 0, fill: '+1', backgroundColor: 'rgba(16,188,173,0.12)', tension: 0 },
               { label: '_careLo', data: f.withCare.map(p => pt(p, p.lo)), borderWidth: 0, pointRadius: 0, fill: false, tension: 0 },
 
@@ -244,7 +241,7 @@ function ForecastChart({ f }: { f: EyeForecast }) {
         <span className="flex items-center gap-1"><span className="w-3 h-0.5 rounded inline-block" style={{ background: childColor }} />실측</span>
         <span className="flex items-center gap-1"><svg width="18" height="4"><line x1="0" y1="2" x2="18" y2="2" stroke="#10bcad" strokeWidth="2.5" strokeDasharray="5,4" /></svg>케어 유지</span>
         <span className="flex items-center gap-1"><svg width="18" height="4"><line x1="0" y1="2" x2="18" y2="2" stroke="#f43f5e" strokeWidth="2.5" strokeDasharray="5,4" /></svg>케어 없음</span>
-        <span className="flex items-center gap-1"><span className="w-4 h-2.5 rounded-sm inline-block" style={{ backgroundColor: 'rgba(16,188,173,0.18)' }} />예측 범위</span>
+        <span className="flex items-center gap-1"><span className="w-4 h-2.5 rounded-sm inline-block" style={{ backgroundColor: 'rgba(16,188,173,0.18)' }} />예측 범위(케어 유지)</span>
         <span className="flex items-center gap-1"><span className="w-4 h-2 rounded inline-block" style={{ backgroundColor: 'rgba(13,148,136,0.12)', border: '1px dashed rgba(13,148,136,0.35)' }} />또래(P25–75)</span>
       </div>
     </div>
