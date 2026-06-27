@@ -35,6 +35,33 @@ export default function AxialTab() {
   )
 }
 
+// ── 탭 재구성용 섹션 export ────────────────────────────────────────
+// 「변화추이」 탭 = 안축장 추이(+성장률), 「또래·예측」 탭 = 백분위 비교
+
+export function AxialTrendView() {
+  const { exams, isLoading } = useChild()
+  if (isLoading) return <TabSkeleton />
+  const sorted = [...exams]
+    .filter(e => e.axOD || e.axOS)
+    .sort((a, b) => a.date.localeCompare(b.date))
+  if (sorted.length < 2) {
+    return <EmptyState message="안축장 기록이 2개 이상 있어야 추세를 볼 수 있습니다." />
+  }
+  return <TrendView exams={sorted} />
+}
+
+export function AxialPctView() {
+  const { exams, activeChild, isLoading } = useChild()
+  if (isLoading) return <TabSkeleton />
+  const sorted = [...exams]
+    .filter(e => e.axOD || e.axOS)
+    .sort((a, b) => a.date.localeCompare(b.date))
+  if (sorted.length < 1) {
+    return <EmptyState message="안축장 기록이 있어야 또래 비교를 볼 수 있습니다." />
+  }
+  return <PctView exams={sorted} birth={activeChild?.birth} />
+}
+
 // ── 변화 추이 뷰 ──────────────────────────────────────────────────
 
 const SCROLL_THRESHOLD = 8
