@@ -24,11 +24,12 @@ export const CARE_EFFICACY = {
 } as const
 
 export const HORIZON_YEARS = 3
-// 측정 총기간이 이보다 짧으면 진행속도 추정 신뢰도가 낮다고 본다(개월)
+// 예측을 그리려면 최소 이만큼의 측정 기간이 필요(개월). 미만이면 연환산이 노이즈를 증폭.
 export const MIN_SPAN_MONTHS = 6
-// 신뢰구간 콘: 연차당 추가 불확실성(mm) + 기본 폭 하한(mm)
-const CONE_PER_YEAR = 0.12
-const CONE_FLOOR = 0.08
+// 12개월 미만은 "잠정"으로 표기
+const PROVISIONAL_MONTHS = 12
+const SIGMA0 = 0.05   // 단일 안축장 측정 불확실성(mm) — 콘 최소 폭·기울기 SE 산출
+const CONE_CAP = 1.2  // 콘 반폭 상한(mm) — 차트가 과도하게 채워지는 것 방지
 
 // ── 현재 케어로부터 효과 계수·라벨 결정 ──────────────────────────
 export interface CareInfo {
@@ -91,7 +92,8 @@ export interface EyeForecast {
   withoutCare: ScenarioPoint[]
   diffAL: number         // horizon 시점 (없음 − 유지) mm
   spanMonths: number
-  reliable: boolean
+  projectable: boolean   // 측정 기간이 충분해 예측을 그릴 수 있는가
+  provisional: boolean   // 1년 미만 — 잠정(콘 넓음)
   residSD: number        // 측정 산포 mm
 }
 export interface Forecast {
@@ -132,6 +134,15 @@ function buildEye(
   const measuredRate = Math.max(0, fit.slope)
   const sd = residualSD(xy, fit)
 
+  // 기울기 표준오차(SE): 측정기간이 짧거나(작은 Sxx) 점이 적을수록 커진다.
+  // 콘 너비를 이 SE로 정하면 짧은 데이터는 자동으로 넓은(=정직한) 콘이 된다.
+  const n = xy.length
+  const xbar = xy.reduce((s, p) => s + p.x, 0) / n
+  const Sxx = xy.reduce((s, p) => s + (p.x - xbar) ** 2, 0)
+  const ssr = xy.reduce((s, p) => s + (p.y - (fit.slope * p.x + fit.intercept)) ** 2, 0)
+  const sReg = n >= 3 ? Math.max(SIGMA0, Math.sqrt(ssr / (n - 2))) : SIGMA0
+  const slopeSE = Sxx > 1e-6 ? sReg / Math.sqrt(Sxx) : 1
+
   // 케어 없음(natural)을 고정 기준으로 삼고, 케어 유지(treated)에 슬라이더 효과를 적용한다.
   // → "케어 감속 효과" 슬라이더는 항상 케어 유지(녹색) 선을 움직인다.
   //  - 케어 중 아이: 실측은 이미 치료된 속도 → 문헌 기본효과로 자연속도를 1회 역산(고정).
@@ -149,7 +160,8 @@ function buildEye(
     if (!decel) return current.al + rate * y
     return current.al + (rate / baseSlope) * (normP50(current.age + y) - refP50)
   }
-  const halfWidth = (y: number): number => Math.max(CONE_FLOOR, sd) + CONE_PER_YEAR * y
+  const halfWidth = (y: number): number =>
+    Math.min(CONE_CAP, Math.sqrt(SIGMA0 ** 2 + (slopeSE * y) ** 2))
 
   const mk = (rate: number): ScenarioPoint[] =>
     Array.from({ length: horizon + 1 }, (_, y) => {
@@ -182,7 +194,8 @@ function buildEye(
     withoutCare,
     diffAL: round(withoutCare[horizon].al - withCare[horizon].al, 2),
     spanMonths,
-    reliable: spanMonths >= MIN_SPAN_MONTHS,
+    projectable: spanMonths >= MIN_SPAN_MONTHS,
+    provisional: spanMonths < PROVISIONAL_MONTHS,
     residSD: round(sd, 3),
   }
 }

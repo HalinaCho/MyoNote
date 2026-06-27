@@ -86,35 +86,51 @@ export default function ForecastCard() {
         </div>
       </div>
 
-      <Hero f={active} care={forecast.care} horizon={forecast.horizon} />
-      <ForecastChart f={active} />
-      <ProjectionTable f={active} horizon={forecast.horizon} />
+      {!active.projectable ? (
+        <>
+          <div className="bg-gray-50 rounded-xl p-5 text-center space-y-1.5">
+            <FontAwesomeIcon icon={faTriangleExclamation} className="text-amber-400" />
+            <p className="text-sm text-gray-600 font-medium">추세 예측을 표시하려면 검사가 더 필요해요</p>
+            <p className="text-xs text-gray-400 leading-relaxed">
+              짧은 간격의 측정을 1년치로 환산하면 오차가 크게 부풀려집니다. 최소 6개월(권장 1년) 간격의 안축장 검사가 쌓이면 예측이 표시돼요.
+              <br />현재 측정 기간 {active.spanMonths}개월 · {EYE_LABEL[active.eye]}
+            </p>
+          </div>
+          <p className="text-[11px] text-gray-400 leading-relaxed">{DISCLAIMER}</p>
+        </>
+      ) : (
+        <>
+          <Hero f={active} care={forecast.care} horizon={forecast.horizon} />
+          <ForecastChart f={active} />
+          <ProjectionTable f={active} horizon={forecast.horizon} />
 
-      {/* 가정값 슬라이더 */}
-      <Sliders
-        effPct={sliderVal}
-        defaultEffPct={Math.round(forecast.care.efficacy * 100)}
-        overridden={effOverride !== null}
-        onCare={forecast.care.onCare}
-        horizon={horizon}
-        onEff={v => setEffOverride(v / 100)}
-        onResetEff={() => setEffOverride(null)}
-        onHorizon={setHorizon}
-      />
+          {/* 가정값 슬라이더 */}
+          <Sliders
+            effPct={sliderVal}
+            defaultEffPct={Math.round(forecast.care.efficacy * 100)}
+            overridden={effOverride !== null}
+            onCare={forecast.care.onCare}
+            horizon={horizon}
+            onEff={v => setEffOverride(v / 100)}
+            onResetEff={() => setEffOverride(null)}
+            onHorizon={setHorizon}
+          />
 
-      <Assumptions f={active} careLabel={forecast.care.label} efficacy={forecast.efficacy} onCare={forecast.care.onCare} />
+          <Assumptions f={active} careLabel={forecast.care.label} efficacy={forecast.efficacy} onCare={forecast.care.onCare} />
 
-      {!active.reliable && (
-        <div className="flex gap-2 bg-amber-50 rounded-xl p-3">
-          <FontAwesomeIcon icon={faTriangleExclamation} className="text-amber-500 mt-0.5 shrink-0" />
-          <p className="text-xs leading-relaxed text-amber-900">
-            측정 기간이 {active.spanMonths}개월로 짧아 예측 신뢰도가 낮습니다. 검사를 더 모을수록 정확해집니다.
-          </p>
-        </div>
+          {active.provisional && (
+            <div className="flex gap-2 bg-amber-50 rounded-xl p-3">
+              <FontAwesomeIcon icon={faTriangleExclamation} className="text-amber-500 mt-0.5 shrink-0" />
+              <p className="text-xs leading-relaxed text-amber-900">
+                측정 기간이 {active.spanMonths}개월로 1년 미만이라 예측 범위(음영)가 넓고 잠정적입니다. 검사가 쌓일수록 범위가 좁아집니다.
+              </p>
+            </div>
+          )}
+
+          <p className="text-[11px] text-gray-400 leading-relaxed">{DISCLAIMER}</p>
+          <p className="text-[10px] text-gray-300 leading-relaxed">{SOURCE}</p>
+        </>
       )}
-
-      <p className="text-[11px] text-gray-400 leading-relaxed">{DISCLAIMER}</p>
-      <p className="text-[10px] text-gray-300 leading-relaxed">{SOURCE}</p>
     </div>
   )
 }
