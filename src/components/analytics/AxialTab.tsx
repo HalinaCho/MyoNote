@@ -11,7 +11,7 @@ import {
 } from 'chart.js'
 import { calcAgeYears, calcPercentile, pctLabel, normCurve } from '@/lib/axialPercentile'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCircleInfo, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons'
+import { faCircleInfo, faChevronDown, faChevronUp, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler)
 
 export default function AxialTab() {
@@ -539,6 +539,7 @@ function GrowthRateCard({ exams }: { exams: { date: string; axOD: string; axOS: 
   const osData = exams.map(e => parseFloat(e.axOS) || null)
   const growthOD = linearSlope(xs, odData)
   const growthOS = linearSlope(xs, osData)
+  const spanMonths = Math.round(xs[xs.length - 1])  // 첫~마지막 검사 간격(개월)
 
   const badge = (g: number) =>
     Math.abs(g) < 0.2  ? { label: '안정', cls: 'bg-teal-100 text-teal-700' }
@@ -570,6 +571,16 @@ function GrowthRateCard({ exams }: { exams: { date: string; axOD: string; axOS: 
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400"/>주의 0.20–0.35</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-400"/>진행 &gt;0.35</span>
       </div>
+      {spanMonths < 12 && (
+        <div className="flex gap-2 bg-amber-50 rounded-xl p-3 mt-3">
+          <FontAwesomeIcon icon={faTriangleExclamation} className="text-amber-500 mt-0.5 shrink-0" />
+          <p className="text-xs leading-relaxed text-amber-900">
+            {spanMonths < 6
+              ? `측정 기간이 ${spanMonths}개월로 짧아, 짧은 간격을 1년으로 환산한 성장률은 오차가 클 수 있어요. 참고용으로만 보세요.`
+              : `측정 기간이 ${spanMonths}개월로 1년 미만이라 연간 성장률은 잠정 수치입니다.`}
+          </p>
+        </div>
+      )}
     </div>
   )
 }
