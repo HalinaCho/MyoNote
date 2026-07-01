@@ -479,7 +479,7 @@ const VERDICT_KO: Record<'faster' | 'similar' | 'slower', string> = {
 }
 // 판정 밴드 설명 (구체 비율 대신 기준 범위)
 const VERDICT_BAND: Record<'faster' | 'similar' | 'slower', string> = {
-  faster: '직전보다 20%+ 빠름', similar: '직전과 ±20% 이내', slower: '직전보다 20%+ 느림',
+  faster: '직전보다 20% 이상 빠름', similar: '직전과 ±20% 이내', slower: '직전보다 20% 이상 느림',
 }
 function ExamComparisonBlock({ exams, examId }: { exams: ExamRecord[]; examId: string }) {
   const cmp = buildExamComparison(exams, examId)
