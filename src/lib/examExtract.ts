@@ -16,8 +16,26 @@ export interface RefractionFields {
   cylLeft: number | null
 }
 
-// 긴 변 최대 maxDim으로 축소한 JPEG data URI. (Vercel 본문 4.5MB 제한 + 토큰 절감)
-export async function downscaleImage(file: File, maxDim = 2000, quality = 0.85): Promise<string> {
+// 디코드된 이미지 소스(빠른 경로=ImageBitmap / 폴백=HTMLImageElement 공통 표현)
+interface Decoded {
+  source: CanvasImageSource
+  width: number
+  height: number
+  close: () => void
+}
+
+// 파일을 캔버스에 그릴 수 있는 형태로 디코드.
+// 빠른 경로: createImageBitmap(blob 직접 디코드 → 거대 base64 왕복/메모리 회피, EXIF 회전 반영).
+// 폴백: FileReader→Image (구형 브라우저).
+async function decodeImage(file: File): Promise<Decoded> {
+  if (typeof createImageBitmap === 'function') {
+    try {
+      const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' })
+      return { source: bmp, width: bmp.width, height: bmp.height, close: () => bmp.close() }
+    } catch {
+      // 폴백으로 진행
+    }
+  }
   const dataUrl = await new Promise<string>((resolve, reject) => {
     const fr = new FileReader()
     fr.onload = () => resolve(fr.result as string)
@@ -30,16 +48,26 @@ export async function downscaleImage(file: File, maxDim = 2000, quality = 0.85):
     im.onerror = () => reject(new Error('이미지를 불러오지 못했습니다.'))
     im.src = dataUrl
   })
-  const scale = Math.min(1, maxDim / Math.max(img.width, img.height))
-  const w = Math.round(img.width * scale)
-  const h = Math.round(img.height * scale)
-  const canvas = document.createElement('canvas')
-  canvas.width = w
-  canvas.height = h
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return dataUrl
-  ctx.drawImage(img, 0, 0, w, h)
-  return canvas.toDataURL('image/jpeg', quality)
+  return { source: img, width: img.naturalWidth, height: img.naturalHeight, close: () => {} }
+}
+
+// 긴 변 최대 maxDim으로 축소한 JPEG data URI. (Vercel 본문 4.5MB 제한 + 토큰 절감)
+export async function downscaleImage(file: File, maxDim = 2000, quality = 0.85): Promise<string> {
+  const { source, width, height, close } = await decodeImage(file)
+  try {
+    const scale = Math.min(1, maxDim / Math.max(width, height))
+    const w = Math.round(width * scale)
+    const h = Math.round(height * scale)
+    const canvas = document.createElement('canvas')
+    canvas.width = w
+    canvas.height = h
+    const ctx = canvas.getContext('2d')
+    if (!ctx) throw new Error('이미지를 처리하지 못했습니다.')
+    ctx.drawImage(source, 0, 0, w, h)
+    return canvas.toDataURL('image/jpeg', quality)
+  } finally {
+    close()
+  }
 }
 
 export async function extractExam(
