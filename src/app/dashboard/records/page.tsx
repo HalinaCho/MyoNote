@@ -46,6 +46,7 @@ export default function RecordsPage() {
   const [confirmPosSph, setConfirmPosSph] = useState<string | null>(null)  // 양수 Sph 저장 전 확인
   const [explains, setExplains] = useState<Record<string, { loading?: boolean; points?: { label: string; text: string }[]; error?: string; open?: boolean }>>({})
   const [extracting, setExtracting] = useState<'axial' | 'refraction' | null>(null)
+  const [extractStage, setExtractStage] = useState<string | null>(null)  // OCR 대기 중 단계별 안내 문구
 
   const years = [...new Set(exams.map(e => e.date.slice(0, 4)))].sort().reverse()
   const activeYear = selectedYear || years[0] || ''
@@ -115,8 +116,12 @@ export default function RecordsPage() {
   const handleExtract = async (type: 'axial' | 'refraction', file: File | undefined) => {
     if (!file || extracting) return
     setExtracting(type)
+    setExtractStage('사진을 최적화하고 있어요…')
+    let slowTimer: ReturnType<typeof setTimeout> | undefined
     try {
       const img = await downscaleImage(file)
+      setExtractStage('AI가 검사값을 읽는 중이에요…')          // API 대기 진입
+      slowTimer = setTimeout(() => setExtractStage('거의 다 됐어요, 잠시만요…'), 12000)
       const fields = await extractExam(type, img)
       const patch = type === 'axial'
         ? axialToPatch(fields as AxialFields)
@@ -130,7 +135,9 @@ export default function RecordsPage() {
     } catch (e) {
       toast.error(e instanceof Error ? e.message : '추출에 실패했습니다.')
     } finally {
+      if (slowTimer) clearTimeout(slowTimer)
       setExtracting(null)
+      setExtractStage(null)
     }
   }
 
@@ -336,12 +343,19 @@ export default function RecordsPage() {
                   <ExtractButton label="안축장 검사지" type="axial" extracting={extracting} onFile={handleExtract} />
                   <ExtractButton label="굴절 검사지" type="refraction" extracting={extracting} onFile={handleExtract} />
                 </div>
-                <div className="flex items-start gap-1.5 mt-2">
-                  <p className="flex-1 text-[11px] text-gray-400">각각 올리면 자동으로 채워져요. 저장 전 꼭 확인·수정하세요.</p>
-                  <button type="button" onClick={() => setShowOcrInfo(v => !v)} className="shrink-0 text-gray-400 mt-px" aria-label="안내">
-                    <FontAwesomeIcon icon={faCircleInfo} className="text-[11px]" />
-                  </button>
-                </div>
+                {extracting ? (
+                  <div className="flex items-center gap-1.5 mt-2 text-[11px] text-teal-600" aria-live="polite">
+                    <FontAwesomeIcon icon={faArrowsRotate} className="animate-spin shrink-0" />
+                    <span>{extractStage}</span>
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-1.5 mt-2">
+                    <p className="flex-1 text-[11px] text-gray-400">각각 올리면 자동으로 채워져요. 저장 전 꼭 확인·수정하세요.</p>
+                    <button type="button" onClick={() => setShowOcrInfo(v => !v)} className="shrink-0 text-gray-400 mt-px" aria-label="안내">
+                      <FontAwesomeIcon icon={faCircleInfo} className="text-[11px]" />
+                    </button>
+                  </div>
+                )}
                 {showOcrInfo && (
                   <p className="text-[11px] text-gray-400 mt-1">사진은 측정값 추출을 위해 외부 AI(Upstage)로 전송되며 저장되지 않습니다.</p>
                 )}
