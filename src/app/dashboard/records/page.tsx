@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useChild } from '@/context/ChildContext'
 import TabSkeleton from '@/components/ui/TabSkeleton'
@@ -41,7 +41,7 @@ export default function RecordsPage() {
   const [showCRInfo, setShowCRInfo] = useState(false)
   const [showOcrInfo, setShowOcrInfo] = useState(false)
   const [showMemo, setShowMemo] = useState(false)
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set())  // 접힌 연도(기본 전부 펼침)
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set())  // 접힌 연도(최초 로드 시 최근 연도만 펼침)
   const [deleting, setDeleting] = useState<ExamRecord | null>(null)
   const [confirmPosSph, setConfirmPosSph] = useState<string | null>(null)  // 양수 Sph 저장 전 확인
   const [explains, setExplains] = useState<Record<string, { loading?: boolean; points?: { label: string; text: string }[]; error?: string; open?: boolean }>>({})
@@ -55,6 +55,14 @@ export default function RecordsPage() {
     if (next.has(y)) next.delete(y); else next.add(y)
     return next
   })
+
+  // 최초 로드 시 1회: 최근(첫) 연도만 펼치고 나머지 접기. 이후 사용자 토글·새 연도는 존중.
+  const initCollapsed = useRef(false)
+  useEffect(() => {
+    if (initCollapsed.current || years.length === 0) return
+    initCollapsed.current = true
+    setCollapsed(new Set(years.slice(1)))
+  }, [years])
 
   const seqOD = calcSeq(form.sphOD, form.cylOD)
   const seqOS = calcSeq(form.sphOS, form.cylOS)
