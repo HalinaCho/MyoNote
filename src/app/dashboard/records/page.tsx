@@ -41,7 +41,7 @@ export default function RecordsPage() {
   const [showCRInfo, setShowCRInfo] = useState(false)
   const [showOcrInfo, setShowOcrInfo] = useState(false)
   const [showMemo, setShowMemo] = useState(false)
-  const [selectedYear, setSelectedYear] = useState('')
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set())  // 접힌 연도(기본 전부 펼침)
   const [deleting, setDeleting] = useState<ExamRecord | null>(null)
   const [confirmPosSph, setConfirmPosSph] = useState<string | null>(null)  // 양수 Sph 저장 전 확인
   const [explains, setExplains] = useState<Record<string, { loading?: boolean; points?: { label: string; text: string }[]; error?: string; open?: boolean }>>({})
@@ -50,8 +50,11 @@ export default function RecordsPage() {
   const [extractProgress, setExtractProgress] = useState(0)              // OCR 진행바(시간 기반 추정, 92%에서 대기)
 
   const years = [...new Set(exams.map(e => e.date.slice(0, 4)))].sort().reverse()
-  const activeYear = selectedYear || years[0] || ''
-  const filtered = activeYear ? exams.filter(e => e.date.startsWith(activeYear)) : exams
+  const toggleYear = (y: string) => setCollapsed(prev => {
+    const next = new Set(prev)
+    if (next.has(y)) next.delete(y); else next.add(y)
+    return next
+  })
 
   const seqOD = calcSeq(form.sphOD, form.cylOD)
   const seqOS = calcSeq(form.sphOS, form.cylOS)
@@ -193,20 +196,25 @@ export default function RecordsPage() {
       {exams.length === 0 ? (
         <EmptyState message="검사기록이 없습니다." action={{ label: '첫 기록 추가', onClick: openAdd }} />
       ) : (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-400">{filtered.length}건</span>
-            <select
-              value={activeYear}
-              onChange={e => setSelectedYear(e.target.value)}
-              className="text-sm font-semibold text-gray-700 border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-            >
-              {years.map(y => (
-                <option key={y} value={y}>{y}년</option>
-              ))}
-            </select>
-          </div>
-          {filtered.map(e => (
+        <div className="space-y-3">
+          <span className="text-sm text-gray-400">전체 {exams.length}건</span>
+          {years.map(y => {
+            const items = exams.filter(e => e.date.startsWith(y))
+            const open = !collapsed.has(y)
+            return (
+            <div key={y}>
+              <button
+                onClick={() => toggleYear(y)}
+                className="sticky top-0 z-10 w-full flex items-center justify-between bg-[#edf7f6] py-2 px-1"
+              >
+                <span className="text-sm font-bold text-gray-700">
+                  {y}년<span className="ml-1.5 font-normal text-gray-400">{items.length}건</span>
+                </span>
+                <FontAwesomeIcon icon={open ? faChevronUp : faChevronDown} className="text-gray-400 text-xs" />
+              </button>
+              {open && (
+                <div className="space-y-2 mt-1">
+                  {items.map(e => (
             <div key={e.id} className="bg-white rounded-xl p-4 shadow-sm">
               <div className="flex items-center justify-between mb-2">
                 <span className="font-semibold text-gray-800">{e.date}</span>
@@ -287,7 +295,12 @@ export default function RecordsPage() {
                 </div>
               )}
             </div>
-          ))}
+                  ))}
+                </div>
+              )}
+            </div>
+            )
+          })}
         </div>
       )}
 
