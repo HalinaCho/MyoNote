@@ -335,20 +335,16 @@ export default function RecordsPage() {
                   <p className="text-[11px] text-gray-400 mt-1">사진은 측정값 추출을 위해 외부 AI(Upstage)로 전송되며 저장되지 않습니다.</p>
                 )}
               </div>
-              <div className="border border-gray-100 rounded-xl p-3">
-                <p className="text-sm font-medium text-gray-700 mb-2">
-                  안축장 (mm)
-                  <span className="ml-1.5 align-middle text-[10px] font-semibold text-teal-600 bg-teal-50 px-1.5 py-0.5 rounded">필수</span>
-                </p>
+              <Field label={<>안축장 (mm)<span className="ml-1.5 align-middle text-[10px] font-semibold text-teal-600 bg-teal-50 px-1.5 py-0.5 rounded">필수</span></>}>
                 <div className="grid gap-2 items-center" style={{gridTemplateColumns:'4.5rem 1fr 4.5rem 1fr'}}>
                   <span className="text-xs text-center text-gray-500 font-medium">우안(OD)</span>
                   <input type="number" step="0.01" value={form.axOD} onChange={e=>setForm(f=>({...f,axOD:e.target.value}))} className={INPUT}/>
                   <span className="text-xs text-center text-gray-500 font-medium">좌안(OS)</span>
                   <input type="number" step="0.01" value={form.axOS} onChange={e=>setForm(f=>({...f,axOS:e.target.value}))} className={INPUT}/>
                 </div>
-              </div>
+              </Field>
 
-              <div className="border border-gray-100 rounded-xl p-3">
+              <div>
                 <button type="button" onClick={() => setShowRefraction(v => !v)}
                   className="w-full flex items-center justify-between" aria-expanded={showRefraction}>
                   <span className="text-sm font-medium text-gray-700">
@@ -358,7 +354,7 @@ export default function RecordsPage() {
                   <FontAwesomeIcon icon={showRefraction ? faChevronUp : faChevronDown} className="text-xs text-gray-400" />
                 </button>
                 {showRefraction && (
-                  <div className="mt-3">
+                  <div className="mt-1">
                     <div className="flex justify-end mb-2">
                       <button type="button" onClick={() => setShowCRInfo(v => !v)}
                         className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full transition-colors
@@ -429,7 +425,7 @@ export default function RecordsPage() {
   )
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
