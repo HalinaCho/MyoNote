@@ -47,6 +47,7 @@ export default function RecordsPage() {
   const [explains, setExplains] = useState<Record<string, { loading?: boolean; points?: { label: string; text: string }[]; error?: string; open?: boolean }>>({})
   const [extracting, setExtracting] = useState<'axial' | 'refraction' | null>(null)
   const [extractStage, setExtractStage] = useState<string | null>(null)  // OCR 대기 중 단계별 안내 문구
+  const [extractProgress, setExtractProgress] = useState(0)              // OCR 진행바(시간 기반 추정, 92%에서 대기)
 
   const years = [...new Set(exams.map(e => e.date.slice(0, 4)))].sort().reverse()
   const activeYear = selectedYear || years[0] || ''
@@ -122,6 +123,13 @@ export default function RecordsPage() {
       setTimeout(() => setExtractStage('AI가 검사값을 읽는 중이에요…'), 4000),
       setTimeout(() => setExtractStage('거의 다 됐어요, 잠시만요…'), 13000),
     ]
+    // 진행바: 실측 진행률이 없으므로 경과시간 기반 추정. 92%에 점근(완료 전 100% 미도달=정직).
+    setExtractProgress(0)
+    const startedAt = performance.now()
+    const progressTimer = setInterval(() => {
+      const t = (performance.now() - startedAt) / 1000
+      setExtractProgress(92 * (1 - Math.exp(-t / 7)))
+    }, 150)
     try {
       const img = await downscaleImage(file)
       const fields = await extractExam(type, img)
@@ -137,9 +145,11 @@ export default function RecordsPage() {
     } catch (e) {
       toast.error(e instanceof Error ? e.message : '추출에 실패했습니다.')
     } finally {
+      clearInterval(progressTimer)
       stageTimers.forEach(clearTimeout)
       setExtracting(null)
       setExtractStage(null)
+      setExtractProgress(0)
     }
   }
 
@@ -346,8 +356,14 @@ export default function RecordsPage() {
                   <ExtractButton label="굴절 검사지" type="refraction" extracting={extracting} onFile={handleExtract} />
                 </div>
                 {extracting ? (
-                  <div className="mt-2 text-[11px] text-teal-600" aria-live="polite">
-                    <span className="animate-pulse">{extractStage}</span>
+                  <div className="mt-2" aria-live="polite">
+                    <p className="text-[11px] text-teal-600">{extractStage}</p>
+                    <div className="mt-1 h-1 rounded-full bg-teal-100 overflow-hidden">
+                      <div
+                        className="h-full bg-teal-500 rounded-full transition-[width] duration-200 ease-out"
+                        style={{ width: `${extractProgress}%` }}
+                      />
+                    </div>
                   </div>
                 ) : (
                   <div className="flex items-start gap-1.5 mt-2">
