@@ -17,7 +17,7 @@ const TOPIC_LABEL: Record<ReportTopic, string> = {
 }
 
 const DISCLAIMER =
-  '이 요약은 기록을 쉽게 보기 위한 참고용이며, 진단·처방이 아닙니다. 정확한 판단은 안과 전문의와 상담하세요.'
+  '이 요약은 기록을 쉽게 보기 위한 참고용이며, 진단·처방이 아닙니다. 진단·처방은 담당 안과 의료진과 함께 하세요.'
 
 export default function AiReportCard() {
   const { activeChild, activeChildId, exams, lifestyle, logs, treatmentsForDate, isLoading } = useChild()
