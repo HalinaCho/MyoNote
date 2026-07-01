@@ -15,7 +15,7 @@ const AXIAL_SCHEMA = {
     type: 'object',
     additionalProperties: false,
     properties: {
-      examDate: { type: 'string', description: '검사일(YYYY-MM-DD). 없으면 null' },
+      examDate: { type: 'string', description: '검사를 시행·측정한 날짜(검사일/측정일). 반드시 YYYY-MM-DD 형식. 검사지에 여러 날짜(생년월일·출력일/인쇄일·다음예약일)가 있어도 그것들이 아닌 실제 측정 시점을 고른다. 날짜가 없으면 null' },
       axialRight: { type: 'number', description: "오른쪽 눈(R/OD)의 안축장(Axial Length, AL) 값, mm 단위(예: 23.84). 없으면 null" },
       axialLeft: { type: 'number', description: "왼쪽 눈(L/OS)의 안축장(Axial Length, AL) 값, mm 단위. 없으면 null" },
     },
@@ -29,7 +29,7 @@ const REFRACTION_SCHEMA = {
     type: 'object',
     additionalProperties: false,
     properties: {
-      examDate: { type: 'string', description: '검사일(YYYY-MM-DD). 없으면 null' },
+      examDate: { type: 'string', description: '검사를 시행·측정한 날짜(검사일/측정일). 반드시 YYYY-MM-DD 형식. 검사지에 여러 날짜(생년월일·출력일/인쇄일·다음예약일)가 있어도 그것들이 아닌 실제 측정 시점을 고른다. 날짜가 없으면 null' },
       sphRight: { type: 'number', description: '오른쪽 눈(R/OD)의 구면(Sphere, S) 도수. 부호 그대로(예: -3.00, +1.25). 없으면 null' },
       sphLeft: { type: 'number', description: '왼쪽 눈(L/OS)의 구면(Sphere, S) 도수. 부호 그대로. 없으면 null' },
       cylRight: { type: 'number', description: '오른쪽 눈(R/OD)의 원주(Cylinder, C) 도수. 결과지에 표기된 부호 그대로(plus-cyl이면 +, minus-cyl이면 -). 없으면 null' },

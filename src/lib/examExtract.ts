@@ -56,6 +56,26 @@ export async function extractExam(
   return data.fields
 }
 
+// OCR이 읽은 날짜 문자열을 <input type="date">가 받는 YYYY-MM-DD로 정규화.
+// 검사지 표기가 제각각이라(2024.03.05 / 2024년 3월 5일 / 24-3-5 / 2024/03/05 [+시각])
+// 연-월-일 숫자 3개를 뽑아 정리하고, 말이 안 되는 값(존재하지 않는 날짜·미래·2000년 이전)은
+// null로 버려 폼에 깨진 값이 들어가지 않게 한다.
+export function normalizeExamDate(raw: string | null | undefined): string | null {
+  if (!raw) return null
+  // 연도(2~4자리) [구분자] 월(1~2) [구분자] 일(1~2). 구분자 = - . / 년 월 (+공백 허용)
+  const m = String(raw).match(/(\d{2,4})\s*[-.\/년]\s*(\d{1,2})\s*[-.\/월]\s*(\d{1,2})/)
+  if (!m) return null
+  let year = parseInt(m[1], 10)
+  const month = parseInt(m[2], 10)
+  const day = parseInt(m[3], 10)
+  if (year < 100) year += 2000                                  // 2자리 연도 → 20xx
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null
+  const d = new Date(year, month - 1, day)
+  if (d.getFullYear() !== year || d.getMonth() !== month - 1 || d.getDate() !== day) return null // 2/30 등 방지
+  if (year < 2000 || d.getTime() > Date.now()) return null      // 미래·과거 이상치 제거
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+}
+
 // 폼에 병합할 부분값 (추출된 것만)
 export interface FormPatch {
   date?: string
@@ -71,7 +91,8 @@ const mm = (n: number | null) => (n != null && isFinite(n) ? n.toFixed(2) : unde
 
 export function axialToPatch(f: AxialFields): FormPatch {
   const p: FormPatch = {}
-  if (f.examDate) p.date = f.examDate
+  const date = normalizeExamDate(f.examDate)
+  if (date) p.date = date
   const od = mm(f.axialRight)
   const os = mm(f.axialLeft)
   if (od) p.axOD = od
@@ -95,7 +116,8 @@ function normEye(sph: number | null, cyl: number | null): { sphForm?: string; cy
 
 export function refractionToPatch(f: RefractionFields): FormPatch {
   const p: FormPatch = {}
-  if (f.examDate) p.date = f.examDate
+  const date = normalizeExamDate(f.examDate)
+  if (date) p.date = date
   const r = normEye(f.sphRight, f.cylRight)
   const l = normEye(f.sphLeft, f.cylLeft)
   if (r.sphForm != null) p.sphOD = r.sphForm
