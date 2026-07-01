@@ -335,7 +335,9 @@ export default function RecordsPage() {
                   <p className="text-[11px] text-gray-400 mt-1">사진은 측정값 추출을 위해 외부 AI(Upstage)로 전송되며 저장되지 않습니다.</p>
                 )}
               </div>
-              <Field label={<>안축장 (mm)<span className="ml-1.5 align-middle text-[10px] font-semibold text-teal-600 bg-teal-50 px-1.5 py-0.5 rounded">필수</span></>}>
+              {/* 필드 그룹 — 카드 대신 얇은 구분선으로 구역 구분 */}
+              <div className="divide-y divide-gray-100">
+              <Field className="pb-3" label={<>안축장 (mm)<span className="ml-1.5 align-middle text-[10px] font-semibold text-teal-600 bg-teal-50 px-1.5 py-0.5 rounded">필수</span></>}>
                 <div className="grid gap-2 items-center" style={{gridTemplateColumns:'4.5rem 1fr 4.5rem 1fr'}}>
                   <span className="text-xs text-center text-gray-500 font-medium">우안(OD)</span>
                   <input type="number" step="0.01" value={form.axOD} onChange={e=>setForm(f=>({...f,axOD:e.target.value}))} className={INPUT}/>
@@ -344,7 +346,7 @@ export default function RecordsPage() {
                 </div>
               </Field>
 
-              <div>
+              <div className="py-3">
                 <button type="button" onClick={() => setShowRefraction(v => !v)}
                   className="w-full flex items-center justify-between" aria-expanded={showRefraction}>
                   <span className="text-sm font-medium text-gray-700">
@@ -392,7 +394,7 @@ export default function RecordsPage() {
                 )}
               </div>
 
-              <Field label="다음 예약일">
+              <Field className="py-3" label="다음 예약일">
                 {/* type=date는 일반 placeholder 미지원 → 빈 상태(비포커스)에만 YY.MM.DD 오버레이 */}
                 <div className="relative">
                   <input type="date" value={form.nextAppointment}
@@ -405,10 +407,11 @@ export default function RecordsPage() {
                 </div>
               </Field>
 
-              <Field label="추가 정보 (선택)">
+              <Field className="pt-3" label="추가 정보 (선택)">
                 <textarea rows={2} placeholder="메모 — 특이사항 등" value={form.note}
                   onChange={e=>setForm(f=>({...f,note:e.target.value}))} className={TEXTAREA}/>
               </Field>
+              </div>
               </div>
 
               {/* 고정 저장 바 */}
@@ -425,9 +428,9 @@ export default function RecordsPage() {
   )
 }
 
-function Field({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
+function Field({ label, children, className = '' }: { label: React.ReactNode; children: React.ReactNode; className?: string }) {
   return (
-    <div>
+    <div className={className}>
       <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
       {children}
     </div>
