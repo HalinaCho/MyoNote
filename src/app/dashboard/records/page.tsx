@@ -481,6 +481,10 @@ const VERDICT_KO: Record<'faster' | 'similar' | 'slower', string> = {
 const VERDICT_BAND: Record<'faster' | 'similar' | 'slower', string> = {
   faster: '직전보다 20% 이상 빠름', similar: '직전과 ±20% 이내', slower: '직전보다 20% 이상 느림',
 }
+// 컬러 상징: 빠름=로즈(주의)·비슷=엠버·느림=틸(양호)
+const VERDICT_COLOR: Record<'faster' | 'similar' | 'slower', string> = {
+  faster: 'text-rose-500', similar: 'text-amber-600', slower: 'text-teal-600',
+}
 function ExamComparisonBlock({ exams, examId }: { exams: ExamRecord[]; examId: string }) {
   const cmp = buildExamComparison(exams, examId)
   const [open, setOpen] = useState(false)
@@ -503,17 +507,23 @@ function ExamComparisonBlock({ exams, examId }: { exams: ExamRecord[]; examId: s
         <FontAwesomeIcon icon={open ? faChevronUp : faChevronDown} className="text-[10px] text-gray-400" />
       </button>
       {open && (
-        <div className="mt-2 bg-teal-50/60 rounded-lg p-3 text-sm text-gray-700 space-y-1">
-          <p>지난 검사({cmp.prevDate}) 대비 <b>{cmp.months1}개월</b> — 안축장 {eyes(cmp.delta1.od, cmp.delta1.os)}</p>
+        <div className="mt-2 bg-teal-50/60 rounded-lg p-3 text-sm text-gray-700 space-y-1.5">
+          <p className="flex gap-2">
+            <span className="text-teal-400 mt-0.5 select-none">•</span>
+            <span>지난 검사({cmp.prevDate}) 대비 <b>{cmp.months1}개월</b> — 안축장 {eyes(cmp.delta1.od, cmp.delta1.os)}</span>
+          </p>
           {cmp.prior && (
-            <p className="text-gray-600">
-              같은 {cmp.months1}개월로 맞추면 직전 구간은 {eyes(cmp.prior.scaled0.od, cmp.prior.scaled0.os)} →
-              성장 속도 <b className="text-gray-700">{VERDICT_KO[cmp.prior.verdict]}</b>
-              <span className="text-gray-400 text-xs"> ({VERDICT_BAND[cmp.prior.verdict]})</span>
+            <p className="flex gap-2">
+              <span className={`mt-0.5 select-none ${VERDICT_COLOR[cmp.prior.verdict]}`}>•</span>
+              <span className="text-gray-600">
+                같은 {cmp.months1}개월로 맞추면 직전 구간은 {eyes(cmp.prior.scaled0.od, cmp.prior.scaled0.os)} →
+                성장 속도 <b className={VERDICT_COLOR[cmp.prior.verdict]}>{VERDICT_KO[cmp.prior.verdict]}</b>
+                <span className="text-gray-400 text-xs"> ({VERDICT_BAND[cmp.prior.verdict]})</span>
+              </span>
             </p>
           )}
           {cmp.shortInterval && (
-            <p className="text-[11px] text-gray-400">검사 간격이 짧아 참고용이에요.</p>
+            <p className="text-[11px] text-gray-400 pl-4">검사 간격이 짧아 참고용이에요.</p>
           )}
         </div>
       )}
