@@ -227,15 +227,9 @@ export default function RecordsPage() {
                   </div>
                 )}
                 {e.note && <div className="text-xs text-gray-400 px-1">{e.note}</div>}
-                {e.nextAppointment && (
-                  <div className="flex items-center gap-1.5 text-xs text-teal-500 px-1 mt-0.5">
-                    <FontAwesomeIcon icon={faCalendarDays} />
-                    <span>다음 예약: {e.nextAppointment}</span>
-                  </div>
-                )}
               </div>
 
-              <ExamComparisonBlock exams={exams} examId={e.id} />
+              <ExamCardFooter exams={exams} examId={e.id} nextAppointment={e.nextAppointment} onAddAppt={() => openEdit(e)} />
             </div>
                   ))}
                 </div>
@@ -477,10 +471,11 @@ const VERDICT_BAND: Record<'faster' | 'similar' | 'slower', string> = {
 const VERDICT_COLOR: Record<'faster' | 'similar' | 'slower', string> = {
   faster: 'text-rose-500', similar: 'text-amber-600', slower: 'text-teal-600',
 }
-function ExamComparisonBlock({ exams, examId }: { exams: ExamRecord[]; examId: string }) {
+function ExamCardFooter({ exams, examId, nextAppointment, onAddAppt }: {
+  exams: ExamRecord[]; examId: string; nextAppointment?: string | null; onAddAppt: () => void
+}) {
   const cmp = buildExamComparison(exams, examId)
   const [open, setOpen] = useState(false)
-  if (!cmp) return null
   const eyes = (od: number | null, os: number | null) => {
     const parts: string[] = []
     if (od != null) parts.push(`우안 ${fmtDeltaMm(od)}`)
@@ -489,16 +484,32 @@ function ExamComparisonBlock({ exams, examId }: { exams: ExamRecord[]; examId: s
   }
   return (
     <div className="mt-2.5 pt-2.5 border-t border-gray-50">
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="flex items-center gap-1.5 text-xs font-medium text-teal-600"
-        aria-expanded={open}
-      >
-        <FontAwesomeIcon icon={faRightLeft} className="text-[11px]" />
-        지난 검사와 비교
-        <FontAwesomeIcon icon={open ? faChevronUp : faChevronDown} className="text-[10px] text-gray-400" />
-      </button>
-      {open && (
+      {/* 한 줄: 좌=비교 토글(있을 때), 우=다음 예약(항상) */}
+      <div className="flex items-center gap-2">
+        {cmp && (
+          <button
+            onClick={() => setOpen(o => !o)}
+            className="flex items-center gap-1.5 text-xs font-medium text-teal-600"
+            aria-expanded={open}
+          >
+            <FontAwesomeIcon icon={faRightLeft} className="text-[11px]" />
+            지난 검사와 비교
+            <FontAwesomeIcon icon={open ? faChevronUp : faChevronDown} className="text-[10px] text-gray-400" />
+          </button>
+        )}
+        {nextAppointment ? (
+          <span className="ml-auto flex items-center gap-1.5 text-xs text-teal-500">
+            <FontAwesomeIcon icon={faCalendarDays} className="text-[11px]" />
+            다음 예약 {nextAppointment}
+          </span>
+        ) : (
+          <button onClick={onAddAppt} className="ml-auto flex items-center gap-1.5 text-xs text-amber-600 hover:text-amber-700">
+            <FontAwesomeIcon icon={faCalendarDays} className="text-[11px]" />
+            다음 예약일 입력
+          </button>
+        )}
+      </div>
+      {cmp && open && (
         <div className="mt-2 bg-teal-50/60 rounded-lg p-3 text-sm text-gray-700 space-y-1.5">
           <p className="flex gap-2">
             <span className="text-teal-400 mt-0.5 select-none">•</span>
