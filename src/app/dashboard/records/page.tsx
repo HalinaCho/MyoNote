@@ -7,12 +7,12 @@ import TabSkeleton from '@/components/ui/TabSkeleton'
 import EmptyState from '@/components/ui/EmptyState'
 import ConfirmModal from '@/components/ui/ConfirmModal'
 import { today } from '@/lib/utils/date'
-import { buildExamExplainContext } from '@/lib/aiReport'
+import { buildExamComparison } from '@/lib/aiReport'
 import { downscaleImage, extractExam, axialToPatch, refractionToPatch } from '@/lib/examExtract'
 import type { AxialFields, RefractionFields } from '@/lib/examExtract'
 import type { ExamRecord } from '@/types'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPen, faXmark, faCircleInfo, faCalendarDays, faPlus, faWandMagicSparkles, faCamera, faArrowsRotate, faChevronDown, faChevronUp, faArrowUpFromBracket } from '@fortawesome/free-solid-svg-icons'
+import { faPen, faXmark, faCircleInfo, faCalendarDays, faPlus, faRightLeft, faCamera, faArrowsRotate, faChevronDown, faChevronUp, faArrowUpFromBracket } from '@fortawesome/free-solid-svg-icons'
 
 // Sph는 부호 있는 값(+/−), Cyl은 minus-cyl 크기(양수, 실제값은 음수).
 // SEQ = Sph + (−Cyl)/2 = Sph − Cyl크기/2
@@ -28,12 +28,14 @@ const stripMinus = (v: string) => v.replace(/^-/, '')
 const fmtD = (v: string) => { const n = parseFloat(v); return isNaN(n) ? '—' : n.toFixed(2) }
 // 양수면 + 기호 표시 (Sph·SEQ 등 부호가 의미 있는 값용). 음수는 toFixed가 −를 포함.
 const fmtSigned = (v: string) => { const n = parseFloat(v); return isNaN(n) ? '—' : (n > 0 ? '+' : '') + n.toFixed(2) }
+// 안축장 변화량(mm) — 부호 포함
+const fmtDeltaMm = (v: number) => `${v > 0 ? '+' : ''}${v.toFixed(2)}mm`
 
 const EMPTY_EXAM = { date: today(), clinic: '', axOD: '', axOS: '', sphOD: '', sphOS: '', cylOD: '', cylOS: '', note: '', nextAppointment: '' }
 const INPUT = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 accent-teal-500'
 
 export default function RecordsPage() {
-  const { exams, activeChild, isLoading, saveExam, updateExam, deleteExam } = useChild()
+  const { exams, isLoading, saveExam, updateExam, deleteExam } = useChild()
   const [modal, setModal]       = useState(false)
   const [editing, setEditing]   = useState<ExamRecord | null>(null)
   const [form, setForm]         = useState(EMPTY_EXAM)
@@ -44,7 +46,6 @@ export default function RecordsPage() {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())  // 접힌 연도(최초 로드 시 최근 연도만 펼침)
   const [deleting, setDeleting] = useState<ExamRecord | null>(null)
   const [confirmPosSph, setConfirmPosSph] = useState<string | null>(null)  // 양수 Sph 저장 전 확인
-  const [explains, setExplains] = useState<Record<string, { loading?: boolean; points?: { label: string; text: string }[]; error?: string; open?: boolean }>>({})
   const [extracting, setExtracting] = useState<'axial' | 'refraction' | null>(null)
   const [extractStage, setExtractStage] = useState<string | null>(null)  // OCR 대기 중 단계별 안내 문구
   const [extractProgress, setExtractProgress] = useState(0)              // OCR 진행바(시간 기반 추정, 92%에서 대기)
@@ -173,30 +174,6 @@ export default function RecordsPage() {
     finally { setDeleting(null) }
   }
 
-  const toggleExplain = async (exam: ExamRecord) => {
-    const cur = explains[exam.id]
-    if (cur && (cur.points || cur.error)) {          // 이미 받아온 건 펼침/접힘만
-      setExplains(p => ({ ...p, [exam.id]: { ...cur, open: !cur.open } }))
-      return
-    }
-    if (!activeChild) return
-    setExplains(p => ({ ...p, [exam.id]: { loading: true, open: true } }))
-    try {
-      const ctx = buildExamExplainContext({ child: activeChild, exams, examId: exam.id })
-      if (!ctx) throw new Error('해설을 만들 수 없습니다.')
-      const res = await fetch('/api/exam-explain', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(ctx),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || '해설 생성에 실패했습니다.')
-      setExplains(p => ({ ...p, [exam.id]: { points: data.explanation.points, open: true } }))
-    } catch (err) {
-      setExplains(p => ({ ...p, [exam.id]: { error: err instanceof Error ? err.message : '해설 생성 실패', open: true } }))
-    }
-  }
-
   if (isLoading) return <TabSkeleton />
 
   return (
@@ -266,42 +243,7 @@ export default function RecordsPage() {
                 )}
               </div>
 
-              {(e.axOD || e.axOS || e.serOD || e.serOS) && (
-                <div className="mt-2.5 pt-2.5 border-t border-gray-50">
-                  <button
-                    onClick={() => toggleExplain(e)}
-                    disabled={explains[e.id]?.loading}
-                    className="flex items-center gap-1.5 text-xs font-medium text-teal-600 disabled:opacity-50"
-                  >
-                    <FontAwesomeIcon icon={faWandMagicSparkles} className={explains[e.id]?.loading ? 'animate-pulse' : ''} />
-                    AI 해설
-                  </button>
-                  {explains[e.id]?.open && (
-                    <div className="mt-2 bg-teal-50/60 rounded-lg p-3 text-sm leading-relaxed text-gray-700">
-                      {explains[e.id]?.loading ? (
-                        <span className="text-gray-400">해설 생성 중…</span>
-                      ) : explains[e.id]?.error ? (
-                        <span className="text-rose-500">{explains[e.id]?.error}</span>
-                      ) : (
-                        <>
-                          <ul className="space-y-1.5">
-                            {explains[e.id]?.points?.map((pt, i) => (
-                              <li key={i} className="flex gap-2">
-                                <span className="text-teal-400 mt-0.5 select-none">•</span>
-                                <p className="flex-1">
-                                  <span className="font-semibold text-gray-800">{pt.label}</span>
-                                  <span className="text-gray-600"> — {pt.text}</span>
-                                </p>
-                              </li>
-                            ))}
-                          </ul>
-                          <p className="mt-2.5 text-[11px] text-gray-400">참고용 해설이며 진단이 아닙니다. 정확한 판단은 안과 전문의와 상담하세요.</p>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
+              <ExamComparisonBlock exams={exams} examId={e.id} />
             </div>
                   ))}
                 </div>
@@ -528,6 +470,41 @@ function SignedInput({ value, onChange, placeholder }: { value: string; onChange
       onBlur={handleBlur}
       className="w-full border border-gray-200 rounded-lg px-2 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
     />
+  )
+}
+
+// 지난 검사와 비교 (안축장 길이, 결정적 계산 — AI 없음, 상담 권유·불안 조장 없이 사실만)
+const VERDICT_KO: Record<'faster' | 'similar' | 'slower', string> = {
+  faster: '빠른 편', similar: '비슷한 편', slower: '느린 편',
+}
+function ExamComparisonBlock({ exams, examId }: { exams: ExamRecord[]; examId: string }) {
+  const cmp = buildExamComparison(exams, examId)
+  if (!cmp) return null
+  const eyes = (od: number | null, os: number | null) => {
+    const parts: string[] = []
+    if (od != null) parts.push(`우안 ${fmtDeltaMm(od)}`)
+    if (os != null) parts.push(`좌안 ${fmtDeltaMm(os)}`)
+    return parts.join(' · ')
+  }
+  return (
+    <div className="mt-2.5 pt-2.5 border-t border-gray-50">
+      <div className="flex items-center gap-1.5 text-xs font-medium text-teal-600 mb-1.5">
+        <FontAwesomeIcon icon={faRightLeft} className="text-[11px]" />
+        지난 검사와 비교
+      </div>
+      <div className="bg-teal-50/60 rounded-lg p-3 text-sm text-gray-700 space-y-1">
+        <p>지난 검사({cmp.prevDate}) 대비 <b>{cmp.months1}개월</b> — 안축장 {eyes(cmp.delta1.od, cmp.delta1.os)}</p>
+        {cmp.prior && (
+          <p className="text-gray-600">
+            같은 {cmp.months1}개월로 맞추면 직전 구간은 {eyes(cmp.prior.scaled0.od, cmp.prior.scaled0.os)} →
+            성장 속도 <b className="text-gray-700">{VERDICT_KO[cmp.prior.verdict]}</b>
+          </p>
+        )}
+        {cmp.shortInterval && (
+          <p className="text-[11px] text-gray-400">검사 간격이 짧아 참고용이에요.</p>
+        )}
+      </div>
+    </div>
   )
 }
 

@@ -209,76 +209,85 @@ export function buildReportContext(opts: {
   }
 }
 
-// ── 검사 결과 즉시 해설 (검사 1건) ────────────────────────────
-// 분석탭 AI 요약(기간 종합)과 달리, 검사 기록 한 건에 초점.
-export interface ExamExplainContext {
-  child: { ageYears: number; gender: 'M' | 'F' }
-  exam: {
-    date: string
-    axial: { od: AxialEyeLatest; os: AxialEyeLatest } | null
-    ser: { od: number | null; os: number | null } | null
-  }
-  prev: {
-    date: string
-    months: number
-    axialDelta: { od: number | null; os: number | null } | null   // mm
-    serDelta: { od: number | null; os: number | null } | null     // D
+// ── 지난 검사와 비교 (안축장 길이, 결정적 계산 — AI 미사용) ──────
+// 검사 1건을 직전 검사와 비교(기간+Δ)하고, 지지난→지난 구간이 있으면 그 구간을
+// 이번과 같은 기간으로 환산해 성장 속도를 비교한다.
+// ※ 불안 조장·상담 권유 없이 사실 수치만. (환자는 이미 안과 진료 중)
+export interface ExamComparison {
+  prevDate: string
+  months1: number                                    // 이번 구간(직전→이번) 개월
+  delta1: { od: number | null; os: number | null }   // mm
+  prior: {
+    prev2Date: string
+    months0: number
+    scaled0: { od: number | null; os: number | null } // 직전 구간을 months1로 환산한 Δ(mm)
+    verdict: 'faster' | 'similar' | 'slower'
   } | null
+  shortInterval: boolean                             // 간격 짧아 참고용
 }
 
-// AI가 돌려주는 검사 해설 — 핵심 내용별 불렛
-export interface ExamExplanation {
-  points: { label: string; text: string }[]
-}
+const axPair = (e: ExamRecord) => ({ od: num(e.axOD), os: num(e.axOS) })
+const hasAxial = (e: ExamRecord) => num(e.axOD) != null || num(e.axOS) != null
 
-export function buildExamExplainContext(opts: {
-  child: Child
-  exams: ExamRecord[]
-  examId: string
-}): ExamExplainContext | null {
-  const { child, exams, examId } = opts
+export function buildExamComparison(exams: ExamRecord[], examId: string): ExamComparison | null {
   const target = exams.find(e => e.id === examId)
-  if (!target) return null
+  if (!target || !hasAxial(target)) return null
 
-  const ageAtExam = calcAgeYears(child.birth, target.date)
-  const tod = num(target.axOD), tos = num(target.axOS)
-  const tserod = num(target.serOD), tseros = num(target.serOS)
-  const hasAxial = tod != null || tos != null
-  const hasSer = tserod != null || tseros != null
+  // 직전·지지난 = target보다 이전이면서 안축장 있는 검사 (최신순)
+  const priors = exams
+    .filter(e => e.id !== examId && e.date < target.date && hasAxial(e))
+    .sort((a, b) => b.date.localeCompare(a.date))
+  const prev = priors[0]
+  if (!prev) return null
+  const prev2 = priors[1] ?? null
 
-  // 직전 검사 = target.date 보다 이전 중 가장 최근 검사
-  const prevExam = exams
-    .filter(e => e.id !== examId && e.date < target.date)
-    .sort((a, b) => b.date.localeCompare(a.date))[0] ?? null
+  const t = axPair(target), p = axPair(prev)
+  const months1 = round(monthsBetween(prev.date, target.date), 1)
+  const delta1 = {
+    od: t.od != null && p.od != null ? round(t.od - p.od, 2) : null,
+    os: t.os != null && p.os != null ? round(t.os - p.os, 2) : null,
+  }
 
-  let prev: ExamExplainContext['prev'] = null
-  if (prevExam) {
-    const pod = num(prevExam.axOD), pos = num(prevExam.axOS)
-    const pserod = num(prevExam.serOD), pseros = num(prevExam.serOS)
-    prev = {
-      date: prevExam.date,
-      months: round(monthsBetween(prevExam.date, target.date), 1),
-      axialDelta: hasAxial && (pod != null || pos != null) ? {
-        od: tod != null && pod != null ? round(tod - pod, 2) : null,
-        os: tos != null && pos != null ? round(tos - pos, 2) : null,
-      } : null,
-      serDelta: hasSer && (pserod != null || pseros != null) ? {
-        od: tserod != null && pserod != null ? round(tserod - pserod, 2) : null,
-        os: tseros != null && pseros != null ? round(tseros - pseros, 2) : null,
-      } : null,
+  let prior: ExamComparison['prior'] = null
+  if (prev2 && months1 > 0) {
+    const p2 = axPair(prev2)
+    const months0 = round(monthsBetween(prev2.date, prev.date), 1)
+    const delta0 = {
+      od: p.od != null && p2.od != null ? round(p.od - p2.od, 2) : null,
+      os: p.os != null && p2.os != null ? round(p.os - p2.os, 2) : null,
+    }
+    if (months0 > 0) {
+      const scale = months1 / months0
+      const scaled0 = {
+        od: delta0.od != null ? round(delta0.od * scale, 2) : null,
+        os: delta0.os != null ? round(delta0.os * scale, 2) : null,
+      }
+      // 성장 속도 비교 = 값이 있는 눈들의 평균 월간율
+      const rates1: number[] = [], rates0: number[] = []
+      for (const eye of ['od', 'os'] as const) {
+        if (delta1[eye] != null) rates1.push(delta1[eye]! / months1)
+        if (delta0[eye] != null) rates0.push(delta0[eye]! / months0)
+      }
+      if (rates1.length && rates0.length) {
+        const r1 = rates1.reduce((a, b) => a + b, 0) / rates1.length
+        const r0 = rates0.reduce((a, b) => a + b, 0) / rates0.length
+        let verdict: 'faster' | 'similar' | 'slower'
+        if (r0 <= 0.005) {
+          verdict = r1 > 0.02 ? 'faster' : 'similar'   // 직전이 사실상 정체
+        } else {
+          const ratio = r1 / r0
+          verdict = ratio > 1.2 ? 'faster' : ratio < 0.8 ? 'slower' : 'similar'
+        }
+        prior = { prev2Date: prev2.date, months0, scaled0, verdict }
+      }
     }
   }
 
   return {
-    child: { ageYears: calcAgeYears(child.birth, target.date), gender: child.gender },
-    exam: {
-      date: target.date,
-      axial: hasAxial ? {
-        od: { value: tod, pct: tod != null ? calcPercentile(tod, ageAtExam) : null },
-        os: { value: tos, pct: tos != null ? calcPercentile(tos, ageAtExam) : null },
-      } : null,
-      ser: hasSer ? { od: tserod, os: tseros } : null,
-    },
-    prev,
+    prevDate: prev.date,
+    months1,
+    delta1,
+    prior,
+    shortInterval: months1 < 2 || (prior != null && prior.months0 < 2),
   }
 }
