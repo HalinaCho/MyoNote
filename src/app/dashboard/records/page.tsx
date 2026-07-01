@@ -43,6 +43,7 @@ export default function RecordsPage() {
   const [showCRInfo, setShowCRInfo] = useState(false)
   const [showOcrInfo, setShowOcrInfo] = useState(false)
   const [showRefraction, setShowRefraction] = useState(false)  // 굴절도수(선택) 섹션 펼침
+  const [apptFocus, setApptFocus] = useState(false)            // 다음 예약일 포커스(플레이스홀더 오버레이용)
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())  // 접힌 연도(기본 전부 펼침)
   const [deleting, setDeleting] = useState<ExamRecord | null>(null)
   const [confirmPosSph, setConfirmPosSph] = useState<string | null>(null)  // 양수 Sph 저장 전 확인
@@ -338,9 +339,9 @@ export default function RecordsPage() {
                 </p>
                 <div className="grid gap-2 items-center" style={{gridTemplateColumns:'4.5rem 1fr 4.5rem 1fr'}}>
                   <span className="text-xs text-center text-gray-500 font-medium">우안(OD)</span>
-                  <input type="number" step="0.01" placeholder="24.82" value={form.axOD} onChange={e=>setForm(f=>({...f,axOD:e.target.value}))} className={INPUT}/>
+                  <input type="number" step="0.01" value={form.axOD} onChange={e=>setForm(f=>({...f,axOD:e.target.value}))} className={INPUT}/>
                   <span className="text-xs text-center text-gray-500 font-medium">좌안(OS)</span>
-                  <input type="number" step="0.01" placeholder="24.91" value={form.axOS} onChange={e=>setForm(f=>({...f,axOS:e.target.value}))} className={INPUT}/>
+                  <input type="number" step="0.01" value={form.axOS} onChange={e=>setForm(f=>({...f,axOS:e.target.value}))} className={INPUT}/>
                 </div>
               </div>
 
@@ -375,14 +376,14 @@ export default function RecordsPage() {
                     </div>
                     <div className="grid gap-2 items-center mb-2" style={{gridTemplateColumns:'4.5rem 1fr 1fr 1fr'}}>
                       <span className="text-xs text-center text-gray-500 font-medium">우안(OD)</span>
-                      <SignedInput value={form.sphOD} onChange={v=>setForm(f=>({...f,sphOD:v}))} placeholder="-3.00"/>
-                      <NegInput value={form.cylOD} onChange={v=>setForm(f=>({...f,cylOD:v}))} placeholder="0.50"/>
+                      <SignedInput value={form.sphOD} onChange={v=>setForm(f=>({...f,sphOD:v}))} placeholder=""/>
+                      <NegInput value={form.cylOD} onChange={v=>setForm(f=>({...f,cylOD:v}))} placeholder=""/>
                       <div className="h-10 flex items-center justify-center bg-teal-50 rounded-lg text-sm font-bold text-teal-700">{seqOD}</div>
                     </div>
                     <div className="grid gap-2 items-center" style={{gridTemplateColumns:'4.5rem 1fr 1fr 1fr'}}>
                       <span className="text-xs text-center text-gray-500 font-medium">좌안(OS)</span>
-                      <SignedInput value={form.sphOS} onChange={v=>setForm(f=>({...f,sphOS:v}))} placeholder="-3.00"/>
-                      <NegInput value={form.cylOS} onChange={v=>setForm(f=>({...f,cylOS:v}))} placeholder="0.50"/>
+                      <SignedInput value={form.sphOS} onChange={v=>setForm(f=>({...f,sphOS:v}))} placeholder=""/>
+                      <NegInput value={form.cylOS} onChange={v=>setForm(f=>({...f,cylOS:v}))} placeholder=""/>
                       <div className="h-10 flex items-center justify-center bg-teal-50 rounded-lg text-sm font-bold text-teal-700">{seqOS}</div>
                     </div>
                     <p className="text-[11px] text-gray-400 mt-2 leading-snug">
@@ -393,7 +394,16 @@ export default function RecordsPage() {
               </div>
 
               <Field label="다음 예약일">
-                <input type="date" value={form.nextAppointment} onChange={e=>setForm(f=>({...f,nextAppointment:e.target.value}))} className={INPUT}/>
+                {/* type=date는 일반 placeholder 미지원 → 빈 상태(비포커스)에만 YY.MM.DD 오버레이 */}
+                <div className="relative">
+                  <input type="date" value={form.nextAppointment}
+                    onChange={e=>setForm(f=>({...f,nextAppointment:e.target.value}))}
+                    onFocus={()=>setApptFocus(true)} onBlur={()=>setApptFocus(false)}
+                    className={`${INPUT} ${!form.nextAppointment && !apptFocus ? 'text-transparent' : ''}`}/>
+                  {!form.nextAppointment && !apptFocus && (
+                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-gray-400">YY.MM.DD</span>
+                  )}
+                </div>
               </Field>
 
               <Field label="추가 정보 (선택)">
