@@ -10,7 +10,7 @@ import { today, formatDate } from '@/lib/utils/date'
 import { calcStreak, calcMonthCompliance, getDayStatus } from '@/lib/utils/compliance'
 import { getAlertDay } from '@/lib/notificationPrefs'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheck, faMinus, faFire, faXmark, faTree, faMobileScreen, faCalendarDays, faPen, faBell, faHospital, faCommentDots, faRulerHorizontal, faChevronRight } from '@fortawesome/free-solid-svg-icons'
+import { faCheck, faMinus, faFire, faXmark, faTree, faMobileScreen, faCalendarDays, faPen, faBell, faHospital, faCommentDots } from '@fortawesome/free-solid-svg-icons'
 import { faCircle } from '@fortawesome/free-regular-svg-icons'
 import OnboardingFlow from '@/components/onboarding/OnboardingFlow'
 import TabSkeleton from '@/components/ui/TabSkeleton'
@@ -249,21 +249,6 @@ export default function HomePage() {
           </div>
         </section>
       )}
-
-      {/* ── 거리 자가 점검 ── */}
-      <button
-        onClick={() => router.push('/dashboard/distance')}
-        className="w-full bg-white rounded-2xl p-4 mb-3 shadow-sm flex items-center gap-3 text-left active:scale-[0.99] transition-transform"
-      >
-        <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center shrink-0">
-          <FontAwesomeIcon icon={faRulerHorizontal} className="text-teal-500" />
-        </div>
-        <div className="flex-1">
-          <p className="font-bold text-gray-800">거리 자가 점검</p>
-          <p className="text-xs text-gray-400">카메라로 화면과 눈 사이 거리를 확인해요</p>
-        </div>
-        <FontAwesomeIcon icon={faChevronRight} className="text-gray-300" />
-      </button>
 
       {/* ── 오늘의 생활습관 ── */}
       <section className="bg-white rounded-2xl p-4 mb-3 shadow-sm">
