@@ -477,6 +477,10 @@ function SignedInput({ value, onChange, placeholder }: { value: string; onChange
 const VERDICT_KO: Record<'faster' | 'similar' | 'slower', string> = {
   faster: '빠른 편', similar: '비슷한 편', slower: '느린 편',
 }
+// 판정 밴드 설명 (구체 비율 대신 기준 범위)
+const VERDICT_BAND: Record<'faster' | 'similar' | 'slower', string> = {
+  faster: '직전보다 20%+ 빠름', similar: '직전과 ±20% 이내', slower: '직전보다 20%+ 느림',
+}
 function ExamComparisonBlock({ exams, examId }: { exams: ExamRecord[]; examId: string }) {
   const cmp = buildExamComparison(exams, examId)
   const [open, setOpen] = useState(false)
@@ -505,6 +509,7 @@ function ExamComparisonBlock({ exams, examId }: { exams: ExamRecord[]; examId: s
             <p className="text-gray-600">
               같은 {cmp.months1}개월로 맞추면 직전 구간은 {eyes(cmp.prior.scaled0.od, cmp.prior.scaled0.os)} →
               성장 속도 <b className="text-gray-700">{VERDICT_KO[cmp.prior.verdict]}</b>
+              <span className="text-gray-400 text-xs"> ({VERDICT_BAND[cmp.prior.verdict]})</span>
             </p>
           )}
           {cmp.shortInterval && (
