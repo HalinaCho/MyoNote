@@ -42,7 +42,7 @@ export default function RecordsPage() {
   const [saving, setSaving]     = useState(false)
   const [showCRInfo, setShowCRInfo] = useState(false)
   const [showOcrInfo, setShowOcrInfo] = useState(false)
-  const [showMemo, setShowMemo] = useState(false)
+  const [showRefraction, setShowRefraction] = useState(false)  // 굴절도수(선택) 섹션 펼침
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())  // 접힌 연도(기본 전부 펼침)
   const [deleting, setDeleting] = useState<ExamRecord | null>(null)
   const [confirmPosSph, setConfirmPosSph] = useState<string | null>(null)  // 양수 Sph 저장 전 확인
@@ -65,7 +65,7 @@ export default function RecordsPage() {
   const openAdd = () => {
     setEditing(null)
     setForm({ ...EMPTY_EXAM, clinic: exams[0]?.clinic ?? '' })
-    setShowMemo(false)
+    setShowRefraction(false)
     setModal(true)
   }
   const openEdit = (e: ExamRecord) => {
@@ -76,7 +76,7 @@ export default function RecordsPage() {
       cylOD: stripMinus(e.cylOD), cylOS: stripMinus(e.cylOS), // Cyl: 크기로(음수 표기 제거)
       note: e.note, nextAppointment: e.nextAppointment ?? '',
     })
-    setShowMemo(!!e.note)   // 메모 있으면 펼쳐서 보이게
+    setShowRefraction(!!(e.sphOD || e.sphOS || e.cylOD || e.cylOS))  // 굴절값 있으면 펼쳐서 보이게
     setModal(true)
   }
   const closeModal = () => { setModal(false); setEditing(null); setForm(EMPTY_EXAM) }
@@ -149,6 +149,7 @@ export default function RecordsPage() {
         return
       }
       setForm(f => ({ ...f, ...patch }))   // 추출된 필드만 채움 (나머지 유지)
+      if (type === 'refraction') setShowRefraction(true)   // 굴절 채웠으면 섹션 펼침
       toast.success('자동 입력했어요. 저장 전 꼭 확인해주세요.')
     } catch (e) {
       toast.error(e instanceof Error ? e.message : '추출에 실패했습니다.')
@@ -287,12 +288,12 @@ export default function RecordsPage() {
                   <div>
                     <label className="block text-[11px] font-medium text-teal-50 mb-1">검사일</label>
                     <input type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))}
-                      className="w-full bg-white border border-transparent rounded-lg px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-white/70"/>
+                      className="w-full h-9 bg-white border border-transparent rounded-lg px-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-white/70"/>
                   </div>
                   <div>
                     <label className="block text-[11px] font-medium text-teal-50 mb-1">안과</label>
                     <input placeholder="병원명" value={form.clinic} onChange={e=>setForm(f=>({...f,clinic:e.target.value}))}
-                      className="w-full bg-white border border-transparent rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-white/70"/>
+                      className="w-full h-9 bg-white border border-transparent rounded-lg px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/70"/>
                   </div>
                 </div>
               </div>
@@ -331,7 +332,10 @@ export default function RecordsPage() {
                 )}
               </div>
               <div className="border border-gray-100 rounded-xl p-3">
-                <p className="text-sm font-medium text-gray-700 mb-2">안축장 (mm)</p>
+                <p className="text-sm font-medium text-gray-700 mb-2">
+                  안축장 (mm)
+                  <span className="ml-1.5 align-middle text-[10px] font-semibold text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded">필수</span>
+                </p>
                 <div className="grid gap-2 items-center" style={{gridTemplateColumns:'4.5rem 1fr 4.5rem 1fr'}}>
                   <span className="text-xs text-center text-gray-500 font-medium">우안(OD)</span>
                   <input type="number" step="0.01" placeholder="24.82" value={form.axOD} onChange={e=>setForm(f=>({...f,axOD:e.target.value}))} className={INPUT}/>
@@ -341,57 +345,61 @@ export default function RecordsPage() {
               </div>
 
               <div className="border border-gray-100 rounded-xl p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">굴절 도수 (D)</span>
-                  <button type="button" onClick={() => setShowCRInfo(v => !v)}
-                    className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full transition-colors
-                      ${showCRInfo ? 'bg-teal-500 text-white' : 'bg-teal-50 text-teal-500 hover:bg-teal-100'}`}>
-                    <FontAwesomeIcon icon={faCircleInfo} />
-                    조절마비(CR)검사 결과 우선
-                  </button>
-                </div>
-                {showCRInfo && (
-                  <div className="bg-teal-50 border border-teal-100 rounded-xl p-3 mb-3 text-xs space-y-1.5 text-teal-700">
-                    <p className="font-semibold">조절마비검사(CR검사)란?</p>
-                    <p>CR(Cycloplegic Refraction)은 조절마비 안약을 점안해 눈의 조절 기능을 일시적으로 풀어준 상태에서 굴절이상을 측정하는 검사입니다.</p>
-                    <p>어린이는 조절력이 강해 일반 검사만으로는 실제 근시 도수가 낮게 측정될 수 있습니다. CR검사 결과가 실제 굴절 상태를 더 정확하게 반영하므로, 입력 시 CR검사 수치를 우선 입력해주세요.</p>
+                <button type="button" onClick={() => setShowRefraction(v => !v)}
+                  className="w-full flex items-center justify-between" aria-expanded={showRefraction}>
+                  <span className="text-sm font-medium text-gray-700">
+                    굴절 도수 (D)
+                    <span className="ml-1.5 align-middle text-[10px] font-semibold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">선택</span>
+                  </span>
+                  <FontAwesomeIcon icon={showRefraction ? faChevronUp : faChevronDown} className="text-xs text-gray-400" />
+                </button>
+                {showRefraction && (
+                  <div className="mt-3">
+                    <div className="flex justify-end mb-2">
+                      <button type="button" onClick={() => setShowCRInfo(v => !v)}
+                        className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full transition-colors
+                          ${showCRInfo ? 'bg-teal-500 text-white' : 'bg-teal-50 text-teal-500 hover:bg-teal-100'}`}>
+                        <FontAwesomeIcon icon={faCircleInfo} />
+                        조절마비(CR)검사 결과 우선
+                      </button>
+                    </div>
+                    {showCRInfo && (
+                      <div className="bg-teal-50 border border-teal-100 rounded-xl p-3 mb-3 text-xs space-y-1.5 text-teal-700">
+                        <p className="font-semibold">조절마비검사(CR검사)란?</p>
+                        <p>CR(Cycloplegic Refraction)은 조절마비 안약을 점안해 눈의 조절 기능을 일시적으로 풀어준 상태에서 굴절이상을 측정하는 검사입니다.</p>
+                        <p>어린이는 조절력이 강해 일반 검사만으로는 실제 근시 도수가 낮게 측정될 수 있습니다. CR검사 결과가 실제 굴절 상태를 더 정확하게 반영하므로, 입력 시 CR검사 수치를 우선 입력해주세요.</p>
+                      </div>
+                    )}
+                    <div className="grid gap-2 mb-1 text-xs text-center text-gray-400 font-medium px-1" style={{gridTemplateColumns:'4.5rem 1fr 1fr 1fr'}}>
+                      <span/><span>Sph</span><span>Cyl</span><span>SEQ (자동)</span>
+                    </div>
+                    <div className="grid gap-2 items-center mb-2" style={{gridTemplateColumns:'4.5rem 1fr 1fr 1fr'}}>
+                      <span className="text-xs text-center text-gray-500 font-medium">우안(OD)</span>
+                      <SignedInput value={form.sphOD} onChange={v=>setForm(f=>({...f,sphOD:v}))} placeholder="-3.00"/>
+                      <NegInput value={form.cylOD} onChange={v=>setForm(f=>({...f,cylOD:v}))} placeholder="0.50"/>
+                      <div className="h-10 flex items-center justify-center bg-teal-50 rounded-lg text-sm font-bold text-teal-700">{seqOD}</div>
+                    </div>
+                    <div className="grid gap-2 items-center" style={{gridTemplateColumns:'4.5rem 1fr 1fr 1fr'}}>
+                      <span className="text-xs text-center text-gray-500 font-medium">좌안(OS)</span>
+                      <SignedInput value={form.sphOS} onChange={v=>setForm(f=>({...f,sphOS:v}))} placeholder="-3.00"/>
+                      <NegInput value={form.cylOS} onChange={v=>setForm(f=>({...f,cylOS:v}))} placeholder="0.50"/>
+                      <div className="h-10 flex items-center justify-center bg-teal-50 rounded-lg text-sm font-bold text-teal-700">{seqOS}</div>
+                    </div>
+                    <p className="text-[11px] text-gray-400 mt-2 leading-snug">
+                      Sph는 근시면 <span className="font-medium text-gray-500">−</span>(예: −3.00), 원시면 <span className="font-medium text-gray-500">+</span>를 붙여 입력해주세요.
+                    </p>
                   </div>
                 )}
-                <div className="grid gap-2 mb-1 text-xs text-center text-gray-400 font-medium px-1" style={{gridTemplateColumns:'4.5rem 1fr 1fr 1fr'}}>
-                  <span/><span>Sph</span><span>Cyl</span><span>SEQ (자동)</span>
-                </div>
-                <div className="grid gap-2 items-center mb-2" style={{gridTemplateColumns:'4.5rem 1fr 1fr 1fr'}}>
-                  <span className="text-xs text-center text-gray-500 font-medium">우안(OD)</span>
-                  <SignedInput value={form.sphOD} onChange={v=>setForm(f=>({...f,sphOD:v}))} placeholder="-3.00"/>
-                  <NegInput value={form.cylOD} onChange={v=>setForm(f=>({...f,cylOD:v}))} placeholder="0.50"/>
-                  <div className="h-10 flex items-center justify-center bg-teal-50 rounded-lg text-sm font-bold text-teal-700">{seqOD}</div>
-                </div>
-                <div className="grid gap-2 items-center" style={{gridTemplateColumns:'4.5rem 1fr 1fr 1fr'}}>
-                  <span className="text-xs text-center text-gray-500 font-medium">좌안(OS)</span>
-                  <SignedInput value={form.sphOS} onChange={v=>setForm(f=>({...f,sphOS:v}))} placeholder="-3.00"/>
-                  <NegInput value={form.cylOS} onChange={v=>setForm(f=>({...f,cylOS:v}))} placeholder="0.50"/>
-                  <div className="h-10 flex items-center justify-center bg-teal-50 rounded-lg text-sm font-bold text-teal-700">{seqOS}</div>
-                </div>
-                <p className="text-[11px] text-gray-400 mt-2 leading-snug">
-                  Sph는 근시면 <span className="font-medium text-gray-500">−</span>(예: −3.00), 원시면 <span className="font-medium text-gray-500">+</span>를 붙여 입력해주세요.
-                </p>
               </div>
 
               <Field label="다음 예약일">
                 <input type="date" value={form.nextAppointment} onChange={e=>setForm(f=>({...f,nextAppointment:e.target.value}))} className={INPUT}/>
               </Field>
 
-              <div>
-                <button type="button" onClick={() => setShowMemo(v => !v)}
-                  className="flex items-center gap-1.5 text-sm font-medium text-gray-500">
-                  <FontAwesomeIcon icon={showMemo ? faChevronUp : faChevronDown} className="text-xs" />
-                  추가 정보 (선택)
-                </button>
-                {showMemo && (
-                  <textarea rows={2} placeholder="메모 — 특이사항 등" value={form.note}
-                    onChange={e=>setForm(f=>({...f,note:e.target.value}))} className={`${INPUT} mt-2`}/>
-                )}
-              </div>
+              <Field label="추가 정보 (선택)">
+                <textarea rows={2} placeholder="메모 — 특이사항 등" value={form.note}
+                  onChange={e=>setForm(f=>({...f,note:e.target.value}))} className={INPUT}/>
+              </Field>
               </div>
 
               {/* 고정 저장 바 */}
