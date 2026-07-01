@@ -123,12 +123,13 @@ export default function RecordsPage() {
       setTimeout(() => setExtractStage('AI가 검사값을 읽는 중이에요…'), 4000),
       setTimeout(() => setExtractStage('거의 다 됐어요, 잠시만요…'), 13000),
     ]
-    // 진행바: 실측 진행률이 없으므로 경과시간 기반 추정. 92%에 점근(완료 전 100% 미도달=정직).
+    // 진행바: 실측 진행률이 없으므로 경과시간 기반 추정. S자(로지스틱)로 초반은 천천히,
+    // 중반에 차오르다 92%에 점근(완료 전 100% 미도달=정직). 중점 10초, 기울기 0.4.
     setExtractProgress(0)
     const startedAt = performance.now()
     const progressTimer = setInterval(() => {
       const t = (performance.now() - startedAt) / 1000
-      setExtractProgress(92 * (1 - Math.exp(-t / 7)))
+      setExtractProgress(92 / (1 + Math.exp(-0.4 * (t - 10))))
     }, 150)
     try {
       const img = await downscaleImage(file)
