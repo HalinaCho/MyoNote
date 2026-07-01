@@ -32,8 +32,8 @@ const fmtSigned = (v: string) => { const n = parseFloat(v); return isNaN(n) ? '�
 const fmtDeltaMm = (v: number) => `${v > 0 ? '+' : ''}${v.toFixed(2)}mm`
 
 const EMPTY_EXAM = { date: today(), clinic: '', axOD: '', axOS: '', sphOD: '', sphOS: '', cylOD: '', cylOS: '', note: '', nextAppointment: '' }
-// 단일 줄 입력칸 공통 규칙 — 높이 h-10(40px)로 통일(SEQ 박스·헤더 입력과 동일)
-const INPUT = 'w-full h-10 bg-gray-50 focus:bg-white border border-gray-200 rounded-lg px-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 accent-teal-500'
+// 단일 줄 입력칸 공통 규칙 — 높이 h-9(36px)로 통일(SEQ 박스·헤더·업로드 버튼과 동일)
+const INPUT = 'w-full h-9 bg-gray-50 focus:bg-white border border-gray-200 rounded-lg px-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 accent-teal-500'
 // 여러 줄(메모)용 — 높이는 rows로 자동, 나머지 스타일은 INPUT과 통일
 const TEXTAREA = 'w-full bg-gray-50 focus:bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500'
 
@@ -292,12 +292,12 @@ export default function RecordsPage() {
                   <div>
                     <label className="block text-[11px] font-medium text-teal-50 mb-1">검사일</label>
                     <input type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))}
-                      className="w-full h-10 bg-white border border-transparent rounded-lg px-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-white/70"/>
+                      className="w-full h-9 bg-white border border-transparent rounded-lg px-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-white/70"/>
                   </div>
                   <div>
                     <label className="block text-[11px] font-medium text-teal-50 mb-1">안과</label>
                     <input placeholder="병원명" value={form.clinic} onChange={e=>setForm(f=>({...f,clinic:e.target.value}))}
-                      className="w-full h-10 bg-white border border-transparent rounded-lg px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/70"/>
+                      className="w-full h-9 bg-white border border-transparent rounded-lg px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/70"/>
                   </div>
                 </div>
               </div>
@@ -381,13 +381,13 @@ export default function RecordsPage() {
                       <span className="text-xs text-center text-gray-500 font-medium">우안(OD)</span>
                       <SignedInput value={form.sphOD} onChange={v=>setForm(f=>({...f,sphOD:v}))} placeholder=""/>
                       <NegInput value={form.cylOD} onChange={v=>setForm(f=>({...f,cylOD:v}))} placeholder=""/>
-                      <div className="h-10 flex items-center justify-center bg-teal-50 rounded-lg text-sm font-bold text-teal-700">{seqOD}</div>
+                      <div className="h-9 flex items-center justify-center bg-teal-50 rounded-lg text-sm font-bold text-teal-700">{seqOD}</div>
                     </div>
                     <div className="grid gap-2 items-center" style={{gridTemplateColumns:'4.5rem 1fr 1fr 1fr'}}>
                       <span className="text-xs text-center text-gray-500 font-medium">좌안(OS)</span>
                       <SignedInput value={form.sphOS} onChange={v=>setForm(f=>({...f,sphOS:v}))} placeholder=""/>
                       <NegInput value={form.cylOS} onChange={v=>setForm(f=>({...f,cylOS:v}))} placeholder=""/>
-                      <div className="h-10 flex items-center justify-center bg-teal-50 rounded-lg text-sm font-bold text-teal-700">{seqOS}</div>
+                      <div className="h-9 flex items-center justify-center bg-teal-50 rounded-lg text-sm font-bold text-teal-700">{seqOS}</div>
                     </div>
                     <p className="text-[11px] text-gray-400 mt-2 leading-snug">
                       Sph는 근시면 <span className="font-medium text-gray-500">−</span>(예: −3.00), 원시면 <span className="font-medium text-gray-500">+</span>를 붙여 입력해주세요.
@@ -452,7 +452,7 @@ function NegInput({ value, onChange, placeholder }: { value: string; onChange: (
         value={value}
         onChange={e => onChange(e.target.value)}
         onBlur={handleBlur}
-        className="w-full h-10 bg-gray-50 focus:bg-white border border-gray-200 rounded-lg pl-6 pr-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+        className="w-full h-9 bg-gray-50 focus:bg-white border border-gray-200 rounded-lg pl-6 pr-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
       />
     </div>
   )
@@ -477,7 +477,7 @@ function SignedInput({ value, onChange, placeholder }: { value: string; onChange
       value={value}
       onChange={e => onChange(e.target.value)}
       onBlur={handleBlur}
-      className="w-full h-10 bg-gray-50 focus:bg-white border border-gray-200 rounded-lg px-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+      className="w-full h-9 bg-gray-50 focus:bg-white border border-gray-200 rounded-lg px-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
     />
   )
 }
@@ -567,7 +567,7 @@ function ExtractButton({ label, type, extracting, onFile }: {
   const busy = extracting === type
   const disabled = extracting !== null
   return (
-    <label className={`flex items-center justify-center gap-1.5 text-xs font-medium border rounded-lg py-2.5 px-2 transition-colors
+    <label className={`flex items-center justify-center gap-1.5 text-xs font-medium border rounded-lg h-9 px-2 transition-colors
       ${disabled ? 'border-gray-200 text-gray-400 cursor-not-allowed' : 'border-teal-300 text-teal-600 bg-white cursor-pointer active:bg-teal-50'}`}>
       <FontAwesomeIcon icon={busy ? faArrowsRotate : faArrowUpFromBracket} className={busy ? 'animate-spin' : ''} />
       {busy ? '인식 중…' : label}
