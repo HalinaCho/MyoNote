@@ -344,9 +344,8 @@ export default function RecordsPage() {
                   <ExtractButton label="굴절 검사지" type="refraction" extracting={extracting} onFile={handleExtract} />
                 </div>
                 {extracting ? (
-                  <div className="flex items-center gap-1.5 mt-2 text-[11px] text-teal-600" aria-live="polite">
-                    <FontAwesomeIcon icon={faArrowsRotate} className="animate-spin shrink-0" />
-                    <span>{extractStage}</span>
+                  <div className="mt-2 text-[11px] text-teal-600" aria-live="polite">
+                    <span className="animate-pulse">{extractStage}</span>
                   </div>
                 ) : (
                   <div className="flex items-start gap-1.5 mt-2">
