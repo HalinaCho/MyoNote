@@ -19,7 +19,7 @@ function fmtTime(h: number) {
 }
 
 export default function CalendarPage() {
-  const { logs, lifestyle, treatmentsForDate, isLoading, saveTreatmentLog, saveLifestyle } = useChild()
+  const { logs, lifestyle, treatmentsForDate, isLoading, saveTreatmentLog, saveLifestyle, deleteLifestyle } = useChild()
   const [calYear, setCalYear]   = useState(new Date().getFullYear())
   const [calMonth, setCalMonth] = useState(new Date().getMonth())
   const [statsTab, setStatsTab] = useState<'care' | 'lifestyle'>('care')
@@ -84,13 +84,17 @@ export default function CalendarPage() {
 
   const handleLifeSave = async () => {
     if (!dayModal) return
+    const outdoor = lifeForm.outdoorH + lifeForm.outdoorM / 60
+    const phone   = lifeForm.phoneH   + lifeForm.phoneM   / 60
     setLifeSaving(true)
     try {
-      await saveLifestyle(dayModal, {
-        outdoor: lifeForm.outdoorH + lifeForm.outdoorM / 60,
-        phone:   lifeForm.phoneH   + lifeForm.phoneM   / 60,
-        sleep: 0,
-      })
+      if (outdoor === 0 && phone === 0) {
+        // 입력값이 없으면 생활습관 기록을 만들지 않음(케어만 토글 시 유령 도트 방지).
+        // 기존 기록을 0으로 비운 경우엔 지운 것으로 보고 삭제.
+        if (lifestyle[dayModal]) await deleteLifestyle(dayModal)
+      } else {
+        await saveLifestyle(dayModal, { outdoor, phone, sleep: 0 })
+      }
       toast.success('저장되었습니다')
       setDayModal(null)
     } catch { toast.error('저장에 실패했습니다') }
@@ -124,6 +128,7 @@ export default function CalendarPage() {
             const isToday   = ds === todayStr
             const clickable = ds <= todayStr
             const life      = lifestyle[ds]
+            const hasLife   = !!life && (life.outdoor > 0 || life.phone > 0)   // 0값 유령 기록은 도트 제외
 
             const bg =
               status === 'done'    ? 'bg-teal-100 text-teal-700'
@@ -141,7 +146,7 @@ export default function CalendarPage() {
               >
                 <span className="text-sm sm:text-base font-semibold leading-none">{d}</span>
                 <div className="h-1.5 flex items-center justify-center">
-                  {life && <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />}
+                  {hasLife && <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />}
                 </div>
               </button>
             )
