@@ -51,6 +51,8 @@ export default function RecordsPage() {
   const [extractProgress, setExtractProgress] = useState(0)              // OCR 진행바(시간 기반 추정, 92%에서 대기)
 
   const years = [...new Set(exams.map(e => e.date.slice(0, 4)))].sort().reverse()
+  // 다음 예약은 가장 최신 검사에서만 의미 있음 → 최신 카드에만 노출
+  const latestExamId = exams.length ? exams.reduce((a, b) => (b.date > a.date ? b : a)).id : null
   const toggleYear = (y: string) => setCollapsed(prev => {
     const next = new Set(prev)
     if (next.has(y)) next.delete(y); else next.add(y)
@@ -229,7 +231,7 @@ export default function RecordsPage() {
                 {e.note && <div className="text-xs text-gray-400 px-1">{e.note}</div>}
               </div>
 
-              <ExamCardFooter exams={exams} examId={e.id} nextAppointment={e.nextAppointment} onAddAppt={() => openEdit(e)} />
+              <ExamCardFooter exams={exams} examId={e.id} isLatest={e.id === latestExamId} nextAppointment={e.nextAppointment} onAddAppt={() => openEdit(e)} />
             </div>
                   ))}
                 </div>
@@ -471,11 +473,12 @@ const VERDICT_BAND: Record<'faster' | 'similar' | 'slower', string> = {
 const VERDICT_COLOR: Record<'faster' | 'similar' | 'slower', string> = {
   faster: 'text-rose-500', similar: 'text-amber-600', slower: 'text-teal-600',
 }
-function ExamCardFooter({ exams, examId, nextAppointment, onAddAppt }: {
-  exams: ExamRecord[]; examId: string; nextAppointment?: string | null; onAddAppt: () => void
+function ExamCardFooter({ exams, examId, isLatest, nextAppointment, onAddAppt }: {
+  exams: ExamRecord[]; examId: string; isLatest: boolean; nextAppointment?: string | null; onAddAppt: () => void
 }) {
   const cmp = buildExamComparison(exams, examId)
   const [open, setOpen] = useState(false)
+  if (!cmp && !isLatest) return null   // 비교도 없고 최신도 아니면 푸터 자체 생략
   const eyes = (od: number | null, os: number | null) => {
     const parts: string[] = []
     if (od != null) parts.push(`우안 ${fmtDeltaMm(od)}`)
@@ -484,7 +487,7 @@ function ExamCardFooter({ exams, examId, nextAppointment, onAddAppt }: {
   }
   return (
     <div className="mt-2.5 pt-2.5 border-t border-gray-50">
-      {/* 한 줄: 좌=비교 토글(있을 때), 우=다음 예약(항상) */}
+      {/* 한 줄: 좌=비교 토글(있을 때), 우=다음 예약(최신 카드만) */}
       <div className="flex items-center gap-2">
         {cmp && (
           <button
@@ -497,7 +500,7 @@ function ExamCardFooter({ exams, examId, nextAppointment, onAddAppt }: {
             <FontAwesomeIcon icon={open ? faChevronUp : faChevronDown} className="text-[10px] text-gray-400" />
           </button>
         )}
-        {nextAppointment ? (
+        {isLatest && (nextAppointment ? (
           <span className="ml-auto flex items-center gap-1.5 text-xs text-teal-500">
             <FontAwesomeIcon icon={faCalendarDays} className="text-[11px]" />
             다음 예약 {nextAppointment}
@@ -507,7 +510,7 @@ function ExamCardFooter({ exams, examId, nextAppointment, onAddAppt }: {
             <FontAwesomeIcon icon={faCalendarDays} className="text-[11px]" />
             다음 예약일 입력
           </button>
-        )}
+        ))}
       </div>
       {cmp && open && (
         <div className="mt-2 bg-teal-50/60 rounded-lg p-3 text-sm text-gray-700 space-y-1.5">
