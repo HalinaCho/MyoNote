@@ -510,7 +510,7 @@ function ExamComparisonBlock({ exams, examId }: { exams: ExamRecord[]; examId: s
         <div className="mt-2 bg-teal-50/60 rounded-lg p-3 text-sm text-gray-700 space-y-1.5">
           <p className="flex gap-2">
             <span className="text-teal-400 mt-0.5 select-none">•</span>
-            <span>지난 검사({cmp.prevDate}) 대비 <b>{cmp.months1}개월</b> — 안축장 {eyes(cmp.delta1.od, cmp.delta1.os)}</span>
+            <span>지난 검사({cmp.prevDate}) 대비 {cmp.months1}개월 — 안축장 {eyes(cmp.delta1.od, cmp.delta1.os)}</span>
           </p>
           {cmp.prior && (
             <p className="flex gap-2">
