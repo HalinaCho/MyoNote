@@ -479,6 +479,7 @@ const VERDICT_KO: Record<'faster' | 'similar' | 'slower', string> = {
 }
 function ExamComparisonBlock({ exams, examId }: { exams: ExamRecord[]; examId: string }) {
   const cmp = buildExamComparison(exams, examId)
+  const [open, setOpen] = useState(false)
   if (!cmp) return null
   const eyes = (od: number | null, os: number | null) => {
     const parts: string[] = []
@@ -488,22 +489,29 @@ function ExamComparisonBlock({ exams, examId }: { exams: ExamRecord[]; examId: s
   }
   return (
     <div className="mt-2.5 pt-2.5 border-t border-gray-50">
-      <div className="flex items-center gap-1.5 text-xs font-medium text-teal-600 mb-1.5">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-1.5 text-xs font-medium text-teal-600"
+        aria-expanded={open}
+      >
         <FontAwesomeIcon icon={faRightLeft} className="text-[11px]" />
         지난 검사와 비교
-      </div>
-      <div className="bg-teal-50/60 rounded-lg p-3 text-sm text-gray-700 space-y-1">
-        <p>지난 검사({cmp.prevDate}) 대비 <b>{cmp.months1}개월</b> — 안축장 {eyes(cmp.delta1.od, cmp.delta1.os)}</p>
-        {cmp.prior && (
-          <p className="text-gray-600">
-            같은 {cmp.months1}개월로 맞추면 직전 구간은 {eyes(cmp.prior.scaled0.od, cmp.prior.scaled0.os)} →
-            성장 속도 <b className="text-gray-700">{VERDICT_KO[cmp.prior.verdict]}</b>
-          </p>
-        )}
-        {cmp.shortInterval && (
-          <p className="text-[11px] text-gray-400">검사 간격이 짧아 참고용이에요.</p>
-        )}
-      </div>
+        <FontAwesomeIcon icon={open ? faChevronUp : faChevronDown} className="text-[10px] text-gray-400" />
+      </button>
+      {open && (
+        <div className="mt-2 bg-teal-50/60 rounded-lg p-3 text-sm text-gray-700 space-y-1">
+          <p>지난 검사({cmp.prevDate}) 대비 <b>{cmp.months1}개월</b> — 안축장 {eyes(cmp.delta1.od, cmp.delta1.os)}</p>
+          {cmp.prior && (
+            <p className="text-gray-600">
+              같은 {cmp.months1}개월로 맞추면 직전 구간은 {eyes(cmp.prior.scaled0.od, cmp.prior.scaled0.os)} →
+              성장 속도 <b className="text-gray-700">{VERDICT_KO[cmp.prior.verdict]}</b>
+            </p>
+          )}
+          {cmp.shortInterval && (
+            <p className="text-[11px] text-gray-400">검사 간격이 짧아 참고용이에요.</p>
+          )}
+        </div>
+      )}
     </div>
   )
 }
