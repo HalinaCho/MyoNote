@@ -32,7 +32,10 @@ const fmtSigned = (v: string) => { const n = parseFloat(v); return isNaN(n) ? '�
 const fmtDeltaMm = (v: number) => `${v > 0 ? '+' : ''}${v.toFixed(2)}mm`
 
 const EMPTY_EXAM = { date: today(), clinic: '', axOD: '', axOS: '', sphOD: '', sphOS: '', cylOD: '', cylOS: '', note: '', nextAppointment: '' }
-const INPUT = 'w-full bg-gray-50 focus:bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 accent-teal-500'
+// 단일 줄 입력칸 공통 규칙 — 높이 h-10(40px)로 통일(SEQ 박스·헤더 입력과 동일)
+const INPUT = 'w-full h-10 bg-gray-50 focus:bg-white border border-gray-200 rounded-lg px-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 accent-teal-500'
+// 여러 줄(메모)용 — 높이는 rows로 자동, 나머지 스타일은 INPUT과 통일
+const TEXTAREA = 'w-full bg-gray-50 focus:bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500'
 
 export default function RecordsPage() {
   const { exams, isLoading, saveExam, updateExam, deleteExam } = useChild()
@@ -289,12 +292,12 @@ export default function RecordsPage() {
                   <div>
                     <label className="block text-[11px] font-medium text-teal-50 mb-1">검사일</label>
                     <input type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))}
-                      className="w-full h-9 bg-white border border-transparent rounded-lg px-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-white/70"/>
+                      className="w-full h-10 bg-white border border-transparent rounded-lg px-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-white/70"/>
                   </div>
                   <div>
                     <label className="block text-[11px] font-medium text-teal-50 mb-1">안과</label>
                     <input placeholder="병원명" value={form.clinic} onChange={e=>setForm(f=>({...f,clinic:e.target.value}))}
-                      className="w-full h-9 bg-white border border-transparent rounded-lg px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/70"/>
+                      className="w-full h-10 bg-white border border-transparent rounded-lg px-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/70"/>
                   </div>
                 </div>
               </div>
@@ -401,14 +404,14 @@ export default function RecordsPage() {
                     onFocus={()=>setApptFocus(true)} onBlur={()=>setApptFocus(false)}
                     className={`${INPUT} ${!form.nextAppointment && !apptFocus ? 'text-transparent' : ''}`}/>
                   {!form.nextAppointment && !apptFocus && (
-                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-gray-400">YY.MM.DD</span>
+                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-gray-400">YYYY.MM.DD</span>
                   )}
                 </div>
               </Field>
 
               <Field label="추가 정보 (선택)">
                 <textarea rows={2} placeholder="메모 — 특이사항 등" value={form.note}
-                  onChange={e=>setForm(f=>({...f,note:e.target.value}))} className={INPUT}/>
+                  onChange={e=>setForm(f=>({...f,note:e.target.value}))} className={TEXTAREA}/>
               </Field>
               </div>
 
@@ -449,7 +452,7 @@ function NegInput({ value, onChange, placeholder }: { value: string; onChange: (
         value={value}
         onChange={e => onChange(e.target.value)}
         onBlur={handleBlur}
-        className="w-full bg-gray-50 focus:bg-white border border-gray-200 rounded-lg pl-6 pr-2 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+        className="w-full h-10 bg-gray-50 focus:bg-white border border-gray-200 rounded-lg pl-6 pr-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
       />
     </div>
   )
@@ -474,7 +477,7 @@ function SignedInput({ value, onChange, placeholder }: { value: string; onChange
       value={value}
       onChange={e => onChange(e.target.value)}
       onBlur={handleBlur}
-      className="w-full bg-gray-50 focus:bg-white border border-gray-200 rounded-lg px-2 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+      className="w-full h-10 bg-gray-50 focus:bg-white border border-gray-200 rounded-lg px-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
     />
   )
 }
