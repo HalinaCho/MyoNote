@@ -516,7 +516,7 @@ function ExamComparisonBlock({ exams, examId }: { exams: ExamRecord[]; examId: s
             <p className="flex gap-2">
               <span className={`mt-0.5 select-none ${VERDICT_COLOR[cmp.prior.verdict]}`}>•</span>
               <span className="text-gray-600">
-                같은 {cmp.months1}개월로 맞추면 직전 구간은 {eyes(cmp.prior.scaled0.od, cmp.prior.scaled0.os)} →
+                같은 {cmp.months1}개월로 맞추면 직전 구간은 안축장 {eyes(cmp.prior.scaled0.od, cmp.prior.scaled0.os)} →
                 성장 속도 <b className={VERDICT_COLOR[cmp.prior.verdict]}>{VERDICT_KO[cmp.prior.verdict]}</b>
                 <span className="text-gray-400 text-xs"> ({VERDICT_BAND[cmp.prior.verdict]})</span>
               </span>
