@@ -116,12 +116,14 @@ export default function RecordsPage() {
   const handleExtract = async (type: 'axial' | 'refraction', file: File | undefined) => {
     if (!file || extracting) return
     setExtracting(type)
+    // 문구는 실제 단계(downscale이 이제 <1초라 깜빡임) 대신 ~20초를 읽기 좋게 시간 배분한 안심용.
     setExtractStage('사진을 최적화하고 있어요…')
-    let slowTimer: ReturnType<typeof setTimeout> | undefined
+    const stageTimers = [
+      setTimeout(() => setExtractStage('AI가 검사값을 읽는 중이에요…'), 4000),
+      setTimeout(() => setExtractStage('거의 다 됐어요, 잠시만요…'), 13000),
+    ]
     try {
       const img = await downscaleImage(file)
-      setExtractStage('AI가 검사값을 읽는 중이에요…')          // API 대기 진입
-      slowTimer = setTimeout(() => setExtractStage('거의 다 됐어요, 잠시만요…'), 12000)
       const fields = await extractExam(type, img)
       const patch = type === 'axial'
         ? axialToPatch(fields as AxialFields)
@@ -135,7 +137,7 @@ export default function RecordsPage() {
     } catch (e) {
       toast.error(e instanceof Error ? e.message : '추출에 실패했습니다.')
     } finally {
-      if (slowTimer) clearTimeout(slowTimer)
+      stageTimers.forEach(clearTimeout)
       setExtracting(null)
       setExtractStage(null)
     }
