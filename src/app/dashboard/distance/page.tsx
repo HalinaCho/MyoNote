@@ -200,6 +200,9 @@ export default function DistancePage() {
               <p className="text-center text-white/90 text-sm">{hint}</p>
             ) : (
               <div className="text-center">
+                {!calibrated && dist != null && (
+                  <span className={`text-2xl font-bold align-middle mr-1 ${statusColor}`}>약</span>
+                )}
                 <span className={`text-5xl font-extrabold ${statusColor} drop-shadow`}>
                   {dist != null ? Math.round(dist) : '—'}
                 </span>
@@ -207,6 +210,9 @@ export default function DistancePage() {
                 <p className={`mt-1 text-sm font-semibold ${near ? 'text-rose-300' : 'text-teal-200'}`}>
                   {near ? '가까워요 · 30cm 이상 권장' : '적정 거리예요'}
                 </p>
+                {!calibrated && (
+                  <p className="mt-0.5 text-[11px] text-white/60">정밀 보정 전 · 기기별 편차 있어 참고용</p>
+                )}
               </div>
             )}
           </div>
@@ -215,9 +221,9 @@ export default function DistancePage() {
 
       {/* 보정 상태 + 버튼 */}
       <div className="flex items-center justify-between text-sm">
-        <span className={`inline-flex items-center gap-1.5 ${calibrated ? 'text-teal-600' : 'text-gray-400'}`}>
+        <span className={`inline-flex items-center gap-1.5 ${calibrated ? 'text-teal-600' : 'text-amber-600'}`}>
           <FontAwesomeIcon icon={faRulerHorizontal} />
-          {calibrated ? '정밀 보정됨' : '기본 추정(±10~15%)'}
+          {calibrated ? '정밀 보정됨' : '기본 추정 · 기기별 편차 큼'}
         </span>
         <div className="flex items-center gap-2">
           {calibrated && (
@@ -225,9 +231,9 @@ export default function DistancePage() {
           )}
           <button
             onClick={() => setShowCalib(true)} disabled={phase !== 'running'}
-            className="px-3 py-1.5 rounded-lg border border-teal-300 text-teal-600 font-medium disabled:opacity-40"
+            className={`px-3 py-1.5 rounded-lg font-medium disabled:opacity-40 ${calibrated ? 'border border-teal-300 text-teal-600' : 'bg-teal-500 text-white'}`}
           >
-            정밀 보정
+            {calibrated ? '다시 보정' : '정밀 보정하기'}
           </button>
         </div>
       </div>
