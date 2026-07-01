@@ -6,6 +6,7 @@
 
 import type { Child, ExamRecord, TreatmentLogs, LifestyleLogs, TreatmentDef } from '@/types'
 import { calcPercentile, calcAgeYears } from '@/lib/axialPercentile'
+import { axialGrowth, growthCaveatText } from '@/lib/axialGrowth'
 import { calcStreak } from '@/lib/utils/compliance'
 import { formatDate, parseDate, today } from '@/lib/utils/date'
 
@@ -19,7 +20,8 @@ export interface AxialSummary {
   od: AxialEyeLatest
   os: AxialEyeLatest
   delta: { od: number | null; os: number | null; months: number } | null  // mm, 직전 검사 대비
-  annualized: { od: number | null; os: number | null } | null             // mm/년
+  annualized: { od: number | null; os: number | null } | null             // mm/년 (최근 12개월 회귀, 카드와 동일)
+  annualizedNote: string | null                                           // 잠정/최근1년데이터부족 등 주의 안내
 }
 export interface RefractionSummary {
   latestDate: string
@@ -72,10 +74,6 @@ const monthsBetween = (a: string, b: string): number => {
   const da = parseDate(a), db = parseDate(b)
   return Math.abs((db.getTime() - da.getTime()) / (30.44 * 24 * 60 * 60 * 1000))
 }
-const yearsBetween = (a: string, b: string): number => {
-  const da = parseDate(a), db = parseDate(b)
-  return Math.abs((db.getTime() - da.getTime()) / (365.25 * 24 * 60 * 60 * 1000))
-}
 
 // ── 메인 ──────────────────────────────────────────────────────
 export function buildReportContext(opts: {
@@ -112,21 +110,23 @@ export function buildReportContext(opts: {
       os: { value: os, pct: os != null ? calcPercentile(os, ageAtLatest) : null },
       delta: null,
       annualized: null,
+      annualizedNote: null,
     }
     if (prev) {
       const pod = num(prev.axOD), pos = num(prev.axOS)
-      const months = monthsBetween(prev.date, latest.date)
-      const years = yearsBetween(prev.date, latest.date) || 1
       axial.delta = {
         od: od != null && pod != null ? round(od - pod, 2) : null,
         os: os != null && pos != null ? round(os - pos, 2) : null,
-        months: round(months, 1),
+        months: round(monthsBetween(prev.date, latest.date), 1),
       }
-      // 검사 간격이 3개월 미만이면 연간 환산은 의미 없음(노이즈 증폭) → 제공 안 함
-      axial.annualized = months >= 3 ? {
-        od: od != null && pod != null ? round((od - pod) / years, 2) : null,
-        os: os != null && pos != null ? round((os - pos) / years, 2) : null,
-      } : null
+    }
+    // 연간 성장률 — 「연간 성장률 카드」와 동일한 공용 계산(최근 12개월 회귀 + 폴백/주의)
+    const odG = axialGrowth(axExams.filter(e => num(e.axOD) != null).map(e => ({ date: e.date, value: num(e.axOD)! })))
+    const osG = axialGrowth(axExams.filter(e => num(e.axOS) != null).map(e => ({ date: e.date, value: num(e.axOS)! })))
+    if (odG || osG) {
+      axial.annualized = { od: odG ? round(odG.ratePerYear, 2) : null, os: osG ? round(osG.ratePerYear, 2) : null }
+      const cav = odG?.caveat ?? osG?.caveat ?? null
+      axial.annualizedNote = cav ? growthCaveatText(cav) : null
     }
   }
 

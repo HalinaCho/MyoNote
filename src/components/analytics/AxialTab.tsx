@@ -10,6 +10,7 @@ import {
   PointElement, LineElement, Tooltip, Legend, Filler,
 } from 'chart.js'
 import { calcAgeYears, calcPercentile, pctLabel, normCurve } from '@/lib/axialPercentile'
+import { axialGrowth, growthCaveatText } from '@/lib/axialGrowth'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleInfo, faChevronDown, faChevronUp, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler)
@@ -516,30 +517,15 @@ function PctSummaryInline({
 
 // ── 성장률 카드 ───────────────────────────────────────────────────
 
-function linearSlope(xs: number[], ys: (number | null)[]): number {
-  const pairs = xs
-    .map((x, i) => [x, ys[i]] as [number, number | null])
-    .filter((p): p is [number, number] => p[1] != null)
-  if (pairs.length < 2) return 0
-  const n   = pairs.length
-  const sx  = pairs.reduce((s, [x])    => s + x,     0)
-  const sy  = pairs.reduce((s, [, y])  => s + y,     0)
-  const sxy = pairs.reduce((s, [x, y]) => s + x * y, 0)
-  const sx2 = pairs.reduce((s, [x])    => s + x * x, 0)
-  const denom = n * sx2 - sx * sx
-  return denom === 0 ? 0 : ((n * sxy - sx * sy) / denom) * 12
-}
-
 function GrowthRateCard({ exams }: { exams: { date: string; axOD: string; axOS: string }[] }) {
-  if (exams.length < 2) return null
+  const toPts = (pick: (e: { axOD: string; axOS: string }) => string) =>
+    exams.map(e => ({ date: e.date, value: parseFloat(pick(e)) })).filter(p => Number.isFinite(p.value))
+  const odG = axialGrowth(toPts(e => e.axOD))
+  const osG = axialGrowth(toPts(e => e.axOS))
+  if (!odG && !osG) return null
 
-  const first  = new Date(exams[0].date).getTime()
-  const xs     = exams.map(e => (new Date(e.date).getTime() - first) / (1000 * 60 * 60 * 24 * 30.4))
-  const odData = exams.map(e => parseFloat(e.axOD) || null)
-  const osData = exams.map(e => parseFloat(e.axOS) || null)
-  const growthOD = linearSlope(xs, odData)
-  const growthOS = linearSlope(xs, osData)
-  const spanMonths = Math.round(xs[xs.length - 1])  // 첫~마지막 검사 간격(개월)
+  const rep = odG ?? osG!                              // 부제/주의 대표(눈별 검사일 보통 동일)
+  const repCaveat = odG?.caveat ?? osG?.caveat ?? null
 
   const badge = (g: number) =>
     Math.abs(g) < 0.2  ? { label: '안정', cls: 'bg-teal-100 text-teal-700' }
@@ -550,35 +536,32 @@ function GrowthRateCard({ exams }: { exams: { date: string; axOD: string; axOS: 
     <div className="bg-white rounded-2xl p-4 shadow-sm">
       <div className="flex items-baseline justify-between mb-3">
         <h3 className="font-bold text-gray-800">연간 성장률 분석</h3>
-        <span className="text-xs text-gray-400">전체 {exams.length}회 기준</span>
+        <span className="text-xs text-gray-400">{rep.fallback ? '최근 2회 기준' : '최근 1년 기준'}</span>
       </div>
-      {[['우안 (OD)', growthOD], ['좌안 (OS)', growthOS]].map(([eye, g]) => {
-        const b = badge(g as number)
-        return (
-          <div key={eye as string} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-            <span className="text-sm text-gray-600">{eye as string}</span>
+      {([['우안 (OD)', odG], ['좌안 (OS)', osG]] as const).map(([eye, g]) => (
+        <div key={eye} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+          <span className="text-sm text-gray-600">{eye}</span>
+          {g ? (
             <div className="flex items-center gap-2">
               <span className="text-sm font-bold text-gray-800">
-                {(g as number) >= 0 ? '+' : ''}{(g as number).toFixed(2)} mm/yr
+                {g.ratePerYear >= 0 ? '+' : ''}{g.ratePerYear.toFixed(2)} mm/yr
               </span>
-              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${b.cls}`}>{b.label}</span>
+              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${badge(g.ratePerYear).cls}`}>{badge(g.ratePerYear).label}</span>
             </div>
-          </div>
-        )
-      })}
+          ) : (
+            <span className="text-sm text-gray-300">기록 부족</span>
+          )}
+        </div>
+      ))}
       <div className="flex gap-3 mt-3 text-xs text-gray-400">
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-teal-500"/>안정 &lt;0.20</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400"/>주의 0.20–0.35</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-400"/>진행 &gt;0.35</span>
       </div>
-      {spanMonths < 12 && (
+      {repCaveat && (
         <div className="flex gap-2 bg-amber-50 rounded-xl p-3 mt-3">
           <FontAwesomeIcon icon={faTriangleExclamation} className="text-amber-500 mt-0.5 shrink-0" />
-          <p className="text-xs leading-relaxed text-amber-900">
-            {spanMonths < 6
-              ? `측정 기간이 ${spanMonths}개월로 짧아, 짧은 간격을 1년으로 환산한 성장률은 오차가 클 수 있어요. 참고용으로만 보세요.`
-              : `측정 기간이 ${spanMonths}개월로 1년 미만이라 연간 성장률은 잠정 수치입니다.`}
-          </p>
+          <p className="text-xs leading-relaxed text-amber-900">{growthCaveatText(repCaveat)}</p>
         </div>
       )}
     </div>
