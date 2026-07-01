@@ -32,7 +32,7 @@ const fmtSigned = (v: string) => { const n = parseFloat(v); return isNaN(n) ? '�
 const fmtDeltaMm = (v: number) => `${v > 0 ? '+' : ''}${v.toFixed(2)}mm`
 
 const EMPTY_EXAM = { date: today(), clinic: '', axOD: '', axOS: '', sphOD: '', sphOS: '', cylOD: '', cylOS: '', note: '', nextAppointment: '' }
-const INPUT = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 accent-teal-500'
+const INPUT = 'w-full bg-gray-50 focus:bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 accent-teal-500'
 
 export default function RecordsPage() {
   const { exams, isLoading, saveExam, updateExam, deleteExam } = useChild()
@@ -334,7 +334,7 @@ export default function RecordsPage() {
               <div className="border border-gray-100 rounded-xl p-3">
                 <p className="text-sm font-medium text-gray-700 mb-2">
                   안축장 (mm)
-                  <span className="ml-1.5 align-middle text-[10px] font-semibold text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded">필수</span>
+                  <span className="ml-1.5 align-middle text-[10px] font-semibold text-teal-600 bg-teal-50 px-1.5 py-0.5 rounded">필수</span>
                 </p>
                 <div className="grid gap-2 items-center" style={{gridTemplateColumns:'4.5rem 1fr 4.5rem 1fr'}}>
                   <span className="text-xs text-center text-gray-500 font-medium">우안(OD)</span>
@@ -439,7 +439,7 @@ function NegInput({ value, onChange, placeholder }: { value: string; onChange: (
         value={value}
         onChange={e => onChange(e.target.value)}
         onBlur={handleBlur}
-        className="w-full border border-gray-200 rounded-lg pl-6 pr-2 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+        className="w-full bg-gray-50 focus:bg-white border border-gray-200 rounded-lg pl-6 pr-2 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
       />
     </div>
   )
@@ -464,7 +464,7 @@ function SignedInput({ value, onChange, placeholder }: { value: string; onChange
       value={value}
       onChange={e => onChange(e.target.value)}
       onBlur={handleBlur}
-      className="w-full border border-gray-200 rounded-lg px-2 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+      className="w-full bg-gray-50 focus:bg-white border border-gray-200 rounded-lg px-2 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
     />
   )
 }
