@@ -145,8 +145,8 @@ function Hero({ f, care, horizon }: { f: EyeForecast; care: { onCare: boolean; l
   let cap: React.ReactNode
   if (stable) {
     cap = care.onCare
-      ? <>현재 진행 속도가 안정적입니다.<br />케어 유지 시 {horizon}년 뒤 안축장 <b className="text-teal-600">{careEnd}mm</b>로 예상돼요.</>
-      : <>현재 진행 속도가 안정적입니다.<br />{horizon}년 뒤 안축장 <b className="text-teal-600">{careEnd}mm</b>로 예상돼요.</>
+      ? <>현재 <b className="text-teal-600">{care.label}</b> 케어와 함께 진행 속도가 안정적으로 유지되고 있어요.<br />이대로 유지하면 <b>{horizon}년 뒤</b> 안축장 <b className="text-teal-600">{careEnd}mm</b>로 예상돼요.</>
+      : <>현재 진행 속도가 비교적 안정적이에요.<br />지금 추세라면 <b>{horizon}년 뒤</b> 안축장 <b className="text-teal-600">{careEnd}mm</b>로 예상돼요.</>
   } else {
     cap = care.onCare
       ? <>지금처럼 <b className="text-teal-600">{care.label}</b> 케어를 유지하면<br /><b>{horizon}년 뒤(만 {Math.round(end.age)}세)</b>, 케어를 중단할 때보다</>
@@ -199,11 +199,10 @@ function ForecastChart({ f }: { f: EyeForecast }) {
         <Line
           data={{
             datasets: [
-              // 또래 정상범위 밴드 (P25–P75)
-              { label: 'P25', data: normCurve('p25'), borderColor: 'rgba(13,148,136,0.22)', borderWidth: 1, borderDash: [4, 4], fill: '+1', backgroundColor: 'rgba(13,148,136,0.06)', pointRadius: 0, tension: 0.4 },
-              { label: 'P75', data: normCurve('p75'), borderColor: 'rgba(13,148,136,0.22)', borderWidth: 1, borderDash: [4, 4], fill: false, pointRadius: 0, tension: 0.4 },
-              { label: 'P50', data: normCurve('p50'), borderColor: 'rgba(13,148,136,0.45)', borderWidth: 1.5, borderDash: [6, 3], fill: false, pointRadius: 0, tension: 0.4 },
-              { label: 'P90', data: normCurve('p90'), borderColor: 'rgba(251,113,133,0.45)', borderWidth: 1, borderDash: [4, 3], fill: false, pointRadius: 0, tension: 0.4 },
+              // 또래 정상범위 밴드 (P25–P75) — 중립 회색(또래 기준). teal/rose는 케어 시나리오 전용.
+              { label: 'P25', data: normCurve('p25'), borderColor: 'rgba(148,163,184,0.35)', borderWidth: 1, borderDash: [4, 4], fill: '+1', backgroundColor: 'rgba(148,163,184,0.08)', pointRadius: 0, tension: 0.4 },
+              { label: 'P75', data: normCurve('p75'), borderColor: 'rgba(148,163,184,0.35)', borderWidth: 1, borderDash: [4, 4], fill: false, pointRadius: 0, tension: 0.4 },
+              { label: 'P50', data: normCurve('p50'), borderColor: 'rgba(148,163,184,0.6)', borderWidth: 1.5, borderDash: [6, 3], fill: false, pointRadius: 0, tension: 0.4 },
 
               // 신뢰구간 콘 — 케어 유지 (teal)만 표시 (겹침 방지)
               { label: '_careHi', data: f.withCare.map(p => pt(p, p.hi)), borderWidth: 0, pointRadius: 0, fill: '+1', backgroundColor: 'rgba(16,188,173,0.12)', tension: 0 },
@@ -228,7 +227,7 @@ function ForecastChart({ f }: { f: EyeForecast }) {
                   label: ctx => {
                     const n = ctx.dataset.label ?? ''
                     const y = (ctx.parsed.y ?? 0).toFixed(2)
-                    if (['P25', 'P50', 'P75', 'P90'].includes(n)) return `${n}: ${y}mm`
+                    if (['P25', 'P50', 'P75'].includes(n)) return `${n}: ${y}mm`
                     return `${n}: ${y}mm (${(ctx.parsed.x ?? 0).toFixed(1)}세)`
                   },
                 },
@@ -252,14 +251,22 @@ function ForecastChart({ f }: { f: EyeForecast }) {
           }}
         />
       </div>
-      {/* 범례 */}
+      {/* 범례 — 회색=또래 기준 / teal=케어 유지(+예측 범위 음영) / rose=케어 없음 / 실측 실선 */}
       <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 mt-2 text-[11px] text-gray-500">
-        <span className="flex items-center gap-1"><span className="w-3 h-0.5 rounded inline-block" style={{ background: childColor }} />실측</span>
-        <span className="flex items-center gap-1"><svg width="18" height="4"><line x1="0" y1="2" x2="18" y2="2" stroke="#10bcad" strokeWidth="2.5" strokeDasharray="5,4" /></svg>케어 유지</span>
-        <span className="flex items-center gap-1"><svg width="18" height="4"><line x1="0" y1="2" x2="18" y2="2" stroke="#f43f5e" strokeWidth="2.5" strokeDasharray="5,4" /></svg>케어 없음</span>
-        <span className="flex items-center gap-1"><span className="w-4 h-2.5 rounded-sm inline-block" style={{ backgroundColor: 'rgba(16,188,173,0.18)' }} />예측 범위(케어 유지)</span>
-        <span className="flex items-center gap-1"><span className="w-4 h-2 rounded inline-block" style={{ backgroundColor: 'rgba(13,148,136,0.12)', border: '1px dashed rgba(13,148,136,0.35)' }} />또래(P25–75)</span>
+        <span className="flex items-center gap-1"><span className="w-4 h-[2px] inline-block" style={{ background: childColor }} />실측</span>
+        <span className="flex items-center gap-1">
+          <span className="inline-flex items-center justify-center w-5 h-3 rounded-sm" style={{ backgroundColor: 'rgba(16,188,173,0.16)' }}>
+            <span className="w-4 h-[2px] inline-block" style={{ background: 'repeating-linear-gradient(90deg,#10bcad 0 5px,transparent 5px 9px)' }} />
+          </span>
+          케어 유지 · 범위
+        </span>
+        <span className="flex items-center gap-1"><span className="w-5 h-[2px] inline-block" style={{ background: 'repeating-linear-gradient(90deg,#f43f5e 0 5px,transparent 5px 9px)' }} />케어 없음</span>
+        <span className="flex items-center gap-1"><span className="w-4 h-2 rounded inline-block" style={{ backgroundColor: 'rgba(148,163,184,0.12)', border: '1px dashed rgba(148,163,184,0.5)' }} />또래(P25–75)</span>
       </div>
+      {/* 신뢰구간 안내 — '한쪽만 음영' 혼란 해소 */}
+      <p className="text-[10px] text-gray-400 leading-relaxed mt-1.5 text-center">
+        음영은 예측의 <b className="font-semibold text-gray-500">불확실성 범위</b>로, 먼 미래일수록 넓어져요. 두 선이 겹치지 않도록 케어 유지 선에만 표시했으며, 케어 없음도 비슷한 폭의 불확실성을 가집니다.
+      </p>
     </div>
   )
 }
@@ -326,6 +333,13 @@ function Sliders({
           aria-label="케어 효과"
         />
         <div className="flex justify-between text-[10px] text-gray-300 mt-0.5"><span>20%</span><span>65%</span></div>
+        {effPct !== defaultEffPct && (
+          <p className={`text-[10px] mt-1 leading-relaxed ${effPct > defaultEffPct ? 'text-amber-600' : 'text-gray-400'}`}>
+            {effPct > defaultEffPct
+              ? `문헌 평균(${defaultEffPct}%)보다 낙관적인 가정이에요. 실제 효과는 개인차가 큽니다.`
+              : `문헌 평균(${defaultEffPct}%)보다 보수적인 가정이에요.`}
+          </p>
+        )}
       </div>
       {/* 기간 슬라이더 */}
       <div>
