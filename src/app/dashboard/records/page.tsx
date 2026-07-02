@@ -337,7 +337,12 @@ export default function RecordsPage() {
               </div>
               {/* 필드 그룹 — 카드 대신 얇은 구분선으로 구역 구분 */}
               <div className="divide-y divide-gray-100">
-              <Field className="pb-3" label={<>안축장 (mm)<span className="ml-1.5 align-middle text-[10px] font-semibold text-teal-600 bg-teal-50 px-1.5 py-0.5 rounded">필수</span></>}>
+              <Field className="pb-3" label={
+                <span className="flex items-center justify-between">
+                  <span>안축장 (mm)<span className="ml-1.5 align-middle text-[10px] font-semibold text-teal-600 bg-teal-50 px-1.5 py-0.5 rounded">필수</span></span>
+                  <SwapEyesButton onClick={()=>setForm(f=>({...f,axOD:f.axOS,axOS:f.axOD}))} />
+                </span>
+              }>
                 <div className="grid gap-2 items-center" style={{gridTemplateColumns:'4.5rem 1fr 4.5rem 1fr'}}>
                   <span className="text-xs text-center text-gray-500 font-medium">우안(OD)</span>
                   <input type="number" step="0.01" value={form.axOD} onChange={e=>setForm(f=>({...f,axOD:e.target.value}))} className={INPUT}/>
@@ -357,7 +362,8 @@ export default function RecordsPage() {
                 </button>
                 {showRefraction && (
                   <div className="mt-1">
-                    <div className="flex justify-end mb-2">
+                    <div className="flex justify-between items-center mb-2">
+                      <SwapEyesButton onClick={()=>setForm(f=>({...f,sphOD:f.sphOS,sphOS:f.sphOD,cylOD:f.cylOS,cylOS:f.cylOD}))} />
                       <button type="button" onClick={() => setShowCRInfo(v => !v)}
                         className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full transition-colors
                           ${showCRInfo ? 'bg-teal-500 text-white' : 'bg-teal-50 text-teal-500 hover:bg-teal-100'}`}>
@@ -425,6 +431,18 @@ export default function RecordsPage() {
         </div>
       )}
     </>
+  )
+}
+
+// OCR이 우안(OD)/좌안(OS)을 반대로 읽는 경우가 잦아, 한 번에 되돌리는 좌우 스왑 버튼.
+function SwapEyesButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick}
+      className="shrink-0 flex items-center gap-1 text-[11px] font-medium text-gray-400 hover:text-teal-600 transition-colors"
+      title="우안(OD)과 좌안(OS) 값을 서로 바꿉니다">
+      <FontAwesomeIcon icon={faRightLeft} className="text-[10px]" />
+      좌우 바꾸기
+    </button>
   )
 }
 

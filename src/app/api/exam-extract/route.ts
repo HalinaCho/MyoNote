@@ -9,6 +9,13 @@ const BASE_URL = process.env.SOLAR_BASE_URL || 'https://api.upstage.ai/v1'
 const IE_URL = `${BASE_URL}/information-extraction`
 const IE_MODEL = 'information-extract'
 
+// 좌우 눈 매칭 규칙 — 검사지는 통상 OD(오른쪽 눈)를 왼쪽 열/윗줄, OS(왼쪽 눈)를 오른쪽 열/아랫줄에
+// 인쇄한다. 위치로 판단하면 좌우가 뒤바뀌므로, 반드시 인쇄된 눈 라벨을 보고 매칭하도록 강하게 지시한다.
+const EYE_RULE =
+  '반드시 검사지에 인쇄된 눈 라벨을 보고 그 값을 고르세요. 오른쪽 눈 라벨=OD, R, Right, 우, 우안. 왼쪽 눈 라벨=OS, L, Left, 좌, 좌안. ' +
+  '주의: 대부분의 검사지·생체계측기 출력지는 오른쪽 눈(OD)을 페이지 왼쪽 열(또는 윗줄)에, 왼쪽 눈(OS)을 오른쪽 열(또는 아랫줄)에 인쇄합니다. ' +
+  "따라서 '왼쪽에 있으니 왼쪽 눈'처럼 위치·순서로 판단하지 말고, 각 값 옆의 눈 라벨 텍스트만 기준으로 매칭하세요."
+
 const AXIAL_SCHEMA = {
   name: 'axial_exam',
   schema: {
@@ -16,8 +23,8 @@ const AXIAL_SCHEMA = {
     additionalProperties: false,
     properties: {
       examDate: { type: 'string', description: '검사를 시행·측정한 날짜(검사일/측정일). 반드시 YYYY-MM-DD 형식. 검사지에 여러 날짜(생년월일·출력일/인쇄일·다음예약일)가 있어도 그것들이 아닌 실제 측정 시점을 고른다. 날짜가 없으면 null' },
-      axialRight: { type: 'number', description: "오른쪽 눈(R/OD)의 안축장(Axial Length, AL) 값, mm 단위(예: 23.84). 없으면 null" },
-      axialLeft: { type: 'number', description: "왼쪽 눈(L/OS)의 안축장(Axial Length, AL) 값, mm 단위. 없으면 null" },
+      axialRight: { type: 'number', description: `오른쪽 눈(OD)의 안축장(Axial Length, AL) 값, mm 단위(예: 23.84). ${EYE_RULE} 없으면 null` },
+      axialLeft: { type: 'number', description: `왼쪽 눈(OS)의 안축장(Axial Length, AL) 값, mm 단위. ${EYE_RULE} 없으면 null` },
     },
     required: ['examDate', 'axialRight', 'axialLeft'],
   },
@@ -30,10 +37,10 @@ const REFRACTION_SCHEMA = {
     additionalProperties: false,
     properties: {
       examDate: { type: 'string', description: '검사를 시행·측정한 날짜(검사일/측정일). 반드시 YYYY-MM-DD 형식. 검사지에 여러 날짜(생년월일·출력일/인쇄일·다음예약일)가 있어도 그것들이 아닌 실제 측정 시점을 고른다. 날짜가 없으면 null' },
-      sphRight: { type: 'number', description: '오른쪽 눈(R/OD)의 구면(Sphere, S) 도수. 부호 그대로(예: -3.00, +1.25). 없으면 null' },
-      sphLeft: { type: 'number', description: '왼쪽 눈(L/OS)의 구면(Sphere, S) 도수. 부호 그대로. 없으면 null' },
-      cylRight: { type: 'number', description: '오른쪽 눈(R/OD)의 원주(Cylinder, C) 도수. 결과지에 표기된 부호 그대로(plus-cyl이면 +, minus-cyl이면 -). 없으면 null' },
-      cylLeft: { type: 'number', description: '왼쪽 눈(L/OS)의 원주(Cylinder, C) 도수. 표기된 부호 그대로. 없으면 null' },
+      sphRight: { type: 'number', description: `오른쪽 눈(OD)의 구면(Sphere, S) 도수. 부호 그대로(예: -3.00, +1.25). ${EYE_RULE} 없으면 null` },
+      sphLeft: { type: 'number', description: `왼쪽 눈(OS)의 구면(Sphere, S) 도수. 부호 그대로. ${EYE_RULE} 없으면 null` },
+      cylRight: { type: 'number', description: `오른쪽 눈(OD)의 원주(Cylinder, C) 도수. 결과지에 표기된 부호 그대로(plus-cyl이면 +, minus-cyl이면 -). ${EYE_RULE} 없으면 null` },
+      cylLeft: { type: 'number', description: `왼쪽 눈(OS)의 원주(Cylinder, C) 도수. 표기된 부호 그대로. ${EYE_RULE} 없으면 null` },
     },
     required: ['examDate', 'sphRight', 'sphLeft', 'cylRight', 'cylLeft'],
   },
