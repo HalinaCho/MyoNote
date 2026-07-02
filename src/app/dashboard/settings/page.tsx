@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { getAlertDay, setAlertDay } from '@/lib/notificationPrefs'
+import { getPushState, subscribeToPush, unsubscribeFromPush, type PushState } from '@/lib/push'
 import { useChild } from '@/context/ChildContext'
 import ChildFormModal from '@/components/child/ChildFormModal'
 import ConfirmModal from '@/components/ui/ConfirmModal'
@@ -24,6 +25,8 @@ export default function SettingsPage() {
   const [joinCode, setJoinCode] = useState('')
   const [generating, setGenerating] = useState(false)
   const [alertDay, setAlertDayState] = useState<number | null>(null)
+  const [pushState, setPushState] = useState<PushState>('default')
+  const [pushBusy, setPushBusy] = useState(false)
   const [guardians, setGuardians] = useState<Guardian[]>([])
   const [loadingGuardians, setLoadingGuardians] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
@@ -35,7 +38,10 @@ export default function SettingsPage() {
     onConfirm: () => Promise<void> | void
   } | null>(null)
 
-  useEffect(() => { setAlertDayState(getAlertDay()) }, [])
+  useEffect(() => {
+    getAlertDay().then(setAlertDayState).catch(() => {})
+    getPushState().then(setPushState).catch(() => setPushState('unsupported'))
+  }, [])
 
   useEffect(() => {
     createClient().auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id ?? null))
@@ -50,10 +56,48 @@ export default function SettingsPage() {
       .finally(() => setLoadingGuardians(false))
   }, [activeChildId])
 
-  const selectAlertDay = (day: number) => {
+  const selectAlertDay = async (day: number) => {
     const next = alertDay === day ? null : day
+    const prev = alertDay
     setAlertDayState(next)
-    setAlertDay(next)
+    try {
+      await setAlertDay(next)
+    } catch {
+      setAlertDayState(prev)
+      toast.error('설정 저장에 실패했어요')
+    }
+  }
+
+  // 예약 알림 켜기: 권한 요청 + 구독 저장. 알림일이 없으면 기본 3일 전으로.
+  const enablePush = async () => {
+    setPushBusy(true)
+    try {
+      await subscribeToPush()
+      setPushState('granted-on')
+      if (alertDay === null) {
+        setAlertDayState(3)
+        await setAlertDay(3)
+      }
+      toast.success('예약 알림을 켰어요')
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : '알림을 켜지 못했어요')
+      setPushState(await getPushState().catch(() => 'unsupported' as PushState))
+    } finally {
+      setPushBusy(false)
+    }
+  }
+
+  const disablePush = async () => {
+    setPushBusy(true)
+    try {
+      await unsubscribeFromPush()
+      setPushState('granted-off')
+      toast.success('예약 알림을 껐어요')
+    } catch {
+      toast.error('알림을 끄지 못했어요')
+    } finally {
+      setPushBusy(false)
+    }
   }
 
   const handleDeleteChild = (child: Child) => {
@@ -293,26 +337,47 @@ export default function SettingsPage() {
       <section className="bg-white rounded-2xl overflow-hidden mb-2 shadow-sm">
         <div className="px-4 pt-3 pb-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wide">알림 설정</div>
         <div className="px-4 py-2.5 border-t border-gray-50">
-          <div className="flex items-center gap-3 text-sm font-medium text-gray-700 mb-1">
-            <FontAwesomeIcon icon={faBell} className="w-4" />
-            병원 예약 알림
+          <div className="flex items-center gap-3 mb-1">
+            <FontAwesomeIcon icon={faBell} className="w-4 text-gray-700" />
+            <span className="flex-1 text-sm font-medium text-gray-700">병원 예약 알림</span>
+            {pushState !== 'unsupported' && pushState !== 'denied' && (
+              <Toggle
+                on={pushState === 'granted-on'}
+                busy={pushBusy}
+                onChange={v => (v ? enablePush() : disablePush())}
+              />
+            )}
           </div>
-          <div className="text-xs text-gray-400 mb-3">예약일 며칠 전부터 홈 화면에 배너를 표시합니다.</div>
-          <div className="flex gap-2">
-            {[1, 3, 7].map(day => (
-              <button
-                key={day}
-                onClick={() => selectAlertDay(day)}
-                className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all border ${
-                  alertDay === day
-                    ? 'bg-[#edf7f6] text-teal-500 border-teal-500/30'
-                    : 'bg-gray-50 text-gray-400 border-transparent'
-                }`}
-              >
-                {day}일 전
-              </button>
-            ))}
-          </div>
+          <div className="text-xs text-gray-400 mb-3">예약일 며칠 전과 당일에 홈 화면 알림을 보냅니다.</div>
+
+          {pushState === 'unsupported' && (
+            <p className="text-xs text-gray-400 leading-snug">
+              이 브라우저에서는 알림이 지원되지 않아요. iOS는 홈 화면에 앱을 추가한 뒤 앱에서 열어주세요.
+            </p>
+          )}
+          {pushState === 'denied' && (
+            <p className="text-xs text-rose-400 leading-snug">
+              알림이 차단되어 있어요. 브라우저·기기 설정에서 마이오노트 알림 권한을 허용해주세요.
+            </p>
+          )}
+
+          {pushState === 'granted-on' && (
+            <div className="flex gap-2">
+              {[1, 3, 7].map(day => (
+                <button
+                  key={day}
+                  onClick={() => selectAlertDay(day)}
+                  className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all border ${
+                    alertDay === day
+                      ? 'bg-[#edf7f6] text-teal-500 border-teal-500/30'
+                      : 'bg-gray-50 text-gray-400 border-transparent'
+                  }`}
+                >
+                  {day}일 전
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -419,5 +484,27 @@ export default function SettingsPage() {
         </div>
       )}
     </>
+  )
+}
+
+// 온/오프 스위치 (알림 토글용)
+function Toggle({ on, busy, onChange }: { on: boolean; busy?: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      disabled={busy}
+      onClick={() => onChange(!on)}
+      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${
+        on ? 'bg-teal-500' : 'bg-gray-200'
+      }`}
+    >
+      <span
+        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+          on ? 'translate-x-5' : 'translate-x-0.5'
+        }`}
+      />
+    </button>
   )
 }

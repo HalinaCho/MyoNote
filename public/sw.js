@@ -42,3 +42,33 @@ self.addEventListener('fetch', e => {
     )
   }
 })
+
+// ── 웹 푸시 ──────────────────────────────────────────────
+// 서버(/api/push/cron)가 web-push로 보낸 payload(JSON)를 받아 알림을 띄운다.
+self.addEventListener('push', e => {
+  let data = {}
+  try { data = e.data ? e.data.json() : {} } catch { data = { body: e.data && e.data.text() } }
+  const title = data.title || '마이오노트'
+  const options = {
+    body: data.body || '',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    tag: data.tag || 'myonote',          // 같은 tag는 덮어써 알림 쌓임 방지
+    data: { url: data.url || '/' },
+  }
+  e.waitUntil(self.registration.showNotification(title, options))
+})
+
+// 알림 클릭 → 해당 화면으로. 이미 열린 탭이 있으면 focus, 없으면 새로 연다.
+self.addEventListener('notificationclick', e => {
+  e.notification.close()
+  const target = (e.notification.data && e.notification.data.url) || '/'
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      for (const c of list) {
+        if ('focus' in c) { c.navigate(target); return c.focus() }
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(target)
+    })
+  )
+})
