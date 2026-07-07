@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# 마케팅 콘텐츠 초안 (public 레포 노출 방지)
+marketing/
