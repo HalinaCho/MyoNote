@@ -1,11 +1,14 @@
-// 병원 예약 알림 발송 (Vercel Cron, 하루 1회) — 서버측 service_role 키 사용
+// 병원 예약 알림 발송 (Supabase pg_cron이 하루 1회 호출) — 서버측 service_role 키 사용
 //
-// 흐름: 크론(00:00 UTC = 09:00 KST) → 이 라우트 →
+// 흐름: pg_cron(00:00 UTC = 09:00 KST, docs/sql/2026-07-07-pg-cron-push.sql) → 이 라우트 →
 //   ① 오늘(KST) 이후 예약 조회 → ② 각 예약의 dDays 계산 →
 //   ③ 자녀의 보호자 중 alertDay가 dDays와 같거나(며칠 전) 예약 당일(0)인 사용자에게 →
 //   ④ 그 사용자의 모든 구독으로 web-push 발송. 410/404(만료) 구독은 삭제.
 //
-// 보안: Vercel은 CRON_SECRET env가 있으면 요청에 Authorization: Bearer <CRON_SECRET>를 붙인다.
+// ※ 원래 Vercel Cron이었으나 Hobby 플랜은 시각 정확도가 없어(최대 수 시간 지연 관측)
+//   2026-07-07 Supabase pg_cron + pg_net 호출로 이전. vercel.json 크론은 제거됨.
+//
+// 보안: 호출자(pg_cron)가 Authorization: Bearer <CRON_SECRET> 헤더를 붙여 호출한다.
 // web-push는 Node crypto 필요 → Node 런타임 고정.
 
 import webpush from 'web-push'
