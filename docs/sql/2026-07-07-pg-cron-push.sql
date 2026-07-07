@@ -5,7 +5,7 @@
 --   → 이미 사용 중인 Supabase의 pg_cron + pg_net으로 분 단위 정확도 확보.
 --
 -- 흐름: pg_cron(00:00 UTC = 09:00 KST) → pg_net HTTP GET
---   → https://myonote.vercel.app/api/push/cron (Bearer CRON_SECRET 검증은 기존 그대로)
+--   → https://myonote.app/api/push/cron (Bearer CRON_SECRET 검증은 기존 그대로)
 --
 -- ⚠️ 실행 전: 아래 <CRON_SECRET> 을 Vercel env의 실제 CRON_SECRET 값으로 치환할 것.
 --   (이 파일은 레포에 커밋되므로 실제 시크릿을 절대 기록하지 않는다)
@@ -23,7 +23,7 @@ select cron.schedule(
   '0 0 * * *',
   $$
   select net.http_get(
-    url := 'https://myonote.vercel.app/api/push/cron',
+    url := 'https://myonote.app/api/push/cron',  -- 2026-07-08 커스텀 도메인으로 갱신
     headers := '{"Authorization": "Bearer <CRON_SECRET>"}'::jsonb,
     timeout_milliseconds := 30000
   );
