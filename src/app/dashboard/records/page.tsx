@@ -46,6 +46,7 @@ async function matchHospitalByLocation(childId: string | null) {
     const hospitalId = await linkHospitalByLocation(childId, pos.lat, pos.lng)
     if (!hospitalId) return
     const hospital = await fetchMyConnectedHospital(childId)
+    if (hospital) toast.success(`${hospital.name}와 연결되었어요`)
     await fetch('/api/exam-notify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
