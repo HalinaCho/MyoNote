@@ -58,3 +58,12 @@ export interface LifestyleLog {
 }
 
 export type LifestyleLogs = Record<string, LifestyleLog>  // key: 'YYYY-MM-DD'
+
+// ── 병원 ──────────────────────────────────────────────────────
+export interface Hospital {
+  id: string
+  name: string
+  logoUrl: string | null
+  brandColor: string | null
+  notice: string | null
+}

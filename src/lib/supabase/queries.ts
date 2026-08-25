@@ -1,6 +1,6 @@
 // RN 이식 시 createClient만 교체하면 전체 재사용 가능
 import { createClient } from './client'
-import type { Child, ExamRecord, TreatmentLogs, LifestyleLogs, TreatmentDef, DesiredTreatment } from '@/types'
+import type { Child, ExamRecord, TreatmentLogs, LifestyleLogs, TreatmentDef, DesiredTreatment, Hospital } from '@/types'
 import type { AiReport } from '@/lib/aiReport'
 
 // 폼 입력 — treatments는 periods 없는 활성 집합 (context가 병합해 기간 부여)
@@ -358,6 +358,130 @@ export async function saveReport(
     model: data.model,
     createdAt: data.created_at,
   }
+}
+
+// ── 병원(원장 포털) ───────────────────────────────────────────
+
+// 로그인한 스태프가 소속된 병원 id (스태프가 아니면 null)
+export async function fetchMyHospitalId(): Promise<string | null> {
+  const sb = createClient()
+  const { data, error } = await sb.rpc('my_hospital_id')
+  if (error) throw error
+  return (data as string) ?? null
+}
+
+export async function fetchHospital(hospitalId: string): Promise<Hospital> {
+  const sb = createClient()
+  const { data, error } = await sb
+    .from('eyebody_hospitals')
+    .select('id, name, logo_url, brand_color, notice')
+    .eq('id', hospitalId)
+    .single()
+  if (error) throw error
+  return {
+    id: data.id, name: data.name,
+    logoUrl: data.logo_url ?? null, brandColor: data.brand_color ?? null, notice: data.notice ?? null,
+  }
+}
+
+// 부모 홈 화면 — 현재 연결된 병원(없으면 null)
+interface HospitalRow {
+  id: string; name: string; logo_url: string | null; brand_color: string | null; notice: string | null
+}
+
+export async function fetchMyConnectedHospital(childId: string): Promise<Hospital | null> {
+  const sb = createClient()
+  const { data, error } = await sb.rpc('get_my_hospital', { p_child_id: childId })
+  if (error) throw error
+  const row = (data as HospitalRow[])?.[0]
+  if (!row) return null
+  return {
+    id: row.id, name: row.name,
+    logoUrl: row.logo_url ?? null, brandColor: row.brand_color ?? null, notice: row.notice ?? null,
+  }
+}
+
+export interface OverduePatient {
+  childId: string
+  childName: string
+  status: 'overdue' | 'churned'
+  nextAppointment: string | null
+  daysOverdue: number | null
+  churnedAt: string | null
+}
+
+interface OverduePatientRow {
+  child_id: string; child_name: string; status: 'overdue' | 'churned'
+  next_appointment: string | null; days_overdue: number | null; churned_at: string | null
+}
+
+export async function fetchOverduePatients(hospitalId: string): Promise<OverduePatient[]> {
+  const sb = createClient()
+  const { data, error } = await sb.rpc('hospital_overdue_patients', { p_hospital_id: hospitalId })
+  if (error) throw error
+  return ((data ?? []) as OverduePatientRow[]).map(r => ({
+    childId: r.child_id, childName: r.child_name, status: r.status,
+    nextAppointment: r.next_appointment, daysOverdue: r.days_overdue, churnedAt: r.churned_at,
+  }))
+}
+
+export interface RosterPatient {
+  childId: string
+  childName: string
+  birth: string
+  lastExamDate: string | null
+  nextAppointment: string | null
+}
+
+interface RosterPatientRow {
+  child_id: string; child_name: string; birth_date: string
+  last_exam_date: string | null; next_appointment: string | null
+}
+
+export async function fetchPatientRoster(hospitalId: string): Promise<RosterPatient[]> {
+  const sb = createClient()
+  const { data, error } = await sb.rpc('hospital_patient_roster', { p_hospital_id: hospitalId })
+  if (error) throw error
+  return ((data ?? []) as RosterPatientRow[]).map(r => ({
+    childId: r.child_id, childName: r.child_name, birth: r.birth_date,
+    lastExamDate: r.last_exam_date, nextAppointment: r.next_appointment,
+  }))
+}
+
+// 병원 QR 연결 토큰 (설정 화면 전용 — Hospital 타입엔 안 넣음, 스태프 화면에서만 필요)
+export async function fetchConnectToken(hospitalId: string): Promise<string> {
+  const sb = createClient()
+  const { data, error } = await sb.from('eyebody_hospitals').select('connect_token').eq('id', hospitalId).single()
+  if (error) throw error
+  return data.connect_token as string
+}
+
+// 토큰 재발급 — 기존 QR은 무효화됨
+export async function regenerateConnectToken(hospitalId: string): Promise<string> {
+  const sb = createClient()
+  const newToken = crypto.randomUUID().replace(/-/g, '')
+  const { error } = await sb.from('eyebody_hospitals').update({ connect_token: newToken }).eq('id', hospitalId)
+  if (error) throw error
+  return newToken
+}
+
+// QR 연결 — 토큰으로 병원 연결, 병원명 반환
+export async function connectHospitalByToken(childId: string, token: string): Promise<string> {
+  const sb = createClient()
+  const { data, error } = await sb.rpc('connect_child_to_hospital', { p_child_id: childId, p_token: token })
+  if (error) throw new Error(error.message || '연결에 실패했습니다')
+  return data as string
+}
+
+// 위치 기반 병원 매칭 → 연결(자동 전환) — 매칭 안 되면 null
+export async function linkHospitalByLocation(childId: string, lat: number, lng: number): Promise<string | null> {
+  const sb = createClient()
+  const { data: hospitalId, error: resolveErr } = await sb.rpc('resolve_hospital_by_location', { p_lat: lat, p_lng: lng })
+  if (resolveErr) throw resolveErr
+  if (!hospitalId) return null
+  const { error: linkErr } = await sb.rpc('link_child_to_hospital', { p_child_id: childId, p_hospital_id: hospitalId })
+  if (linkErr) throw linkErr
+  return hospitalId as string
 }
 
 // ── 계정 ──────────────────────────────────────────────────────

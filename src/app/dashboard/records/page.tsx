@@ -9,6 +9,8 @@ import ConfirmModal from '@/components/ui/ConfirmModal'
 import { today } from '@/lib/utils/date'
 import { buildExamComparison } from '@/lib/aiReport'
 import { downscaleImage, extractExam, axialToPatch, refractionToPatch } from '@/lib/examExtract'
+import { getCurrentPosition } from '@/lib/geo'
+import { linkHospitalByLocation, fetchMyConnectedHospital } from '@/lib/supabase/queries'
 import type { AxialFields, RefractionFields } from '@/lib/examExtract'
 import type { ExamRecord } from '@/types'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -32,13 +34,32 @@ const fmtSigned = (v: string) => { const n = parseFloat(v); return isNaN(n) ? '�
 const fmtDeltaMm = (v: number) => `${v > 0 ? '+' : ''}${v.toFixed(2)}mm`
 
 const EMPTY_EXAM = { date: today(), clinic: '', axOD: '', axOS: '', sphOD: '', sphOS: '', cylOD: '', cylOS: '', note: '', nextAppointment: '' }
+
+// 새 검사기록 저장 직후 현재 위치를 등록된 병원 좌표와 대조 → 매칭되면 그 병원을
+// "현재 담당 병원"으로 자동 연결(이전 병원 연결은 자동 종료)하고 보호자들에게 알림.
+// 위치 미지원/권한거부/매칭 실패 시 조용히 무시 — 저장 자체는 이미 끝난 뒤라 사용자 흐름을 막지 않음.
+async function matchHospitalByLocation(childId: string | null) {
+  if (!childId) return
+  try {
+    const pos = await getCurrentPosition()
+    if (!pos) return
+    const hospitalId = await linkHospitalByLocation(childId, pos.lat, pos.lng)
+    if (!hospitalId) return
+    const hospital = await fetchMyConnectedHospital(childId)
+    await fetch('/api/exam-notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ childId, hospitalName: hospital?.name }),
+    })
+  } catch { /* best-effort */ }
+}
 // 단일 줄 입력칸 공통 규칙 — 높이 h-9(36px)로 통일(SEQ 박스·헤더·업로드 버튼과 동일)
 const INPUT = 'w-full h-9 bg-gray-50 focus:bg-white border border-gray-200 rounded-lg px-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 accent-teal-500'
 // 여러 줄(메모)용 — 높이는 rows로 자동, 나머지 스타일은 INPUT과 통일
 const TEXTAREA = 'w-full bg-gray-50 focus:bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500'
 
 export default function RecordsPage() {
-  const { exams, isLoading, saveExam, updateExam, deleteExam } = useChild()
+  const { activeChildId, exams, isLoading, saveExam, updateExam, deleteExam } = useChild()
   const [modal, setModal]       = useState(false)
   const [editing, setEditing]   = useState<ExamRecord | null>(null)
   const [form, setForm]         = useState(EMPTY_EXAM)
@@ -118,6 +139,7 @@ export default function RecordsPage() {
       } else {
         await saveExam(signedForm)
         toast.success('검사기록이 저장되었습니다')
+        matchHospitalByLocation(activeChildId)   // best-effort, 실패해도 저장 자체엔 영향 없음
       }
       closeModal()
     } catch { toast.error('저장에 실패했습니다') }

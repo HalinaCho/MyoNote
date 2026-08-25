@@ -3,6 +3,14 @@
 import { Suspense, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
+// QR 연결(/connect/[token])처럼 로그인 후 특정 페이지로 돌아가야 할 때
+// 로그인 시작 전 저장해둔 경로 — 있으면 소비하고 지운다(없으면 기본 /dashboard).
+function consumePostLoginRedirect(): string {
+  const path = localStorage.getItem('mn_post_login_redirect')
+  if (path) localStorage.removeItem('mn_post_login_redirect')
+  return path || '/dashboard'
+}
+
 function CallbackHandler() {
   const done = useRef(false)
 
@@ -20,7 +28,7 @@ function CallbackHandler() {
         if (error || !data.session) {
           window.location.replace(`${siteUrl}/login?error=auth_failed`)
         } else {
-          window.location.replace(`${siteUrl}/dashboard`)
+          window.location.replace(`${siteUrl}${consumePostLoginRedirect()}`)
         }
       })
       return
@@ -32,7 +40,7 @@ function CallbackHandler() {
       if (event === 'SIGNED_IN' && session) {
         subscription.unsubscribe()
         clearTimeout(timeout)
-        window.location.replace(`${siteUrl}/dashboard`)
+        window.location.replace(`${siteUrl}${consumePostLoginRedirect()}`)
       }
     })
 
@@ -40,7 +48,7 @@ function CallbackHandler() {
       if (session) {
         subscription.unsubscribe()
         clearTimeout(timeout)
-        window.location.replace(`${siteUrl}/dashboard`)
+        window.location.replace(`${siteUrl}${consumePostLoginRedirect()}`)
       }
     })
 

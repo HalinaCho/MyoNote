@@ -11,13 +11,10 @@
 // 보안: 호출자(pg_cron)가 Authorization: Bearer <CRON_SECRET> 헤더를 붙여 호출한다.
 // web-push는 Node crypto 필요 → Node 런타임 고정.
 
-import webpush from 'web-push'
-import { createClient } from '@supabase/supabase-js'
+import { getServiceClient, configureWebPush, fetchSubscriptions, sendPushJobs, type SubRow } from '@/lib/server/push'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-
-interface SubRow { user_id: string; endpoint: string; p256dh: string; auth: string }
 
 function kstToday(): string {
   return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10)
@@ -32,17 +29,15 @@ export async function GET(req: Request) {
     return Response.json({ error: 'unauthorized' }, { status: 401 })
   }
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  const vapidPublic = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
-  const vapidPrivate = process.env.VAPID_PRIVATE_KEY
-  const vapidSubject = process.env.VAPID_SUBJECT
-  if (!url || !serviceKey || !vapidPublic || !vapidPrivate || !vapidSubject) {
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    !process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY || !process.env.VAPID_SUBJECT
+  ) {
     return Response.json({ error: '서버 환경변수(Supabase service role / VAPID)가 설정되지 않았습니다.' }, { status: 500 })
   }
 
-  webpush.setVapidDetails(vapidSubject, vapidPublic, vapidPrivate)
-  const sb = createClient(url, serviceKey, { auth: { persistSession: false } })
+  configureWebPush()
+  const sb = getServiceClient()
 
   const today = kstToday()
 
@@ -81,19 +76,16 @@ export async function GET(req: Request) {
   const alertDayByUser = new Map<string, number>()
   for (const p of prefs ?? []) alertDayByUser.set(p.user_id, p.appt_alert_day as number)
 
-  const { data: subs } = await sb
-    .from('eyebody_push_subscriptions')
-    .select('user_id, endpoint, p256dh, auth')
-    .in('user_id', userIds)
+  const subs = await fetchSubscriptions(sb, userIds)
   const subsByUser = new Map<string, SubRow[]>()
-  for (const s of (subs ?? []) as SubRow[]) {
+  for (const s of subs) {
     const arr = subsByUser.get(s.user_id) ?? []
     arr.push(s)
     subsByUser.set(s.user_id, arr)
   }
 
   // ④ 발송 대상 구성 (같은 구독에 중복 발송 방지)
-  const jobs: { sub: SubRow; payload: string }[] = []
+  const jobs: { sub: SubRow; payload: { title: string; body: string; url: string; tag: string } }[] = []
   const seen = new Set<string>()   // `${endpoint}|${examId}`
 
   for (const exam of exams) {
@@ -107,7 +99,7 @@ export async function GET(req: Request) {
       const clinic = exam.clinic ? ` · ${exam.clinic}` : ''
       const title = dDays === 0 ? '오늘 병원 예약일이에요' : `병원 예약 D-${dDays}`
       const body = `${exam.next_appointment}${clinic}`
-      const payload = JSON.stringify({ title, body, url: '/dashboard', tag: `appt-${exam.id}` })
+      const payload = { title, body, url: '/dashboard', tag: `appt-${exam.id}` }
       for (const sub of subsByUser.get(uid) ?? []) {
         const key = `${sub.endpoint}|${exam.id}`
         if (seen.has(key)) continue
@@ -117,26 +109,6 @@ export async function GET(req: Request) {
     }
   }
 
-  // 발송 + 만료 구독 정리
-  let sent = 0
-  const stale: string[] = []
-  await Promise.allSettled(
-    jobs.map(async ({ sub, payload }) => {
-      try {
-        await webpush.sendNotification(
-          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-          payload
-        )
-        sent++
-      } catch (err: unknown) {
-        const status = (err as { statusCode?: number })?.statusCode
-        if (status === 404 || status === 410) stale.push(sub.endpoint)
-      }
-    })
-  )
-  if (stale.length) {
-    await sb.from('eyebody_push_subscriptions').delete().in('endpoint', stale)
-  }
-
-  return Response.json({ ok: true, candidates: jobs.length, sent, removed: stale.length })
+  const { sent, removed } = await sendPushJobs(sb, jobs)
+  return Response.json({ ok: true, candidates: jobs.length, sent, removed })
 }
