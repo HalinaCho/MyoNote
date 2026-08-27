@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import QRCode from 'qrcode'
 import { useHospital } from '@/context/HospitalContext'
@@ -12,11 +12,6 @@ import { faHospital, faImage, faEyeDropper } from '@fortawesome/free-solid-svg-i
 
 const LOGO_MAX_BYTES = 5 * 1024 * 1024   // 리사이즈 전 원본 기준 — 너무 큰 파일은 브라우저에서 디코드가 버겁다
 
-// 헤더 배경으로 썼을 때 무난한 색들 — 대화상자 없이 한 번에 고를 수 있는 기본 선택지
-const PRESET_COLORS = [
-  '#14b8a6', '#0ea5e9', '#2563eb', '#7c3aed',
-  '#db2777', '#e11d48', '#ea580c', '#0f172a',
-]
 const isHex = (v: string) => /^#[0-9a-fA-F]{6}$/.test(v)
 
 // 화면 어디서든 색을 집어오는 브라우저 기본 스포이드(Chrome/Edge). 네이티브 색상 대화상자와 달리
@@ -44,6 +39,7 @@ export default function ClinicSettingsPage() {
   // 새로고침된 병원 정보를 자동으로 따라가므로 effect로 동기화할 필요가 없다.
   const [colorDraft, setColorDraft] = useState<string | null>(null)
   const [hexDraft, setHexDraft] = useState<string | null>(null)   // HEX 입력 중 타이핑 값(미완성 상태 허용)
+  const colorInputRef = useRef<HTMLInputElement>(null)
   const [savingColor, setSavingColor] = useState(false)
   const savedColor = hospital?.brandColor ?? DEFAULT_BRAND_COLOR
   const color = colorDraft ?? savedColor
@@ -90,6 +86,8 @@ export default function ClinicSettingsPage() {
   const handleEyeDropper = async () => {
     const Ctor = getEyeDropper()
     if (!Ctor) return
+    // 색상 피커 팝업이 열려 있으면 먼저 닫는다 — 열린 채로 두면 로고를 가려서 집을 수가 없다
+    colorInputRef.current?.blur()
     try {
       const { sRGBHex } = await new Ctor().open()
       setColorDraft(sRGBHex.toLowerCase())
@@ -236,23 +234,17 @@ export default function ClinicSettingsPage() {
 
         <div>
           <div className="text-xs font-medium text-gray-500 mb-1.5">브랜드 컬러</div>
-          {/* 네이티브 <input type="color">를 기본 경로에서 뺀 이유:
-              그 대화상자에 딸린 스포이드를 쓰면 대화상자가 열린 채로 남아 로고를 가린다.
-              스포이드를 지원하는 브라우저(Chrome/Edge)에서는 대화상자를 아예 띄우지 않고
-              스포이드 + 색상표 + HEX 입력으로 고르게 한다. 미지원 브라우저에서만 네이티브 피커를 남긴다. */}
           <div className="flex items-center gap-2 flex-wrap">
-            <div className="w-9 h-9 rounded-lg border border-gray-200 flex-shrink-0"
-              style={{ backgroundColor: color }} aria-hidden />
-            {hasEyeDropper ? (
+            <input type="color" ref={colorInputRef} value={color}
+              onChange={e => { setColorDraft(e.target.value); setHexDraft(null) }}
+              aria-label="브랜드 컬러 직접 선택"
+              className="w-12 h-9 rounded-lg border border-gray-200 bg-white p-1 cursor-pointer" />
+            {hasEyeDropper && (
               <button type="button" onClick={handleEyeDropper}
                 className="flex items-center gap-1.5 text-sm px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50">
                 <FontAwesomeIcon icon={faEyeDropper} className="text-xs text-gray-400" />
                 로고에서 색 뽑기
               </button>
-            ) : (
-              <input type="color" value={color} onChange={e => setColorDraft(e.target.value)}
-                aria-label="브랜드 컬러 직접 선택"
-                className="w-12 h-9 rounded-lg border border-gray-200 bg-white p-1 cursor-pointer" />
             )}
             <input
               value={hexDraft ?? color}
@@ -272,19 +264,10 @@ export default function ClinicSettingsPage() {
             )}
           </div>
 
-          <div className="flex gap-1.5 mt-2 flex-wrap">
-            {PRESET_COLORS.map(c => (
-              <button key={c} type="button" aria-label={`색상 ${c}`}
-                onClick={() => { setColorDraft(c); setHexDraft(null) }}
-                className={`w-8 h-8 rounded-lg border-2 transition-transform hover:scale-105
-                  ${color.toLowerCase() === c ? 'border-gray-800' : 'border-transparent'}`}
-                style={{ backgroundColor: c }} />
-            ))}
-          </div>
-
           {hasEyeDropper && (
             <p className="text-[11px] text-gray-400 mt-1.5">
-              스포이드를 누르면 화면 어디서든 색을 집을 수 있어요. 위 미리보기의 로고를 클릭해보세요.
+              로고에서 색을 딸 때는 왼쪽 색상칸 대신 <strong className="font-medium">로고에서 색 뽑기</strong>를 눌러주세요.
+              색상칸의 대화상자는 열린 채로 남아 로고를 가립니다.
             </p>
           )}
           <button onClick={handleColorSave} disabled={!colorDirty || savingColor}
