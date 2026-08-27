@@ -620,17 +620,21 @@ export interface PostInput {
 }
 
 // 링크 미리보기 수집 — 원장이 글을 저장할 때 한 번만. 실패해도 링크는 그대로 저장한다.
-export async function fetchLinkPreview(url: string): Promise<LinkMeta | null> {
+// reason: 왜 못 가져왔는지(응답 코드·태그 없음 등). 배포 환경에서만 재현되는 실패가 있어
+// 원장 화면에 그대로 보여줘야 원인을 짚을 수 있다.
+export async function fetchLinkPreview(url: string): Promise<{ meta: LinkMeta | null; reason?: string }> {
   try {
     const res = await fetch('/api/link-preview', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url }),
     })
-    if (!res.ok) return null
-    const data = await res.json()
-    return (data.meta as LinkMeta) ?? null
-  } catch { return null }
+    const data = await res.json().catch(() => null)
+    if (!res.ok) return { meta: null, reason: data?.error ?? `API ${res.status}` }
+    return { meta: (data?.meta as LinkMeta) ?? null, reason: data?.reason }
+  } catch (err) {
+    return { meta: null, reason: err instanceof Error ? err.message : '호출 실패' }
+  }
 }
 
 export async function createHospitalPost(

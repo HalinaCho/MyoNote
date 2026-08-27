@@ -101,11 +101,15 @@ export default function ClinicPostsPage() {
       // 부모가 볼 때마다 외부 사이트를 긁으면 느리고, 원문이 막혀도 카드가 깨지면 안 된다.
       // 유튜브는 그 자리에서 임베드되므로 미리보기가 필요 없다.
       const needsPreview = !!linkUrl && !parseYoutubeId(linkUrl)
-      const linkMeta = needsPreview ? await q.fetchLinkPreview(linkUrl!) : null
+      const preview = needsPreview ? await q.fetchLinkPreview(linkUrl!) : null
+      const linkMeta = preview?.meta ?? null
       // 미리보기를 못 만들면 링크는 그대로 저장하되 원장이 알 수 있게 알린다 —
-      // 조용히 넘어가면 "왜 썸네일이 안 뜨지"를 원장 혼자 헤매게 된다
+      // 조용히 넘어가면 "왜 썸네일이 안 뜨지"를 원장 혼자 헤매게 된다.
+      // 이유까지 같이 보여준다(사이트가 막았는지, 태그가 없는지 구분돼야 손을 쓸 수 있다)
       if (needsPreview && !linkMeta?.title) {
-        toast('링크 미리보기를 가져오지 못했어요. 링크는 그대로 저장됩니다', { icon: '⚠️' })
+        const why = preview?.reason ? ` (${preview.reason})` : ''
+        toast(`링크 미리보기를 가져오지 못했어요${why}. 링크는 그대로 저장됩니다`,
+          { icon: '⚠️', duration: 6000 })
       }
       const input = { body: trimmed, images: urls, linkUrl, linkMeta }
       if (editing === 'new') await q.createHospitalPost(hospital.id, postId, input)

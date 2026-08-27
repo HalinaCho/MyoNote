@@ -9,7 +9,7 @@ import { createClient as createServerClient } from '@/lib/supabase/server'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-const FETCH_TIMEOUT_MS = 6000
+const FETCH_TIMEOUT_MS = 10000   // 해외 리전에서 국내 사이트를 부를 때 6초는 빠듯할 수 있다
 const MAX_BYTES = 512 * 1024        // <head>만 필요하므로 512KB면 충분
 const MAX_REDIRECTS = 3
 
@@ -61,9 +61,12 @@ async function fetchHead(start: URL, signal: AbortSignal): Promise<{ res: Respon
       signal,
       redirect: 'manual',
       headers: {
-        // 봇 차단을 피하려 일반 브라우저처럼 요청. og 태그는 대개 이 정도면 내려온다.
-        'User-Agent': 'Mozilla/5.0 (compatible; MyoNoteBot/1.0; +https://myonote.app)',
-        'Accept': 'text/html,application/xhtml+xml',
+        // 봇임을 밝히는 UA는 네이버·언론사 등에서 자주 차단당한다(특히 데이터센터 IP에서).
+        // 링크 미리보기를 만드는 목적이므로 일반 브라우저와 같은 헤더로 요청한다.
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+          + '(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'ko-KR,ko;q=0.9,en;q=0.8',
       },
     })
     if (res.status >= 300 && res.status < 400) {
@@ -139,11 +142,16 @@ export async function POST(req: Request) {
     const hit = await fetchHead(url, controller.signal)
     if (!hit || !hit.res.ok) {
       // 미리보기를 못 만들어도 링크 자체는 저장할 수 있어야 하므로 도메인만 돌려준다
-      return Response.json({ meta: { siteName: url.hostname.replace(/^www\./, '') } })
+      const reason = hit ? `응답 ${hit.res.status}` : '리다이렉트 실패'
+      console.error('[link-preview]', url.href, reason)
+      return Response.json({ meta: { siteName: url.hostname.replace(/^www\./, '') }, reason })
     }
     const type = hit.res.headers.get('content-type') ?? ''
     if (!type.includes('html')) {
-      return Response.json({ meta: { siteName: hit.finalUrl.hostname.replace(/^www\./, '') } })
+      return Response.json({
+        meta: { siteName: hit.finalUrl.hostname.replace(/^www\./, '') },
+        reason: `HTML 아님(${type.split(';')[0] || '알 수 없음'})`,
+      })
     }
 
     // 본문 전체를 받지 않고 앞부분만 — <head>만 필요하고, 거대 페이지에서 메모리를 지키기 위해
@@ -163,17 +171,22 @@ export async function POST(req: Request) {
     }
 
     const image = clean(pickMeta(html, 'og:image') ?? pickMeta(html, 'twitter:image'), 500)
+    const title = clean(pickMeta(html, 'og:title') ?? html.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1] ?? null, 200)
+    if (!title) console.error('[link-preview] 태그 없음', hit.finalUrl.href, 'len', html.length)
     return Response.json({
+      reason: title ? undefined : `제목 태그 없음(${html.length}바이트)`,
       meta: {
-        title: clean(pickMeta(html, 'og:title') ?? html.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1] ?? null, 200),
+        title,
         description: clean(pickMeta(html, 'og:description') ?? pickMeta(html, 'description'), 300),
         // 상대경로 og:image도 있으므로 최종 URL 기준으로 절대경로화
         image: image ? new URL(image, hit.finalUrl).href : null,
         siteName: clean(pickMeta(html, 'og:site_name'), 80) ?? hit.finalUrl.hostname.replace(/^www\./, ''),
       },
     })
-  } catch {
-    return Response.json({ meta: { siteName: url.hostname.replace(/^www\./, '') } })
+  } catch (err) {
+    const reason = err instanceof Error ? `요청 실패(${err.name})` : '요청 실패'
+    console.error('[link-preview]', url.href, err)
+    return Response.json({ meta: { siteName: url.hostname.replace(/^www\./, '') }, reason })
   } finally {
     clearTimeout(timer)
   }
