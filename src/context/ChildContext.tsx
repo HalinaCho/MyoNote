@@ -22,7 +22,7 @@ interface ChildContextType {
   updateChild: (data: q.ChildFormUpdateInput) => Promise<void>
   deleteChild: (id: string) => Promise<void>
   saveTreatmentLog: (dateStr: string, done: Record<string, boolean>) => Promise<void>
-  saveExam: (exam: Omit<ExamRecord, 'id'>) => Promise<ExamRecord>
+  saveExam: (exam: Omit<ExamRecord, 'id'>, enteredByHospitalId?: string | null) => Promise<ExamRecord>
   updateExam: (id: string, exam: Omit<ExamRecord, 'id'>) => Promise<void>
   deleteExam: (id: string) => Promise<void>
   saveLifestyle: (dateStr: string, data: { outdoor: number; phone: number; sleep: number }) => Promise<void>
@@ -119,9 +119,9 @@ export function ChildProvider({ children: node }: { children: React.ReactNode })
   const sortExams = (list: ExamRecord[]) =>
     [...list].sort((a, b) => b.date.localeCompare(a.date))
 
-  const saveExam = async (exam: Omit<ExamRecord, 'id'>) => {
+  const saveExam = async (exam: Omit<ExamRecord, 'id'>, enteredByHospitalId?: string | null) => {
     if (!activeChildId) throw new Error('자녀를 선택해주세요')
-    const saved = await q.saveExam(activeChildId, exam)
+    const saved = await q.saveExam(activeChildId, exam, enteredByHospitalId)
     setExams(prev => sortExams([saved, ...prev]))
     return saved
   }

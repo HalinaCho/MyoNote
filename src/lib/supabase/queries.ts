@@ -141,7 +141,7 @@ export async function saveTreatmentLog(
 
 // ── 검사 기록 ─────────────────────────────────────────────────
 
-export async function saveExam(childId: string, exam: Omit<ExamRecord, 'id'>): Promise<ExamRecord> {
+export async function saveExam(childId: string, exam: Omit<ExamRecord, 'id'>, enteredByHospitalId?: string | null): Promise<ExamRecord> {
   const sb = createClient()
   const sphOD = exam.sphOD ? parseFloat(exam.sphOD) : null
   const sphOS = exam.sphOS ? parseFloat(exam.sphOS) : null
@@ -152,6 +152,7 @@ export async function saveExam(childId: string, exam: Omit<ExamRecord, 'id'>): P
 
   const { data, error } = await sb.from('eyebody_exam_records').insert({
     child_id: childId, exam_date: exam.date, clinic: exam.clinic || null,
+    entered_by_hospital_id: enteredByHospitalId ?? null,
     ax_od: exam.axOD ? parseFloat(exam.axOD) : null,
     ax_os: exam.axOS ? parseFloat(exam.axOS) : null,
     sph_od: sphOD, sph_os: sphOS,
