@@ -66,5 +66,13 @@ export interface Hospital {
   name: string
   logoUrl: string | null
   brandColor: string | null
-  notice: string | null
+}
+
+// 병원 소식 피드 — 글 하나에 본문/이미지(최대 5장)/유튜브 링크를 섞어 담는다
+export interface HospitalPost {
+  id: string
+  body: string
+  images: string[]
+  youtubeUrl: string | null
+  createdAt: string
 }

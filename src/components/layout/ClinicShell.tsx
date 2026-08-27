@@ -7,11 +7,12 @@ import { Toaster } from 'react-hot-toast'
 import { createClient } from '@/lib/supabase/client'
 import { HospitalProvider, useHospital } from '@/context/HospitalContext'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faHouse, faUsers, faGear, faRightFromBracket } from '@fortawesome/free-solid-svg-icons'
+import { faHouse, faUsers, faBullhorn, faGear, faRightFromBracket } from '@fortawesome/free-solid-svg-icons'
 
 const NAV = [
   { href: '/clinic', label: '홈', icon: faHouse },
   { href: '/clinic/patients', label: '환자', icon: faUsers },
+  { href: '/clinic/posts', label: '소식', icon: faBullhorn },
   { href: '/clinic/settings', label: '설정', icon: faGear },
 ]
 

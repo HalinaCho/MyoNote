@@ -7,7 +7,10 @@ import { useChild } from '@/context/ChildContext'
 import ChildFormModal from '@/components/child/ChildFormModal'
 import { today } from '@/lib/utils/date'
 import { hasUnseenExam } from '@/lib/aiReport'
-import { fetchLatestReport } from '@/lib/supabase/queries'
+import { fetchLatestReport, fetchFeedForChild } from '@/lib/supabase/queries'
+import { contrastText, contrastMuted, DEFAULT_BRAND_COLOR } from '@/lib/utils/color'
+import HospitalFeedSheet from '@/components/hospital/HospitalFeedSheet'
+import type { HospitalPost } from '@/types'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faXmark, faCalendarDays, faPen, faCommentDots, faHospital, faBullhorn, faFileWaveform, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import OnboardingFlow from '@/components/onboarding/OnboardingFlow'
@@ -21,13 +24,16 @@ export default function HomePage() {
   const [showChat, setShowChat] = useState(false)
   const [editingAppt, setEditingAppt] = useState(false)
   const [apptDate, setApptDate] = useState('')
+  const [showFeed, setShowFeed] = useState(false)
 
   // 병원 정보는 ChildContext가 자녀 데이터와 함께 들고 있다(탭 이동 시 헤더가 늦게 뜨지 않게).
   // 여기서는 "새 검사 도착" 판정에 필요한 마지막 AI 리포트 시각만 조회한다.
   // childId를 함께 담아 파생값으로 읽어, 자녀 전환 직후 이전 자녀 기준으로 판정하는 걸 막는다.
-  const [reportData, setReportData] = useState<{ childId: string; reportAt: string | null } | null>(null)
+  const [reportData, setReportData] =
+    useState<{ childId: string; reportAt: string | null; posts: HospitalPost[] } | null>(null)
   const reportLoaded = !!activeChildId && reportData?.childId === activeChildId
   const lastReportAt = reportLoaded ? reportData!.reportAt : null
+  const posts = reportLoaded ? reportData!.posts : []
 
   const todayStr = today()
 
@@ -41,11 +47,12 @@ export default function HomePage() {
     if (!activeChildId) return
     let cancelled = false
     const childId = activeChildId
-    fetchLatestReport(childId)
-      .catch(() => null)
-      .then(report => {
-        if (!cancelled) setReportData({ childId, reportAt: report?.createdAt ?? null })
-      })
+    Promise.all([
+      fetchLatestReport(childId).catch(() => null),
+      fetchFeedForChild(childId).catch(() => []),   // 병원 미연결이면 빈 배열
+    ]).then(([report, feed]) => {
+      if (!cancelled) setReportData({ childId, reportAt: report?.createdAt ?? null, posts: feed })
+    })
     return () => { cancelled = true }
   }, [activeChildId])
 
@@ -64,6 +71,8 @@ export default function HomePage() {
 
   // 마지막 리포트 이후 새 검사가 들어왔는지 — 조회가 끝난 뒤에만 판정(깜빡임 방지)
   const newExam = reportLoaded && hasUnseenExam(exams, lastReportAt)
+  const brandColor = hospital?.brandColor || DEFAULT_BRAND_COLOR
+  const latestPost = posts[0] ?? null
 
   return (
     <>
@@ -71,7 +80,7 @@ export default function HomePage() {
       {hospital && (
         <section
           className="flex items-center gap-3 rounded-2xl px-4 py-3 mb-3 shadow-sm"
-          style={{ backgroundColor: hospital.brandColor || '#14b8a6' }}
+          style={{ backgroundColor: brandColor }}
         >
           {hospital.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -82,12 +91,13 @@ export default function HomePage() {
             />
           ) : (
             <div className="w-10 h-10 rounded-full bg-white/25 flex items-center justify-center flex-shrink-0">
-              <FontAwesomeIcon icon={faHospital} className="text-white" />
+              <FontAwesomeIcon icon={faHospital} style={{ color: contrastText(brandColor) }} />
             </div>
           )}
           <div className="min-w-0">
-            <p className="text-xs text-white/75">연결된 병원</p>
-            <p className="font-bold text-white truncate">{hospital.name}</p>
+            {/* 글자색은 배경 밝기에 맞춰 자동 — 원장이 밝은 색을 골라도 병원 이름이 묻히지 않게 */}
+            <p className="text-xs" style={{ color: contrastMuted(brandColor) }}>연결된 병원</p>
+            <p className="font-bold truncate" style={{ color: contrastText(brandColor) }}>{hospital.name}</p>
           </div>
         </section>
       )}
@@ -157,15 +167,31 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* ── 병원 공지 ── */}
-      {hospital?.notice && (
-        <section className="bg-white rounded-2xl p-4 mb-3 shadow-sm">
+      {/* ── 병원 소식 (최신 1개만, 탭하면 전체 피드) ── */}
+      {latestPost && (
+        <button
+          onClick={() => setShowFeed(true)}
+          className="w-full bg-white rounded-2xl p-4 mb-3 shadow-sm text-left transition-colors hover:bg-gray-50"
+        >
           <h2 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
             <FontAwesomeIcon icon={faBullhorn} className="text-teal-500 text-sm" />
-            병원 공지
+            병원 소식
+            {posts.length > 1 && (
+              <span className="text-xs font-normal text-gray-400">전체 {posts.length}개</span>
+            )}
+            <FontAwesomeIcon icon={faChevronRight} className="text-xs text-gray-300 ml-auto" />
           </h2>
-          <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">{hospital.notice}</p>
-        </section>
+          <div className="flex gap-3">
+            {latestPost.images[0] && (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img src={latestPost.images[0]} alt="" loading="lazy"
+                className="w-16 h-16 rounded-xl object-cover bg-gray-100 flex-shrink-0" />
+            )}
+            <p className="text-sm text-gray-600 leading-relaxed line-clamp-2 break-words">
+              {latestPost.body || (latestPost.images.length ? '사진을 확인해보세요' : '영상을 확인해보세요')}
+            </p>
+          </div>
+        </button>
       )}
 
       {/* ── 아무것도 없을 때 안내 ── */}
@@ -196,6 +222,13 @@ export default function HomePage() {
         </div>
         <FontAwesomeIcon icon={faChevronRight} className="text-xs text-gray-300 flex-shrink-0" />
       </button>
+
+      <HospitalFeedSheet
+        open={showFeed}
+        onClose={() => setShowFeed(false)}
+        hospitalName={hospital?.name ?? '병원'}
+        posts={posts}
+      />
 
       <ChildFormModal open={showAddChild} onClose={() => setShowAddChild(false)} />
 

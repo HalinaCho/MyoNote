@@ -5,12 +5,74 @@ import toast from 'react-hot-toast'
 import QRCode from 'qrcode'
 import { useHospital } from '@/context/HospitalContext'
 import * as q from '@/lib/supabase/queries'
+import { downscaleImage } from '@/lib/examExtract'
+import { contrastText, contrastMuted, DEFAULT_BRAND_COLOR } from '@/lib/utils/color'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faHospital, faImage } from '@fortawesome/free-solid-svg-icons'
+
+const LOGO_MAX_BYTES = 5 * 1024 * 1024   // 리사이즈 전 원본 기준 — 너무 큰 파일은 브라우저에서 디코드가 버겁다
 
 export default function ClinicSettingsPage() {
-  const { hospital, isLoading, error } = useHospital()
+  const { hospital, isLoading, error, refresh } = useHospital()
   const [token, setToken] = useState<string | null>(null)
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
   const [regenerating, setRegenerating] = useState(false)
+  const [uploadingLogo, setUploadingLogo] = useState(false)
+  // 컬러는 만지작거리다 확정하는 값이라 즉시 저장하지 않는다(로고는 파일 선택이 곧 확정이라 즉시 저장).
+  // draft가 null이면 "아직 안 건드림" → 저장된 값을 그대로 쓴다. 저장 후 null로 되돌리면
+  // 새로고침된 병원 정보를 자동으로 따라가므로 effect로 동기화할 필요가 없다.
+  const [colorDraft, setColorDraft] = useState<string | null>(null)
+  const [savingColor, setSavingColor] = useState(false)
+  const savedColor = hospital?.brandColor ?? DEFAULT_BRAND_COLOR
+  const color = colorDraft ?? savedColor
+  const colorDirty = colorDraft !== null && colorDraft !== savedColor
+
+  const handleLogo = async (file: File | undefined) => {
+    if (!file || !hospital) return
+    if (!file.type.startsWith('image/')) { toast.error('이미지 파일만 올릴 수 있어요'); return }
+    if (file.size > LOGO_MAX_BYTES) { toast.error('5MB 이하 이미지만 올릴 수 있어요'); return }
+    setUploadingLogo(true)
+    try {
+      // PNG로 뽑아야 배경이 뚫린 로고가 흰 사각형으로 뭉개지지 않는다
+      const dataUrl = await downscaleImage(file, 256, 0.92, 'image/png')
+      await q.uploadHospitalLogo(hospital.id, dataUrl)
+      await refresh()
+      toast.success('로고가 등록되었습니다')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : '로고 등록에 실패했습니다')
+    } finally {
+      setUploadingLogo(false)
+    }
+  }
+
+  const handleLogoDelete = async () => {
+    if (!hospital) return
+    setUploadingLogo(true)
+    try {
+      await q.deleteHospitalLogo(hospital.id)
+      await refresh()
+      toast.success('로고를 삭제했습니다')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : '삭제에 실패했습니다')
+    } finally {
+      setUploadingLogo(false)
+    }
+  }
+
+  const handleColorSave = async () => {
+    if (!hospital) return
+    setSavingColor(true)
+    try {
+      await q.updateHospitalBranding(hospital.id, { brandColor: color })
+      await refresh()
+      setColorDraft(null)   // 저장된 값을 다시 따라가게
+      toast.success('브랜드 컬러가 저장되었습니다')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : '저장에 실패했습니다')
+    } finally {
+      setSavingColor(false)
+    }
+  }
 
   useEffect(() => {
     if (!hospital) return
@@ -71,9 +133,66 @@ export default function ClinicSettingsPage() {
         </button>
       </div>
 
-      <p className="text-xs text-gray-400">
-        로고·브랜드 컬러 설정은 다음 업데이트에서 제공됩니다.
-      </p>
+      <div className="bg-white rounded-xl border border-gray-100 p-4 space-y-4">
+        <div className="text-sm text-gray-500">브랜딩</div>
+
+        {/* 부모 홈 미리보기 — 저장하고 부모 폰으로 확인하러 갈 수 없으니 고르는 즉시 보여준다 */}
+        <div>
+          <div className="text-xs text-gray-400 mb-1.5">보호자 앱 홈에서 이렇게 보입니다</div>
+          <div className="flex items-center gap-3 rounded-2xl px-4 py-3" style={{ backgroundColor: color }}>
+            {hospital.logoUrl ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img src={hospital.logoUrl} alt="" className="w-10 h-10 rounded-full bg-white object-contain flex-shrink-0" />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-white/25 flex items-center justify-center flex-shrink-0">
+                <FontAwesomeIcon icon={faHospital} style={{ color: contrastText(color) }} />
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-xs" style={{ color: contrastMuted(color) }}>연결된 병원</p>
+              <p className="font-bold truncate" style={{ color: contrastText(color) }}>{hospital.name}</p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div className="text-xs font-medium text-gray-500 mb-1.5">로고</div>
+          <div className="flex items-center gap-2">
+            <label className={`flex items-center gap-1.5 text-sm px-3 py-2 rounded-lg border border-gray-200 cursor-pointer
+              ${uploadingLogo ? 'opacity-40 pointer-events-none' : 'hover:bg-gray-50'}`}>
+              <FontAwesomeIcon icon={faImage} className="text-xs text-gray-400" />
+              {uploadingLogo ? '처리 중…' : hospital.logoUrl ? '로고 바꾸기' : '로고 올리기'}
+              <input type="file" accept="image/*" className="hidden"
+                onChange={e => { handleLogo(e.target.files?.[0]); e.currentTarget.value = '' }} />
+            </label>
+            {hospital.logoUrl && (
+              <button onClick={handleLogoDelete} disabled={uploadingLogo}
+                className="text-xs text-gray-400 hover:text-rose-500 underline disabled:opacity-50">
+                삭제
+              </button>
+            )}
+          </div>
+          <p className="text-[11px] text-gray-400 mt-1">배경이 투명한 PNG를 권장합니다. 5MB 이하.</p>
+        </div>
+
+        <div>
+          <div className="text-xs font-medium text-gray-500 mb-1.5">브랜드 컬러</div>
+          <div className="flex items-center gap-2">
+            <input type="color" value={color} onChange={e => setColorDraft(e.target.value)}
+              aria-label="브랜드 컬러 선택"
+              className="w-12 h-9 rounded-lg border border-gray-200 bg-white p-1 cursor-pointer" />
+            <span className="text-sm text-gray-500 font-mono">{color}</span>
+            {color !== DEFAULT_BRAND_COLOR && (
+              <button onClick={() => setColorDraft(DEFAULT_BRAND_COLOR)}
+                className="text-xs text-gray-400 hover:text-gray-600 underline">기본색으로</button>
+            )}
+          </div>
+          <button onClick={handleColorSave} disabled={!colorDirty || savingColor}
+            className="mt-3 w-full bg-teal-500 hover:bg-teal-600 disabled:bg-gray-200 disabled:text-gray-400 text-white font-semibold py-2.5 rounded-xl transition-colors">
+            {savingColor ? '저장 중…' : colorDirty ? '컬러 저장' : '저장됨'}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

@@ -51,8 +51,12 @@ async function decodeImage(file: File): Promise<Decoded> {
   return { source: img, width: img.naturalWidth, height: img.naturalHeight, close: () => {} }
 }
 
-// 긴 변 최대 maxDim으로 축소한 JPEG data URI. (Vercel 본문 4.5MB 제한 + 토큰 절감)
-export async function downscaleImage(file: File, maxDim = 2000, quality = 0.85): Promise<string> {
+// 긴 변 최대 maxDim으로 축소한 data URI. (Vercel 본문 4.5MB 제한 + 토큰 절감)
+// mime을 'image/png'로 주면 투명 배경이 보존된다 — 병원 로고처럼 배경이 뚫린 이미지용.
+// 캔버스에 배경을 칠하지 않으므로 PNG 경로에서 알파가 그대로 남는다.
+export async function downscaleImage(
+  file: File, maxDim = 2000, quality = 0.85, mime: 'image/jpeg' | 'image/png' = 'image/jpeg',
+): Promise<string> {
   const { source, width, height, close } = await decodeImage(file)
   try {
     const scale = Math.min(1, maxDim / Math.max(width, height))
@@ -64,7 +68,7 @@ export async function downscaleImage(file: File, maxDim = 2000, quality = 0.85):
     const ctx = canvas.getContext('2d')
     if (!ctx) throw new Error('이미지를 처리하지 못했습니다.')
     ctx.drawImage(source, 0, 0, w, h)
-    return canvas.toDataURL('image/jpeg', quality)
+    return canvas.toDataURL(mime, quality)
   } finally {
     close()
   }

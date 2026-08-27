@@ -1,6 +1,6 @@
 // RN 이식 시 createClient만 교체하면 전체 재사용 가능
 import { createClient } from './client'
-import type { Child, ExamRecord, TreatmentLogs, LifestyleLogs, TreatmentDef, DesiredTreatment, Hospital } from '@/types'
+import type { Child, ExamRecord, TreatmentLogs, LifestyleLogs, TreatmentDef, DesiredTreatment, Hospital, HospitalPost } from '@/types'
 import type { AiReport } from '@/lib/aiReport'
 
 // 폼 입력 — treatments는 periods 없는 활성 집합 (context가 병합해 기간 부여)
@@ -378,19 +378,19 @@ export async function fetchHospital(hospitalId: string): Promise<Hospital> {
   const sb = createClient()
   const { data, error } = await sb
     .from('eyebody_hospitals')
-    .select('id, name, logo_url, brand_color, notice')
+    .select('id, name, logo_url, brand_color')
     .eq('id', hospitalId)
     .single()
   if (error) throw error
   return {
     id: data.id, name: data.name,
-    logoUrl: data.logo_url ?? null, brandColor: data.brand_color ?? null, notice: data.notice ?? null,
+    logoUrl: data.logo_url ?? null, brandColor: data.brand_color ?? null,
   }
 }
 
 // 부모 홈 화면 — 현재 연결된 병원(없으면 null)
 interface HospitalRow {
-  id: string; name: string; logo_url: string | null; brand_color: string | null; notice: string | null
+  id: string; name: string; logo_url: string | null; brand_color: string | null
 }
 
 export async function fetchMyConnectedHospital(childId: string): Promise<Hospital | null> {
@@ -401,7 +401,7 @@ export async function fetchMyConnectedHospital(childId: string): Promise<Hospita
   if (!row) return null
   return {
     id: row.id, name: row.name,
-    logoUrl: row.logo_url ?? null, brandColor: row.brand_color ?? null, notice: row.notice ?? null,
+    logoUrl: row.logo_url ?? null, brandColor: row.brand_color ?? null,
   }
 }
 
@@ -525,6 +525,131 @@ export async function fetchPatientDetail(hospitalId: string, childId: string): P
       nextAppointment: e.next_appointment, byUs: !!e.by_us,
     })),
   }
+}
+
+// ── 병원 브랜딩 / 소식 피드 ───────────────────────────────────
+
+const MEDIA_BUCKET = 'hospital-media'
+export const POST_IMAGE_MAX = 5          // DB check 제약과 같은 값 — 넘기면 insert가 거부된다
+
+// 로고·소식 이미지 공용 업로드. 경로 첫 폴더가 병원 id여야 Storage 정책을 통과한다.
+// data URI로 받는 이유: downscaleImage가 리사이즈 결과를 data URI로 주기 때문(재사용).
+async function uploadMedia(path: string, dataUrl: string, contentType: string): Promise<string> {
+  const sb = createClient()
+  const blob = await (await fetch(dataUrl)).blob()
+  const { error } = await sb.storage.from(MEDIA_BUCKET)
+    .upload(path, blob, { contentType, upsert: true })
+  if (error) throw new Error(error.message || '이미지 업로드에 실패했습니다')
+  const { data } = sb.storage.from(MEDIA_BUCKET).getPublicUrl(path)
+  // 경로가 고정이라 같은 URL로 덮어쓰면 브라우저가 옛 이미지를 계속 보여준다 → 캐시 무력화
+  return `${data.publicUrl}?t=${Date.now()}`
+}
+
+export async function updateHospitalBranding(
+  hospitalId: string, patch: { logoUrl?: string | null; brandColor?: string | null },
+): Promise<void> {
+  const sb = createClient()
+  const row: Record<string, string | null> = {}
+  if ('logoUrl' in patch) row.logo_url = patch.logoUrl ?? null
+  if ('brandColor' in patch) row.brand_color = patch.brandColor ?? null
+  const { error } = await sb.from('eyebody_hospitals').update(row).eq('id', hospitalId)
+  if (error) throw error
+}
+
+// 로고는 병원당 파일 1개만 유지 — 경로 고정 + upsert라 옛 파일이 쌓이지 않는다
+export async function uploadHospitalLogo(hospitalId: string, dataUrl: string): Promise<string> {
+  const url = await uploadMedia(`${hospitalId}/logo`, dataUrl, 'image/png')
+  await updateHospitalBranding(hospitalId, { logoUrl: url })
+  return url
+}
+
+export async function deleteHospitalLogo(hospitalId: string): Promise<void> {
+  const sb = createClient()
+  await sb.storage.from(MEDIA_BUCKET).remove([`${hospitalId}/logo`])   // 파일이 없어도 에러 아님
+  await updateHospitalBranding(hospitalId, { logoUrl: null })
+}
+
+interface HospitalPostRow {
+  id: string; body: string | null; images: string[] | null
+  youtube_url: string | null; created_at: string
+}
+
+const toPost = (r: HospitalPostRow): HospitalPost => ({
+  id: r.id, body: r.body ?? '', images: r.images ?? [],
+  youtubeUrl: r.youtube_url, createdAt: r.created_at,
+})
+
+// 원장 포털 — 자기 병원 소식 전체
+export async function fetchHospitalPosts(hospitalId: string): Promise<HospitalPost[]> {
+  const sb = createClient()
+  const { data, error } = await sb
+    .from('eyebody_hospital_posts')
+    .select('id, body, images, youtube_url, created_at')
+    .eq('hospital_id', hospitalId)
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return ((data ?? []) as HospitalPostRow[]).map(toPost)
+}
+
+// 부모 앱 — 내 자녀의 "현재" 병원 소식만(이탈하면 안 보인다, RPC에서 강제)
+export async function fetchFeedForChild(childId: string, limit = 20): Promise<HospitalPost[]> {
+  const sb = createClient()
+  const { data, error } = await sb.rpc('hospital_feed', { p_child_id: childId, p_limit: limit })
+  if (error) throw error
+  return ((data ?? []) as {
+    post_id: string; post_body: string | null; post_images: string[] | null
+    post_youtube_url: string | null; post_created_at: string
+  }[]).map(r => ({
+    id: r.post_id, body: r.post_body ?? '', images: r.post_images ?? [],
+    youtubeUrl: r.post_youtube_url, createdAt: r.post_created_at,
+  }))
+}
+
+// 소식 이미지 업로드 — 글을 만들기 전에 경로가 필요하므로 postId를 호출부에서 먼저 만들어 넘긴다
+export async function uploadPostImage(
+  hospitalId: string, postId: string, index: number, dataUrl: string,
+): Promise<string> {
+  return uploadMedia(`${hospitalId}/posts/${postId}/${index}`, dataUrl, 'image/jpeg')
+}
+
+export interface PostInput {
+  body: string
+  images: string[]
+  youtubeUrl: string | null
+}
+
+export async function createHospitalPost(
+  hospitalId: string, postId: string, input: PostInput,
+): Promise<void> {
+  const sb = createClient()
+  const { error } = await sb.from('eyebody_hospital_posts').insert({
+    id: postId, hospital_id: hospitalId,
+    body: input.body.trim() || null,
+    images: input.images,
+    youtube_url: input.youtubeUrl,
+  })
+  if (error) throw new Error(error.message || '소식 등록에 실패했습니다')
+}
+
+export async function updateHospitalPost(postId: string, input: PostInput): Promise<void> {
+  const sb = createClient()
+  const { error } = await sb.from('eyebody_hospital_posts').update({
+    body: input.body.trim() || null,
+    images: input.images,
+    youtube_url: input.youtubeUrl,
+    updated_at: new Date().toISOString(),
+  }).eq('id', postId)
+  if (error) throw new Error(error.message || '소식 수정에 실패했습니다')
+}
+
+// 글과 함께 그 글의 이미지 파일까지 지운다(고아 파일 방지).
+// 파일 정리가 실패해도 글 삭제는 되돌리지 않는다 — 사용자에겐 지워진 게 맞고, 남는 건 빈 파일뿐이다.
+export async function deleteHospitalPost(hospitalId: string, postId: string): Promise<void> {
+  const sb = createClient()
+  const { error } = await sb.from('eyebody_hospital_posts').delete().eq('id', postId)
+  if (error) throw error
+  const paths = Array.from({ length: POST_IMAGE_MAX }, (_, i) => `${hospitalId}/posts/${postId}/${i}`)
+  await sb.storage.from(MEDIA_BUCKET).remove(paths).catch(() => {})
 }
 
 // 병원 QR 연결 토큰 (설정 화면 전용 — Hospital 타입엔 안 넣음, 스태프 화면에서만 필요)
