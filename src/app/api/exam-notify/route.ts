@@ -17,7 +17,7 @@ export async function POST(req: Request) {
   const { childId, hospitalName } = body
   if (!childId) return Response.json({ error: 'childId가 필요합니다.' }, { status: 400 })
 
-  const authed = createRouteClient(req)
+  const authed = await createRouteClient(req)
   if (!authed) return Response.json({ error: '로그인이 필요합니다.' }, { status: 401 })
   const { data: { user } } = await authed.auth.getUser()
   if (!user) return Response.json({ error: '로그인이 만료되었습니다.' }, { status: 401 })

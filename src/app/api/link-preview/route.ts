@@ -120,7 +120,7 @@ const clean = (v: string | null, max: number) =>
 
 export async function POST(req: Request) {
   // 원장(병원 스태프)만 호출할 수 있게 — 공개 URL 프록시로 악용되지 않도록
-  const authed = createRouteClient(req)
+  const authed = await createRouteClient(req)
   if (!authed) return Response.json({ error: '로그인이 필요합니다.' }, { status: 401 })
   const { data: { user } } = await authed.auth.getUser()
   if (!user) return Response.json({ error: '로그인이 만료되었습니다. 다시 로그인해주세요.' }, { status: 401 })
