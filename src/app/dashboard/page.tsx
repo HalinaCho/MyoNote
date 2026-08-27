@@ -10,6 +10,7 @@ import { hasUnseenExam } from '@/lib/aiReport'
 import { fetchLatestReport, fetchFeedForChild } from '@/lib/supabase/queries'
 import { contrastText, contrastMuted, DEFAULT_BRAND_COLOR } from '@/lib/utils/color'
 import HospitalFeedSheet from '@/components/hospital/HospitalFeedSheet'
+import PostView from '@/components/hospital/PostView'
 import type { HospitalPost } from '@/types'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faXmark, faCalendarDays, faPen, faCommentDots, faHospital, faBullhorn, faFileWaveform, faChevronRight } from '@fortawesome/free-solid-svg-icons'
@@ -167,31 +168,24 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* ── 병원 소식 (최신 1개만, 탭하면 전체 피드) ── */}
+      {/* ── 병원 소식 (최신 1개를 피드처럼 그대로, 나머지는 시트에서) ── */}
+      {/* 카드 전체를 버튼으로 감싸지 않는 이유: 안에 영상 iframe과 "더보기"가 들어가
+          클릭이 서로 잡아먹는다. 시트 열기는 헤더의 "전체 보기" 버튼이 담당한다. */}
       {latestPost && (
-        <button
-          onClick={() => setShowFeed(true)}
-          className="w-full bg-white rounded-2xl p-4 mb-3 shadow-sm text-left transition-colors hover:bg-gray-50"
-        >
+        <section className="bg-white rounded-2xl p-4 mb-3 shadow-sm">
           <h2 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
             <FontAwesomeIcon icon={faBullhorn} className="text-teal-500 text-sm" />
             병원 소식
             {posts.length > 1 && (
-              <span className="text-xs font-normal text-gray-400">전체 {posts.length}개</span>
+              <button onClick={() => setShowFeed(true)}
+                className="ml-auto flex items-center gap-1 text-xs font-medium text-teal-600 hover:text-teal-700">
+                전체 {posts.length}개
+                <FontAwesomeIcon icon={faChevronRight} className="text-[10px]" />
+              </button>
             )}
-            <FontAwesomeIcon icon={faChevronRight} className="text-xs text-gray-300 ml-auto" />
           </h2>
-          <div className="flex gap-3">
-            {latestPost.images[0] && (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img src={latestPost.images[0]} alt="" loading="lazy"
-                className="w-16 h-16 rounded-xl object-cover bg-gray-100 flex-shrink-0" />
-            )}
-            <p className="text-sm text-gray-600 leading-relaxed line-clamp-2 break-words">
-              {latestPost.body || (latestPost.images.length ? '사진을 확인해보세요' : '영상을 확인해보세요')}
-            </p>
-          </div>
-        </button>
+          <PostView post={latestPost} preview />
+        </section>
       )}
 
       {/* ── 아무것도 없을 때 안내 ── */}

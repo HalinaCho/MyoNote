@@ -8,9 +8,15 @@ import * as q from '@/lib/supabase/queries'
 import { downscaleImage } from '@/lib/examExtract'
 import { contrastText, contrastMuted, DEFAULT_BRAND_COLOR } from '@/lib/utils/color'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faHospital, faImage } from '@fortawesome/free-solid-svg-icons'
+import { faHospital, faImage, faEyeDropper } from '@fortawesome/free-solid-svg-icons'
 
 const LOGO_MAX_BYTES = 5 * 1024 * 1024   // 리사이즈 전 원본 기준 — 너무 큰 파일은 브라우저에서 디코드가 버겁다
+
+// 화면 어디서든 색을 집어오는 브라우저 기본 스포이드(Chrome/Edge). 네이티브 색상 대화상자와 달리
+// 집는 즉시 닫혀서 로고를 가리지 않는다. 미지원 브라우저에서는 버튼을 숨긴다.
+interface EyeDropperCtor { new (): { open: () => Promise<{ sRGBHex: string }> } }
+const getEyeDropper = (): EyeDropperCtor | null =>
+  (typeof window !== 'undefined' && (window as unknown as { EyeDropper?: EyeDropperCtor }).EyeDropper) || null
 
 export default function ClinicSettingsPage() {
   const { hospital, isLoading, error, refresh } = useHospital()
@@ -18,6 +24,14 @@ export default function ClinicSettingsPage() {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
   const [regenerating, setRegenerating] = useState(false)
   const [uploadingLogo, setUploadingLogo] = useState(false)
+  const [dragOver, setDragOver] = useState(false)
+  const [hasEyeDropper, setHasEyeDropper] = useState(false)
+
+  // 브라우저 지원 여부는 서버 렌더 시점에 알 수 없다 → 마운트 후 판정(하이드레이션 불일치 방지)
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 브라우저 기능 감지, 마운트 시 1회
+    setHasEyeDropper(!!getEyeDropper())
+  }, [])
   // 컬러는 만지작거리다 확정하는 값이라 즉시 저장하지 않는다(로고는 파일 선택이 곧 확정이라 즉시 저장).
   // draft가 null이면 "아직 안 건드림" → 저장된 값을 그대로 쓴다. 저장 후 null로 되돌리면
   // 새로고침된 병원 정보를 자동으로 따라가므로 effect로 동기화할 필요가 없다.
@@ -57,6 +71,21 @@ export default function ClinicSettingsPage() {
     } finally {
       setUploadingLogo(false)
     }
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragOver(false)
+    handleLogo(e.dataTransfer.files?.[0])
+  }
+
+  const handleEyeDropper = async () => {
+    const Ctor = getEyeDropper()
+    if (!Ctor) return
+    try {
+      const { sRGBHex } = await new Ctor().open()
+      setColorDraft(sRGBHex)
+    } catch { /* 사용자가 ESC로 취소 — 조용히 무시 */ }
   }
 
   const handleColorSave = async () => {
@@ -157,30 +186,59 @@ export default function ClinicSettingsPage() {
 
         <div>
           <div className="text-xs font-medium text-gray-500 mb-1.5">로고</div>
-          <div className="flex items-center gap-2">
-            <label className={`flex items-center gap-1.5 text-sm px-3 py-2 rounded-lg border border-gray-200 cursor-pointer
-              ${uploadingLogo ? 'opacity-40 pointer-events-none' : 'hover:bg-gray-50'}`}>
-              <FontAwesomeIcon icon={faImage} className="text-xs text-gray-400" />
-              {uploadingLogo ? '처리 중…' : hospital.logoUrl ? '로고 바꾸기' : '로고 올리기'}
-              <input type="file" accept="image/*" className="hidden"
-                onChange={e => { handleLogo(e.target.files?.[0]); e.currentTarget.value = '' }} />
-            </label>
-            {hospital.logoUrl && (
-              <button onClick={handleLogoDelete} disabled={uploadingLogo}
-                className="text-xs text-gray-400 hover:text-rose-500 underline disabled:opacity-50">
-                삭제
-              </button>
+          {/* 영역 전체가 드롭 존이자 파일 선택 버튼 — 끌어다 놓아도, 눌러서 골라도 된다 */}
+          <label
+            onDragOver={e => { e.preventDefault(); setDragOver(true) }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={handleDrop}
+            className={`flex items-center gap-3 rounded-xl border-2 border-dashed px-4 py-3 cursor-pointer transition-colors
+              ${uploadingLogo ? 'opacity-40 pointer-events-none' : ''}
+              ${dragOver ? 'border-teal-400 bg-teal-50' : 'border-gray-200 hover:bg-gray-50'}`}
+          >
+            {hospital.logoUrl ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img src={hospital.logoUrl} alt="" className="w-12 h-12 rounded-lg object-contain bg-gray-50 flex-shrink-0" />
+            ) : (
+              <div className="w-12 h-12 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
+                <FontAwesomeIcon icon={faImage} className="text-gray-300" />
+              </div>
             )}
-          </div>
-          <p className="text-[11px] text-gray-400 mt-1">배경이 투명한 PNG를 권장합니다. 5MB 이하.</p>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-gray-700">
+                {uploadingLogo ? '처리 중…'
+                  : dragOver ? '여기에 놓으세요'
+                  : hospital.logoUrl ? '로고 바꾸기' : '로고 올리기'}
+              </p>
+              <p className="text-[11px] text-gray-400 mt-0.5">
+                파일을 끌어다 놓거나 눌러서 선택하세요 · 투명 배경 PNG 권장 · 5MB 이하
+              </p>
+            </div>
+            <input type="file" accept="image/*" className="hidden"
+              onChange={e => { handleLogo(e.target.files?.[0]); e.currentTarget.value = '' }} />
+          </label>
+          {hospital.logoUrl && (
+            <button onClick={handleLogoDelete} disabled={uploadingLogo}
+              className="mt-1.5 text-xs text-gray-400 hover:text-rose-500 underline disabled:opacity-50">
+              로고 삭제
+            </button>
+          )}
         </div>
 
         <div>
           <div className="text-xs font-medium text-gray-500 mb-1.5">브랜드 컬러</div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <input type="color" value={color} onChange={e => setColorDraft(e.target.value)}
-              aria-label="브랜드 컬러 선택"
+              aria-label="브랜드 컬러 직접 선택"
               className="w-12 h-9 rounded-lg border border-gray-200 bg-white p-1 cursor-pointer" />
+            {hasEyeDropper && (
+              // 색상 대화상자는 열린 채로 로고를 가려서 정작 뽑을 대상을 못 본다.
+              // 브라우저 기본 스포이드는 집는 즉시 닫히므로 로고에서 바로 색을 딸 수 있다.
+              <button type="button" onClick={handleEyeDropper}
+                className="flex items-center gap-1.5 text-sm px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50">
+                <FontAwesomeIcon icon={faEyeDropper} className="text-xs text-gray-400" />
+                로고에서 색 뽑기
+              </button>
+            )}
             <span className="text-sm text-gray-500 font-mono">{color}</span>
             {color !== DEFAULT_BRAND_COLOR && (
               <button onClick={() => setColorDraft(DEFAULT_BRAND_COLOR)}
