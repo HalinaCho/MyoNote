@@ -41,7 +41,9 @@ export default function PostImages({ images }: { images: string[] }) {
             src={url}
             alt={`사진 ${i + 1}`}
             loading="lazy"
-            className="w-full h-52 flex-shrink-0 snap-center object-cover bg-gray-100"
+            // 1:1 고정 — 병원마다 올리는 사진 비율이 제각각이라, 높이를 맞춰두지 않으면
+            // 쓸어 넘길 때마다 카드 높이가 널뛰고 아래 콘텐츠가 밀린다
+            className="w-full aspect-square flex-shrink-0 snap-center object-cover bg-gray-100"
           />
         ))}
       </div>
