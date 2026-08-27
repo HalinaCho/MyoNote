@@ -77,10 +77,13 @@ export default function HomePage() {
 
   return (
     <>
-      {/* ── 병원 브랜딩 헤더 (연결된 병원이 있을 때만) ── */}
+      {/* ── 병원 브랜딩 헤더 (연결된 병원이 있을 때만) ──
+          카드가 아니라 "상단 영역"으로 읽히게: main의 좌우·위 여백(px-4 py-3)을 음수 마진으로
+          뚫어 화면 폭을 꽉 채우고 앱 헤더 바로 밑에 붙인다. 위 모서리는 각지게, 아래만 둥글게.
+          그림자를 빼는 것도 같은 이유 — 그림자가 있으면 다시 "떠 있는 카드"로 보인다. */}
       {hospital && (
         <section
-          className="flex items-center gap-3 rounded-2xl px-4 py-3 mb-3 shadow-sm"
+          className="-mx-4 -mt-3 mb-4 flex items-center gap-3 px-4 pt-4 pb-5 rounded-b-2xl"
           style={{ backgroundColor: brandColor }}
         >
           {hospital.logoUrl ? (
