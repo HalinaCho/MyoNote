@@ -1,13 +1,15 @@
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 
-// 세션은 localStorage에 저장한다(supabase-js 기본).
+// 세션을 쿠키에 저장한다(@supabase/ssr).
 //
-// 2026-08-27: 쿠키 저장(@supabase/ssr createBrowserClient)으로 바꿨다가 카카오 로그인이
-// 실패해서 되돌렸다. 서버에서 세션을 읽으려면 쿠키가 정석이지만, 로그인 자체가 깨지는 건
-// 감수할 수 없다. 서버 라우트는 Authorization 헤더로 토큰을 받아 처리한다
-// (`@/lib/supabase/route`). 쿠키 전환은 원인을 밝힌 뒤 다시 시도할 것.
+// localStorage에 두면 요청에 실리지 않아 서버가 로그인 상태를 전혀 볼 수 없다.
+// 그 탓에 /api/exam-notify(검사 알림 푸시)가 오랫동안 조용히 401로 실패하고 있었다.
+// 쿠키는 요청마다 자동으로 함께 가므로 서버가 그대로 읽는다.
+//
+// 2026-08-27 1차 시도 때 카카오 로그인이 실패해 되돌렸다가, 파일럿 단계(실사용자 없음)라
+// 지금 제대로 잡는 게 낫다고 판단해 재적용. 실패 시 사유가 /login 화면에 표시된다.
 export function createClient() {
-  return createSupabaseClient(
+  return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
