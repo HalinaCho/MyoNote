@@ -21,6 +21,28 @@ export function calcStreak(logs: TreatmentLogs, treatmentsForDate: TreatmentsFor
   return streak
 }
 
+// 최근 N일 달성률 — 오늘 포함 과거 days일. 케어가 없던 날은 분모에서 제외하므로,
+// 대상 기간에 케어가 하루도 없으면 null(= 표시할 수치 없음)을 돌려준다.
+export function calcRecentCompliance(
+  logs: TreatmentLogs,
+  treatmentsForDate: TreatmentsForDate,
+  days: number
+): number | null {
+  let done = 0, total = 0
+  const d = new Date()
+  for (let i = 0; i < days; i++) {
+    const k = formatDate(d)
+    const active = treatmentsForDate(k)
+    if (active.length) {
+      total++
+      const log = logs[k] || {}
+      if (active.every(t => log[t.key])) done++
+    }
+    d.setDate(d.getDate() - 1)
+  }
+  return total > 0 ? Math.round((done / total) * 100) : null
+}
+
 export function calcMonthCompliance(
   logs: TreatmentLogs,
   treatmentsForDate: TreatmentsForDate,

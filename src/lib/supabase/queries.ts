@@ -449,6 +449,81 @@ export async function fetchPatientRoster(hospitalId: string): Promise<RosterPati
   }))
 }
 
+// 로스터 순응도 계산용 원자료 — %는 클라이언트에서 calcRecentCompliance로 계산한다
+// ("그날 활성인 케어" 판정이 treatments의 periods 기반이라 부모 앱 로직을 그대로 재사용)
+export interface PatientCare {
+  treatments: TreatmentDef[]
+  logs: TreatmentLogs
+}
+
+interface PatientCareRow {
+  care_child_id: string
+  care_treatments: TreatmentDef[]
+  care_logs: TreatmentLogs
+}
+
+export async function fetchPatientCare(hospitalId: string, days = 30): Promise<Record<string, PatientCare>> {
+  const sb = createClient()
+  const { data, error } = await sb.rpc('hospital_patient_care', { p_hospital_id: hospitalId, p_days: days })
+  if (error) throw error
+  return Object.fromEntries(
+    ((data ?? []) as PatientCareRow[]).map(r => [
+      r.care_child_id,
+      { treatments: r.care_treatments ?? [], logs: r.care_logs ?? {} },
+    ])
+  )
+}
+
+export interface PatientExam {
+  id: string
+  date: string
+  clinic: string
+  axOD: number | null
+  axOS: number | null
+  serOD: number | null
+  serOS: number | null
+  nextAppointment: string | null
+  byUs: boolean          // 이 병원에서 입력된 검사인지(위치 매칭으로 태깅된 기록)
+}
+
+export interface PatientDetail {
+  childId: string
+  childName: string
+  birth: string
+  treatments: TreatmentDef[]
+  logs: TreatmentLogs
+  exams: PatientExam[]
+}
+
+interface PatientDetailRow {
+  child: { id: string; name: string; birth_date: string; treatments: TreatmentDef[] }
+  logs: TreatmentLogs
+  exams: {
+    id: string; exam_date: string; clinic: string | null
+    ax_od: number | null; ax_os: number | null
+    ser_od: number | null; ser_os: number | null
+    next_appointment: string | null; by_us: boolean | null
+  }[]
+}
+
+// 환자 상세 (조회 전용) — 현재 담당 중인 환자만 열람 가능(서버 RPC에서 강제)
+export async function fetchPatientDetail(hospitalId: string, childId: string): Promise<PatientDetail> {
+  const sb = createClient()
+  const { data, error } = await sb.rpc('hospital_patient_detail', { p_hospital_id: hospitalId, p_child_id: childId })
+  if (error) throw new Error(error.message || '환자 정보를 불러오지 못했습니다')
+  const row = data as PatientDetailRow
+  return {
+    childId: row.child.id, childName: row.child.name, birth: row.child.birth_date,
+    treatments: row.child.treatments ?? [],
+    logs: row.logs ?? {},
+    exams: (row.exams ?? []).map(e => ({
+      id: e.id, date: e.exam_date, clinic: e.clinic ?? '',
+      axOD: e.ax_od, axOS: e.ax_os, serOD: e.ser_od, serOS: e.ser_os,
+      nextAppointment: e.next_appointment, byUs: !!e.by_us,
+    })),
+  }
+}
+
 // 병원 QR 연결 토큰 (설정 화면 전용 — Hospital 타입엔 안 넣음, 스태프 화면에서만 필요)
 export async function fetchConnectToken(hospitalId: string): Promise<string> {
   const sb = createClient()

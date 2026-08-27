@@ -25,6 +25,12 @@ export function getActiveTreatments(child: Child | null, dateStr: string): Treat
   return child.treatments.filter(t => isActiveOn(t, dateStr))
 }
 
+// 케어 정의 배열만으로 "날짜별 활성 케어" 함수 만들기 — 부모 앱은 ChildContext가 제공하지만
+// 원장 포털은 Child 객체 없이 정의 배열만 받으므로 여기서 만든다(순응도 계산 입력).
+export function makeTreatmentsForDate(treatments: TreatmentDef[]) {
+  return (dateStr: string) => treatments.filter(t => isActiveOn(t, dateStr))
+}
+
 // 커스텀 케어 key 생성
 export function makeTreatmentKey(): string {
   return `c_${crypto.randomUUID().slice(0, 8)}`
