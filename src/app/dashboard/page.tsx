@@ -219,7 +219,7 @@ export default function HomePage() {
         <FontAwesomeIcon icon={faCalendarDays} className="text-base text-teal-500 flex-shrink-0" />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-gray-800">오늘의 케어 기록하기</p>
-          <p className="text-xs text-gray-400 mt-0.5">캘린더 탭에서 케어·생활습관을 체크할 수 있어요</p>
+          <p className="text-xs text-gray-400 mt-0.5">케어 탭에서 오늘의 케어·생활습관을 체크할 수 있어요</p>
         </div>
         <FontAwesomeIcon icon={faChevronRight} className="text-xs text-gray-300 flex-shrink-0" />
       </button>
