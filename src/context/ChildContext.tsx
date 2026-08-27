@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import type { Child, ExamRecord, TreatmentLogs, LifestyleLogs, TreatmentDef } from '@/types'
+import type { Child, ExamRecord, TreatmentLogs, LifestyleLogs, TreatmentDef, Hospital } from '@/types'
 import { getActiveTreatments, mergeTreatments } from '@/lib/treatments'
 import * as q from '@/lib/supabase/queries'
 import { today } from '@/lib/utils/date'
@@ -15,9 +15,11 @@ interface ChildContextType {
   logs: TreatmentLogs
   exams: ExamRecord[]
   lifestyle: LifestyleLogs
+  hospital: Hospital | null                              // 현재 담당 병원(자녀 데이터와 함께 로드)
   isLoading: boolean
   switchChild: (id: string) => Promise<void>
   refreshChildren: () => Promise<void>
+  refreshHospital: () => Promise<Hospital | null>        // 위치 매칭으로 병원이 바뀐 직후 재조회
   addChild: (data: q.ChildFormInput) => Promise<void>
   updateChild: (data: q.ChildFormUpdateInput) => Promise<void>
   deleteChild: (id: string) => Promise<void>
@@ -37,13 +39,20 @@ export function ChildProvider({ children: node }: { children: React.ReactNode })
   const [logs, setLogs] = useState<TreatmentLogs>({})
   const [exams, setExams] = useState<ExamRecord[]>([])
   const [lifestyle, setLifestyle] = useState<LifestyleLogs>({})
+  const [hospital, setHospital] = useState<Hospital | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
+  // 병원 정보를 자녀 데이터와 함께 여기서 로드하는 이유: 탭을 옮길 때마다 화면이 새로 마운트돼도
+  // Provider는 대시보드 레이아웃에 살아있어서, 홈의 병원 헤더가 뒤늦게 나타나지 않는다.
   const loadChildData = useCallback(async (childId: string) => {
-    const data = await q.fetchChildData(childId)
+    const [data, connected] = await Promise.all([
+      q.fetchChildData(childId),
+      q.fetchMyConnectedHospital(childId).catch(() => null),  // 병원 조회 실패가 자녀 데이터를 막지 않게
+    ])
     setLogs(data.logs)
     setExams(data.exams)
     setLifestyle(data.lifestyle)
+    setHospital(connected)
   }, [])
 
   const refreshChildren = useCallback(async () => {
@@ -64,6 +73,13 @@ export function ChildProvider({ children: node }: { children: React.ReactNode })
   }, [loadChildData])
 
   useEffect(() => { refreshChildren() }, [refreshChildren])
+
+  const refreshHospital = useCallback(async () => {
+    if (!activeChildId) return null
+    const connected = await q.fetchMyConnectedHospital(activeChildId).catch(() => null)
+    setHospital(connected)
+    return connected
+  }, [activeChildId])
 
   const switchChild = useCallback(async (id: string) => {
     setActiveChildId(id)
@@ -151,8 +167,8 @@ export function ChildProvider({ children: node }: { children: React.ReactNode })
   return (
     <ChildContext.Provider value={{
       children, activeChildId, activeChild, activeTreatments, treatmentsForDate,
-      logs, exams, lifestyle, isLoading,
-      switchChild, refreshChildren,
+      logs, exams, lifestyle, hospital, isLoading,
+      switchChild, refreshChildren, refreshHospital,
       addChild, updateChild, deleteChild,
       saveTreatmentLog, saveExam, updateExam, deleteExam, saveLifestyle, deleteLifestyle,
     }}>

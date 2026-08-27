@@ -7,8 +7,7 @@ import { useChild } from '@/context/ChildContext'
 import ChildFormModal from '@/components/child/ChildFormModal'
 import { today } from '@/lib/utils/date'
 import { hasUnseenExam } from '@/lib/aiReport'
-import { fetchMyConnectedHospital, fetchLatestReport } from '@/lib/supabase/queries'
-import type { Hospital } from '@/types'
+import { fetchLatestReport } from '@/lib/supabase/queries'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faXmark, faCalendarDays, faPen, faCommentDots, faHospital, faBullhorn, faFileWaveform, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import OnboardingFlow from '@/components/onboarding/OnboardingFlow'
@@ -17,19 +16,18 @@ import ChatSheet from '@/components/chat/ChatSheet'
 
 export default function HomePage() {
   const router = useRouter()
-  const { activeChild, activeChildId, exams, isLoading, updateExam } = useChild()
+  const { activeChild, activeChildId, exams, isLoading, updateExam, hospital } = useChild()
   const [showAddChild, setShowAddChild] = useState(false)
   const [showChat, setShowChat] = useState(false)
   const [editingAppt, setEditingAppt] = useState(false)
   const [apptDate, setApptDate] = useState('')
 
-  // 병원 연결 정보 + 마지막 AI 리포트 시각 (둘 다 실패해도 홈은 그대로 뜬다)
-  // childId를 함께 담아두고 파생값으로 읽어, 자녀 전환 시 이전 자녀 정보가 잠깐 보이는 걸 막는다.
-  const [hospitalData, setHospitalData] =
-    useState<{ childId: string; hospital: Hospital | null; reportAt: string | null } | null>(null)
-  const hospitalLoaded = !!activeChildId && hospitalData?.childId === activeChildId
-  const hospital = hospitalLoaded ? hospitalData!.hospital : null
-  const lastReportAt = hospitalLoaded ? hospitalData!.reportAt : null
+  // 병원 정보는 ChildContext가 자녀 데이터와 함께 들고 있다(탭 이동 시 헤더가 늦게 뜨지 않게).
+  // 여기서는 "새 검사 도착" 판정에 필요한 마지막 AI 리포트 시각만 조회한다.
+  // childId를 함께 담아 파생값으로 읽어, 자녀 전환 직후 이전 자녀 기준으로 판정하는 걸 막는다.
+  const [reportData, setReportData] = useState<{ childId: string; reportAt: string | null } | null>(null)
+  const reportLoaded = !!activeChildId && reportData?.childId === activeChildId
+  const lastReportAt = reportLoaded ? reportData!.reportAt : null
 
   const todayStr = today()
 
@@ -43,13 +41,11 @@ export default function HomePage() {
     if (!activeChildId) return
     let cancelled = false
     const childId = activeChildId
-    Promise.all([
-      fetchMyConnectedHospital(childId).catch(() => null),
-      fetchLatestReport(childId).catch(() => null),
-    ]).then(([h, report]) => {
-      if (cancelled) return
-      setHospitalData({ childId, hospital: h, reportAt: report?.createdAt ?? null })
-    })
+    fetchLatestReport(childId)
+      .catch(() => null)
+      .then(report => {
+        if (!cancelled) setReportData({ childId, reportAt: report?.createdAt ?? null })
+      })
     return () => { cancelled = true }
   }, [activeChildId])
 
@@ -67,7 +63,7 @@ export default function HomePage() {
     : null
 
   // 마지막 리포트 이후 새 검사가 들어왔는지 — 조회가 끝난 뒤에만 판정(깜빡임 방지)
-  const newExam = hospitalLoaded && hasUnseenExam(exams, lastReportAt)
+  const newExam = reportLoaded && hasUnseenExam(exams, lastReportAt)
 
   return (
     <>
@@ -173,7 +169,7 @@ export default function HomePage() {
       )}
 
       {/* ── 아무것도 없을 때 안내 ── */}
-      {hospitalLoaded && !hospital && !nextAppt && !newExam && (
+      {reportLoaded && !hospital && !nextAppt && !newExam && (
         <section className="bg-white rounded-2xl p-5 mb-3 shadow-sm text-center">
           <p className="text-sm text-gray-500">아직 연결된 병원이 없어요.</p>
           <p className="text-xs text-gray-400 mt-1 leading-relaxed">

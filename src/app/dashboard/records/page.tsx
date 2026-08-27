@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import toast from 'react-hot-toast'
 import { useChild } from '@/context/ChildContext'
 import TabSkeleton from '@/components/ui/TabSkeleton'
@@ -10,9 +10,9 @@ import { today } from '@/lib/utils/date'
 import { buildExamComparison } from '@/lib/aiReport'
 import { downscaleImage, extractExam, axialToPatch, refractionToPatch } from '@/lib/examExtract'
 import { getCurrentPosition } from '@/lib/geo'
-import { linkHospitalByLocation, fetchMyConnectedHospital } from '@/lib/supabase/queries'
+import { linkHospitalByLocation } from '@/lib/supabase/queries'
 import type { AxialFields, RefractionFields } from '@/lib/examExtract'
-import type { ExamRecord, Hospital } from '@/types'
+import type { ExamRecord } from '@/types'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPen, faXmark, faCircleInfo, faCalendarDays, faPlus, faRightLeft, faCamera, faArrowsRotate, faChevronDown, faChevronUp, faArrowUpFromBracket } from '@fortawesome/free-solid-svg-icons'
 
@@ -36,17 +36,15 @@ const fmtDeltaMm = (v: number) => `${v > 0 ? '+' : ''}${v.toFixed(2)}mm`
 const EMPTY_EXAM = { date: today(), clinic: '', axOD: '', axOS: '', sphOD: '', sphOS: '', cylOD: '', cylOS: '', note: '', nextAppointment: '' }
 
 // 검사 입력을 "시작할 때"(모달 열기) 현재 위치를 등록된 병원 좌표와 대조 → 매칭되면 그 병원을
-// "현재 담당 병원"으로 자동 연결(이전 병원 연결은 자동 종료)하고 그 병원을 돌려준다.
+// "현재 담당 병원"으로 자동 연결(이전 병원 연결은 자동 종료)한다.
 // 저장 후가 아니라 입력 시작 시점에 확정해야 안과 칸을 미리 채우고 기록에 병원을 태깅할 수 있다.
-// 위치 미지원/권한거부/매칭 실패 시 null — 집에서 부모가 직접 입력하는 흐름은 그대로 동작.
-async function matchHospitalByLocation(childId: string): Promise<Hospital | null> {
+// 위치 미지원/권한거부/매칭 실패 시 false — 집에서 부모가 직접 입력하는 흐름은 그대로 동작.
+async function linkHospitalHere(childId: string): Promise<boolean> {
   try {
     const pos = await getCurrentPosition()
-    if (!pos) return null
-    const hospitalId = await linkHospitalByLocation(childId, pos.lat, pos.lng)
-    if (!hospitalId) return null
-    return await fetchMyConnectedHospital(childId)
-  } catch { return null }
+    if (!pos) return false
+    return !!(await linkHospitalByLocation(childId, pos.lat, pos.lng))
+  } catch { return false }
 }
 // 단일 줄 입력칸 공통 규칙 — 높이 h-9(36px)로 통일(SEQ 박스·헤더·업로드 버튼과 동일)
 const INPUT = 'w-full h-9 bg-gray-50 focus:bg-white border border-gray-200 rounded-lg px-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 accent-teal-500'
@@ -54,7 +52,7 @@ const INPUT = 'w-full h-9 bg-gray-50 focus:bg-white border border-gray-200 round
 const TEXTAREA = 'w-full bg-gray-50 focus:bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500'
 
 export default function RecordsPage() {
-  const { activeChildId, exams, isLoading, saveExam, updateExam, deleteExam } = useChild()
+  const { activeChildId, exams, isLoading, saveExam, updateExam, deleteExam, hospital, refreshHospital } = useChild()
   const [modal, setModal]       = useState(false)
   const [editing, setEditing]   = useState<ExamRecord | null>(null)
   const [form, setForm]         = useState(EMPTY_EXAM)
@@ -69,23 +67,9 @@ export default function RecordsPage() {
   const [extracting, setExtracting] = useState<'axial' | 'refraction' | null>(null)
   const [extractStage, setExtractStage] = useState<string | null>(null)  // OCR 대기 중 단계별 안내 문구
   const [extractProgress, setExtractProgress] = useState(0)              // OCR 진행바(시간 기반 추정, 92%에서 대기)
-  // 현재 담당 병원 — 안과 칸 자동입력 + 기록 태깅에 쓴다.
-  // childId를 함께 담아 파생값으로 읽어, 자녀를 바꾼 직후 이전 자녀의 병원이 잠깐 남는 걸 막는다.
-  const [hospitalData, setHospitalData] = useState<{ childId: string; hospital: Hospital | null } | null>(null)
-  const hospital = hospitalData?.childId === activeChildId ? hospitalData.hospital : null
+  // 담당 병원(안과 칸 자동입력 + 기록 태깅)은 ChildContext가 자녀 데이터와 함께 들고 있다
   const atHospitalRef     = useRef(false)   // 이번 입력이 병원 현장(위치 매칭)에서 시작됐는지
   const clinicTouchedRef  = useRef(false)   // 안과 칸을 직접 고쳤으면 자동입력으로 덮어쓰지 않음
-
-  // 연결된 병원을 미리 읽어둔다 — 재방문 시 안과 칸이 바로 채워지도록(위치 권한과 무관)
-  useEffect(() => {
-    if (!activeChildId) return
-    let alive = true
-    const childId = activeChildId
-    fetchMyConnectedHospital(childId)
-      .then(h => { if (alive) setHospitalData({ childId, hospital: h }) })
-      .catch(() => { /* 병원 미연결/조회 실패는 무시 — 안과 칸은 직접 입력 가능 */ })
-    return () => { alive = false }
-  }, [activeChildId])
 
   const years = [...new Set(exams.map(e => e.date.slice(0, 4)))].sort().reverse()
   // 다음 예약은 가장 최신 검사에서만 의미 있음 → 최신 카드에만 노출
@@ -109,10 +93,11 @@ export default function RecordsPage() {
     if (!activeChildId) return
     // 병원에서 연 경우 위치로 담당 병원을 확정해 안과 칸을 채운다(집에서 열면 아무 일도 일어나지 않음)
     const prevId = hospital?.id
-    matchHospitalByLocation(activeChildId).then(h => {
-      if (!h) return
+    linkHospitalHere(activeChildId).then(async matched => {
+      if (!matched) return
       atHospitalRef.current = true
-      setHospitalData({ childId: activeChildId, hospital: h })
+      const h = await refreshHospital()
+      if (!h) return
       if (prevId !== h.id) toast.success(`${h.name}와 연결되었어요`)
       if (!clinicTouchedRef.current) setForm(f => ({ ...f, clinic: h.name }))
     })
