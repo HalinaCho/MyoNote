@@ -77,13 +77,13 @@ export default function HomePage() {
 
   return (
     <>
-      {/* ── 병원 브랜딩 헤더 (연결된 병원이 있을 때만) ──
-          카드가 아니라 "상단 영역"으로 읽히게: main의 좌우·위 여백(px-4 py-3)을 음수 마진으로
-          뚫어 화면 폭을 꽉 채우고 앱 헤더 바로 밑에 붙인다. 위 모서리는 각지게, 아래만 둥글게.
+      {/* ── 병원 브랜딩 히어로 (연결된 병원이 있을 때만) ──
+          main의 좌우·위 여백(px-4 py-3)을 음수 마진으로 뚫어 화면 폭을 꽉 채우고,
+          아래를 넉넉히 비워(pb-16) 그 위로 카드들이 겹쳐 올라오게 한다.
           그림자를 빼는 것도 같은 이유 — 그림자가 있으면 다시 "떠 있는 카드"로 보인다. */}
       {hospital && (
         <section
-          className="-mx-4 -mt-3 mb-4 flex items-center gap-3 px-4 pt-4 pb-5 rounded-b-2xl"
+          className="-mx-4 -mt-3 flex items-center gap-3 px-5 pt-6 pb-16"
           style={{ backgroundColor: brandColor }}
         >
           {hospital.logoUrl ? (
@@ -91,20 +91,24 @@ export default function HomePage() {
             <img
               src={hospital.logoUrl}
               alt=""
-              className="w-10 h-10 rounded-full bg-white object-contain flex-shrink-0"
+              className="w-12 h-12 rounded-full bg-white object-contain flex-shrink-0"
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-white/25 flex items-center justify-center flex-shrink-0">
-              <FontAwesomeIcon icon={faHospital} style={{ color: contrastText(brandColor) }} />
+            <div className="w-12 h-12 rounded-full bg-white/25 flex items-center justify-center flex-shrink-0">
+              <FontAwesomeIcon icon={faHospital} className="text-lg" style={{ color: contrastText(brandColor) }} />
             </div>
           )}
           <div className="min-w-0">
             {/* 글자색은 배경 밝기에 맞춰 자동 — 원장이 밝은 색을 골라도 병원 이름이 묻히지 않게 */}
             <p className="text-xs" style={{ color: contrastMuted(brandColor) }}>연결된 병원</p>
-            <p className="font-bold truncate" style={{ color: contrastText(brandColor) }}>{hospital.name}</p>
+            <p className="text-lg font-bold truncate" style={{ color: contrastText(brandColor) }}>{hospital.name}</p>
           </div>
         </section>
       )}
+
+      {/* 히어로가 있을 때만 카드 묶음을 위로 끌어올려 겹친다.
+          relative를 주는 이유: 겹치는 영역에서 카드가 히어로 위에 그려지도록 쌓임 순서를 확정. */}
+      <div className={hospital ? 'relative -mt-10' : ''}>
 
       {/* ── 새 검사 결과 도착 배너 ── */}
       {newExam && (
@@ -219,6 +223,8 @@ export default function HomePage() {
         </div>
         <FontAwesomeIcon icon={faChevronRight} className="text-xs text-gray-300 flex-shrink-0" />
       </button>
+
+      </div>
 
       <HospitalFeedSheet
         open={showFeed}
