@@ -12,6 +12,13 @@ import { faHospital, faImage, faEyeDropper } from '@fortawesome/free-solid-svg-i
 
 const LOGO_MAX_BYTES = 5 * 1024 * 1024   // 리사이즈 전 원본 기준 — 너무 큰 파일은 브라우저에서 디코드가 버겁다
 
+// 헤더 배경으로 썼을 때 무난한 색들 — 대화상자 없이 한 번에 고를 수 있는 기본 선택지
+const PRESET_COLORS = [
+  '#14b8a6', '#0ea5e9', '#2563eb', '#7c3aed',
+  '#db2777', '#e11d48', '#ea580c', '#0f172a',
+]
+const isHex = (v: string) => /^#[0-9a-fA-F]{6}$/.test(v)
+
 // 화면 어디서든 색을 집어오는 브라우저 기본 스포이드(Chrome/Edge). 네이티브 색상 대화상자와 달리
 // 집는 즉시 닫혀서 로고를 가리지 않는다. 미지원 브라우저에서는 버튼을 숨긴다.
 interface EyeDropperCtor { new (): { open: () => Promise<{ sRGBHex: string }> } }
@@ -36,6 +43,7 @@ export default function ClinicSettingsPage() {
   // draft가 null이면 "아직 안 건드림" → 저장된 값을 그대로 쓴다. 저장 후 null로 되돌리면
   // 새로고침된 병원 정보를 자동으로 따라가므로 effect로 동기화할 필요가 없다.
   const [colorDraft, setColorDraft] = useState<string | null>(null)
+  const [hexDraft, setHexDraft] = useState<string | null>(null)   // HEX 입력 중 타이핑 값(미완성 상태 허용)
   const [savingColor, setSavingColor] = useState(false)
   const savedColor = hospital?.brandColor ?? DEFAULT_BRAND_COLOR
   const color = colorDraft ?? savedColor
@@ -84,7 +92,8 @@ export default function ClinicSettingsPage() {
     if (!Ctor) return
     try {
       const { sRGBHex } = await new Ctor().open()
-      setColorDraft(sRGBHex)
+      setColorDraft(sRGBHex.toLowerCase())
+      setHexDraft(null)
     } catch { /* 사용자가 ESC로 취소 — 조용히 무시 */ }
   }
 
@@ -95,6 +104,7 @@ export default function ClinicSettingsPage() {
       await q.updateHospitalBranding(hospital.id, { brandColor: color })
       await refresh()
       setColorDraft(null)   // 저장된 값을 다시 따라가게
+      setHexDraft(null)
       toast.success('브랜드 컬러가 저장되었습니다')
     } catch (err) {
       toast.error(err instanceof Error ? err.message : '저장에 실패했습니다')
@@ -226,25 +236,57 @@ export default function ClinicSettingsPage() {
 
         <div>
           <div className="text-xs font-medium text-gray-500 mb-1.5">브랜드 컬러</div>
+          {/* 네이티브 <input type="color">를 기본 경로에서 뺀 이유:
+              그 대화상자에 딸린 스포이드를 쓰면 대화상자가 열린 채로 남아 로고를 가린다.
+              스포이드를 지원하는 브라우저(Chrome/Edge)에서는 대화상자를 아예 띄우지 않고
+              스포이드 + 색상표 + HEX 입력으로 고르게 한다. 미지원 브라우저에서만 네이티브 피커를 남긴다. */}
           <div className="flex items-center gap-2 flex-wrap">
-            <input type="color" value={color} onChange={e => setColorDraft(e.target.value)}
-              aria-label="브랜드 컬러 직접 선택"
-              className="w-12 h-9 rounded-lg border border-gray-200 bg-white p-1 cursor-pointer" />
-            {hasEyeDropper && (
-              // 색상 대화상자는 열린 채로 로고를 가려서 정작 뽑을 대상을 못 본다.
-              // 브라우저 기본 스포이드는 집는 즉시 닫히므로 로고에서 바로 색을 딸 수 있다.
+            <div className="w-9 h-9 rounded-lg border border-gray-200 flex-shrink-0"
+              style={{ backgroundColor: color }} aria-hidden />
+            {hasEyeDropper ? (
               <button type="button" onClick={handleEyeDropper}
                 className="flex items-center gap-1.5 text-sm px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50">
                 <FontAwesomeIcon icon={faEyeDropper} className="text-xs text-gray-400" />
                 로고에서 색 뽑기
               </button>
+            ) : (
+              <input type="color" value={color} onChange={e => setColorDraft(e.target.value)}
+                aria-label="브랜드 컬러 직접 선택"
+                className="w-12 h-9 rounded-lg border border-gray-200 bg-white p-1 cursor-pointer" />
             )}
-            <span className="text-sm text-gray-500 font-mono">{color}</span>
+            <input
+              value={hexDraft ?? color}
+              onChange={e => {
+                const v = e.target.value.startsWith('#') ? e.target.value : `#${e.target.value}`
+                setHexDraft(v)
+                if (isHex(v)) setColorDraft(v.toLowerCase())   // 유효할 때만 실제 색에 반영
+              }}
+              onBlur={() => setHexDraft(null)}                 // 입력을 떠나면 확정된 색을 다시 보여준다
+              aria-label="브랜드 컬러 HEX 코드"
+              maxLength={7}
+              className="w-24 h-9 border border-gray-200 rounded-lg px-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-teal-500"
+            />
             {color !== DEFAULT_BRAND_COLOR && (
-              <button onClick={() => setColorDraft(DEFAULT_BRAND_COLOR)}
+              <button onClick={() => { setColorDraft(DEFAULT_BRAND_COLOR); setHexDraft(null) }}
                 className="text-xs text-gray-400 hover:text-gray-600 underline">기본색으로</button>
             )}
           </div>
+
+          <div className="flex gap-1.5 mt-2 flex-wrap">
+            {PRESET_COLORS.map(c => (
+              <button key={c} type="button" aria-label={`색상 ${c}`}
+                onClick={() => { setColorDraft(c); setHexDraft(null) }}
+                className={`w-8 h-8 rounded-lg border-2 transition-transform hover:scale-105
+                  ${color.toLowerCase() === c ? 'border-gray-800' : 'border-transparent'}`}
+                style={{ backgroundColor: c }} />
+            ))}
+          </div>
+
+          {hasEyeDropper && (
+            <p className="text-[11px] text-gray-400 mt-1.5">
+              스포이드를 누르면 화면 어디서든 색을 집을 수 있어요. 위 미리보기의 로고를 클릭해보세요.
+            </p>
+          )}
           <button onClick={handleColorSave} disabled={!colorDirty || savingColor}
             className="mt-3 w-full bg-teal-500 hover:bg-teal-600 disabled:bg-gray-200 disabled:text-gray-400 text-white font-semibold py-2.5 rounded-xl transition-colors">
             {savingColor ? '저장 중…' : colorDirty ? '컬러 저장' : '저장됨'}
