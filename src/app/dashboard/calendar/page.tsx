@@ -11,12 +11,12 @@ import { getDayStatus, calcStreak, calcMonthCompliance } from '@/lib/utils/compl
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faXmark, faTree, faMobileScreen, faCheck, faMinus, faFire,
-  faCalendarDays, faChartSimple, faChevronRight,
+  faCalendarDays, faChevronRight,
 } from '@fortawesome/free-solid-svg-icons'
 import { faCircle } from '@fortawesome/free-regular-svg-icons'
 
 // 케어 탭 첫 화면 = "오늘 할 일"만. 스크롤 없이 끝나는 게 목표다.
-// 월간 캘린더는 /calendar/month, 통계는 /calendar/stats 로 한 단계 들어간다.
+// 월간 캘린더와 통계는 /calendar/history 로 한 단계 들어간다(입구는 위 "기록 보기" 하나).
 
 const DAY_KO = ['일', '월', '화', '수', '목', '금', '토']
 
@@ -56,11 +56,15 @@ export default function CarePage() {
       {/* ── 요약: 연속 달성 · 이번 달 · 이번 주 스트립 ── */}
       <section className="bg-white rounded-2xl p-4 mb-3 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-gray-800">오늘의 케어</h2>
-          <Link href="/dashboard/calendar/month" aria-label="월간 캘린더 보기"
-            className="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-teal-600 px-2 py-1 rounded-lg hover:bg-gray-50">
+          {/* "오늘의 케어"라고 하면 아래 "오늘의 근시케어"와 겹친다. 이 카드는 오늘이 아니라
+              연속 달성·이번 달·이번 주를 담고 있으므로 현황이 정확한 이름이다. */}
+          <h2 className="font-bold text-gray-800">케어 현황</h2>
+          {/* 캘린더와 통계로 가는 유일한 입구 — 스크롤을 내려야 보이던 하단 링크를 여기로 합쳤다 */}
+          <Link href="/dashboard/calendar/history"
+            className="flex items-center gap-1.5 text-xs font-medium text-teal-600 hover:text-teal-700 px-2 py-1 rounded-lg hover:bg-teal-50">
             <FontAwesomeIcon icon={faCalendarDays} className="text-base" />
-            캘린더
+            기록 보기
+            <FontAwesomeIcon icon={faChevronRight} className="text-[10px]" />
           </Link>
         </div>
 
@@ -153,7 +157,7 @@ export default function CarePage() {
       </section>
 
       {/* ── 오늘의 생활습관 ── */}
-      <section className="bg-white rounded-2xl p-4 mb-3 shadow-sm">
+      <section className="bg-white rounded-2xl p-4 shadow-sm">
         <h2 className="font-bold text-gray-800 mb-3">오늘의 생활습관</h2>
         <div className="space-y-2">
           {[
@@ -220,17 +224,6 @@ export default function CarePage() {
           })}
         </div>
       </section>
-
-      {/* ── 기록 돌아보기 ── */}
-      <Link href="/dashboard/calendar/stats"
-        className="w-full flex items-center gap-3 bg-white rounded-2xl px-4 py-3 shadow-sm transition-colors hover:bg-gray-50">
-        <FontAwesomeIcon icon={faChartSimple} className="text-base text-teal-500 flex-shrink-0" />
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-gray-800">기록 돌아보기</p>
-          <p className="text-xs text-gray-400 mt-0.5">최근 7일 생활습관과 월평균 비교를 볼 수 있어요</p>
-        </div>
-        <FontAwesomeIcon icon={faChevronRight} className="text-xs text-gray-300 flex-shrink-0" />
-      </Link>
 
       {/* key로 날짜를 물려 시트가 그 날짜 기록으로 새로 마운트되게 한다 */}
       {daySheet && <DayDetailSheet key={daySheet} date={daySheet} onClose={() => setDaySheet(null)} />}
