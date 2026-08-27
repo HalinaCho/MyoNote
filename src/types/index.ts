@@ -42,6 +42,7 @@ export interface ExamRecord {
   serOS: string        // SEQ 좌안 = sph + cyl/2 (D)
   note: string
   nextAppointment: string  // 다음 예약일 'YYYY-MM-DD'
+  createdAt?: string       // 기록이 저장된 시각(ISO) — "새 검사 도착" 판정용
 }
 
 // ── 치료 로그 ─────────────────────────────────────────────────

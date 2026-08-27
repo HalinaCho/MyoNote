@@ -83,7 +83,7 @@ export async function deleteChild(id: string): Promise<void> {
 export async function fetchChildData(childId: string) {
   const sb = createClient()
   const [examsRes, logsRes, lifeRes] = await Promise.all([
-    sb.from('eyebody_exam_records').select('id,exam_date,clinic,ax_od,ax_os,sph_od,sph_os,cyl_od,cyl_os,ser_od,ser_os,note,next_appointment').eq('child_id', childId).order('exam_date', { ascending: false }),
+    sb.from('eyebody_exam_records').select('id,exam_date,clinic,ax_od,ax_os,sph_od,sph_os,cyl_od,cyl_os,ser_od,ser_os,note,next_appointment,created_at').eq('child_id', childId).order('exam_date', { ascending: false }),
     sb.from('eyebody_treatment_logs').select('log_date, done, atropine, dreamlens').eq('child_id', childId),
     sb.from('eyebody_activity_logs').select('log_date, outdoor_hours, phone_hours, sleep_hours').eq('child_id', childId),
   ])
@@ -100,6 +100,7 @@ export async function fetchChildData(childId: string) {
     serOS: r.ser_os != null ? String(r.ser_os) : '',
     note:  r.note ?? '',
     nextAppointment: r.next_appointment ?? '',
+    createdAt: r.created_at ?? undefined,
   }))
 
   // done(jsonb) 우선, 없으면 구 컬럼(atropine/dreamlens)으로 폴백
@@ -174,6 +175,7 @@ export async function saveExam(childId: string, exam: Omit<ExamRecord, 'id'>, en
     serOS: data.ser_os != null ? String(data.ser_os) : '',
     note:  data.note ?? '',
     nextAppointment: data.next_appointment ?? '',
+    createdAt: data.created_at ?? undefined,
   }
 }
 
@@ -209,6 +211,7 @@ export async function updateExam(id: string, exam: Omit<ExamRecord, 'id'>): Prom
     serOS: data.ser_os != null ? String(data.ser_os) : '',
     note:  data.note ?? '',
     nextAppointment: data.next_appointment ?? '',
+    createdAt: data.created_at ?? undefined,
   }
 }
 

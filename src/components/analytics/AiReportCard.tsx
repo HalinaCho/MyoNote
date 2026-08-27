@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import toast from 'react-hot-toast'
 import { useChild } from '@/context/ChildContext'
-import { buildReportContext } from '@/lib/aiReport'
+import { buildReportContext, hasUnseenExam } from '@/lib/aiReport'
 import type { AiReport, ReportTopic } from '@/lib/aiReport'
 import { fetchLatestReport, saveReport } from '@/lib/supabase/queries'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -72,6 +72,18 @@ export default function AiReportCard() {
       setGenerating(false)
     }
   }, [activeChild, activeChildId, exams, lifestyle, logs, treatmentsForDate])
+
+  // 마지막 리포트 이후 새 검사가 들어왔으면 자동으로 한 번 생성 (병원 방문 직후 훅)
+  // 자녀당 1회만 — 생성이 실패해도 재시도 루프가 돌지 않도록 시도 시점에 표시해 둔다.
+  const autoRanFor = useRef<string | null>(null)
+  useEffect(() => {
+    if (isLoading || loadingSaved || generating || !activeChildId) return
+    if (autoRanFor.current === activeChildId) return
+    if (!hasUnseenExam(exams, meta?.createdAt ?? null)) return
+    autoRanFor.current = activeChildId
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 외부 API 호출 트리거(자녀당 1회), 렌더 루프 없음
+    generate()
+  }, [isLoading, loadingSaved, generating, activeChildId, exams, meta, generate])
 
   if (isLoading || loadingSaved) {
     return <div className="bg-white rounded-2xl p-5 shadow-sm animate-pulse h-28" />

@@ -69,16 +69,20 @@ export default function RecordsPage() {
   const [extracting, setExtracting] = useState<'axial' | 'refraction' | null>(null)
   const [extractStage, setExtractStage] = useState<string | null>(null)  // OCR 대기 중 단계별 안내 문구
   const [extractProgress, setExtractProgress] = useState(0)              // OCR 진행바(시간 기반 추정, 92%에서 대기)
-  const [hospital, setHospital] = useState<Hospital | null>(null)  // 현재 담당 병원 — 안과 칸 자동입력 + 기록 태깅
+  // 현재 담당 병원 — 안과 칸 자동입력 + 기록 태깅에 쓴다.
+  // childId를 함께 담아 파생값으로 읽어, 자녀를 바꾼 직후 이전 자녀의 병원이 잠깐 남는 걸 막는다.
+  const [hospitalData, setHospitalData] = useState<{ childId: string; hospital: Hospital | null } | null>(null)
+  const hospital = hospitalData?.childId === activeChildId ? hospitalData.hospital : null
   const atHospitalRef     = useRef(false)   // 이번 입력이 병원 현장(위치 매칭)에서 시작됐는지
   const clinicTouchedRef  = useRef(false)   // 안과 칸을 직접 고쳤으면 자동입력으로 덮어쓰지 않음
 
   // 연결된 병원을 미리 읽어둔다 — 재방문 시 안과 칸이 바로 채워지도록(위치 권한과 무관)
   useEffect(() => {
-    if (!activeChildId) { setHospital(null); return }
+    if (!activeChildId) return
     let alive = true
-    fetchMyConnectedHospital(activeChildId)
-      .then(h => { if (alive) setHospital(h) })
+    const childId = activeChildId
+    fetchMyConnectedHospital(childId)
+      .then(h => { if (alive) setHospitalData({ childId, hospital: h }) })
       .catch(() => { /* 병원 미연결/조회 실패는 무시 — 안과 칸은 직접 입력 가능 */ })
     return () => { alive = false }
   }, [activeChildId])
@@ -108,7 +112,7 @@ export default function RecordsPage() {
     matchHospitalByLocation(activeChildId).then(h => {
       if (!h) return
       atHospitalRef.current = true
-      setHospital(h)
+      setHospitalData({ childId: activeChildId, hospital: h })
       if (prevId !== h.id) toast.success(`${h.name}와 연결되었어요`)
       if (!clinicTouchedRef.current) setForm(f => ({ ...f, clinic: h.name }))
     })

@@ -291,3 +291,18 @@ export function buildExamComparison(exams: ExamRecord[], examId: string): ExamCo
     shortInterval: months1 < 2 || (prior != null && prior.months0 < 2),
   }
 }
+
+// ── "미확인 새 검사" 판정 ─────────────────────────────────────
+// 마지막으로 저장된 AI 리포트 이후에 추가된 검사기록이 있는지.
+// 리포트가 한 번도 없으면 검사가 하나라도 있을 때 "새 검사"로 본다.
+// (createdAt은 구 데이터에 없을 수 있으므로 없는 건 무시)
+export function hasUnseenExam(exams: ExamRecord[], reportCreatedAt: string | null): boolean {
+  const times = exams
+    .map(e => (e.createdAt ? Date.parse(e.createdAt) : NaN))
+    .filter(t => !Number.isNaN(t))
+  if (times.length === 0) return false
+  if (!reportCreatedAt) return true
+  const reportAt = Date.parse(reportCreatedAt)
+  if (Number.isNaN(reportAt)) return true
+  return Math.max(...times) > reportAt
+}
