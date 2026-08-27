@@ -30,6 +30,19 @@ function isBlockedHost(hostname: string): boolean {
   return false
 }
 
+// 사이트마다 "미리보기가 붙어 있는 주소"가 따로 있는 경우를 보정한다.
+// 네이버 블로그 데스크톱 주소는 og 태그가 전혀 없는 2.8KB짜리 프레임 껍데기를 주고,
+// 같은 글의 모바일 주소에만 og:title/image/description이 들어 있다(실측 확인).
+// 저장되는 링크는 원장이 넣은 원본 그대로다 — 여기서 바꾸는 건 긁어올 주소뿐.
+function normalizeForPreview(u: URL): URL {
+  if (u.hostname === 'blog.naver.com') {
+    const m = new URL(u.href)
+    m.hostname = 'm.blog.naver.com'
+    return m
+  }
+  return u
+}
+
 function safeUrl(raw: string): URL | null {
   let url: URL
   try {
@@ -42,7 +55,7 @@ function safeUrl(raw: string): URL | null {
 
 // 리다이렉트를 직접 따라간다 — 자동 추적을 쓰면 중간 홉이 사설망으로 튀어도 알 수 없다
 async function fetchHead(start: URL, signal: AbortSignal): Promise<{ res: Response; finalUrl: URL } | null> {
-  let url = start
+  let url = normalizeForPreview(start)
   for (let i = 0; i <= MAX_REDIRECTS; i++) {
     const res = await fetch(url, {
       signal,
@@ -58,7 +71,7 @@ async function fetchHead(start: URL, signal: AbortSignal): Promise<{ res: Respon
       if (!loc) return null
       const next = safeUrl(new URL(loc, url).href)
       if (!next) return null
-      url = next
+      url = normalizeForPreview(next)   // 단축링크(naver.me 등)가 데스크톱 주소로 튀는 경우도 보정
       continue
     }
     return { res, finalUrl: url }
@@ -67,10 +80,16 @@ async function fetchHead(start: URL, signal: AbortSignal): Promise<{ res: Respon
 }
 
 // <head>에서 og/twitter/기본 태그를 뽑는다. 파서를 붙일 만큼의 일이 아니라 정규식으로 충분.
+// content 안에 다른 종류의 따옴표가 그대로 들어있는 페이지가 흔하다
+// (예: 네이버 블로그 제목의 '작은따옴표'). 두 종류를 한 문자셋으로 싸잡아 끊으면 제목이 잘리므로
+// 여는 따옴표 종류별로 패턴을 나눈다.
 function pickMeta(html: string, prop: string): string | null {
+  const attr = `(?:property|name)=["']${prop}["']`
   const patterns = [
-    new RegExp(`<meta[^>]+(?:property|name)=["']${prop}["'][^>]+content=["']([^"']*)["']`, 'i'),
-    new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]+(?:property|name)=["']${prop}["']`, 'i'),
+    new RegExp(`<meta[^>]+${attr}[^>]+content="([^"]*)"`, 'is'),
+    new RegExp(`<meta[^>]+${attr}[^>]+content='([^']*)'`, 'is'),
+    new RegExp(`<meta[^>]+content="([^"]*)"[^>]+${attr}`, 'is'),
+    new RegExp(`<meta[^>]+content='([^']*)'[^>]+${attr}`, 'is'),
   ]
   for (const re of patterns) {
     const m = html.match(re)
@@ -79,10 +98,18 @@ function pickMeta(html: string, prop: string): string | null {
   return null
 }
 
+const NAMED_ENTITIES: Record<string, string> = {
+  quot: '"', apos: "'", lt: '<', gt: '>', nbsp: ' ',
+  middot: '·', hellip: '…', mdash: '—', ndash: '–', laquo: '«', raquo: '»',
+  lsquo: '‘', rsquo: '’', ldquo: '“', rdquo: '”',
+}
+
 const decodeEntities = (s: string) =>
-  s.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&apos;/g, "'")
-   .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ')
+  s.replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d)))
+   .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+   .replace(/&([a-z]+);/gi, (m, n) => NAMED_ENTITIES[n.toLowerCase()] ?? m)
    .replace(/&amp;/g, '&')            // amp는 마지막에 — 먼저 풀면 이중 디코드가 된다
+   .replace(/\s+/g, ' ')
    .trim()
 
 const clean = (v: string | null, max: number) =>

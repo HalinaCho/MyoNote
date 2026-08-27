@@ -48,16 +48,18 @@ export default function PostLink({ url, meta }: { url: string; meta: LinkMeta | 
         <img src={meta.image} alt="" loading="lazy"
           className="w-24 h-24 object-cover bg-gray-100 flex-shrink-0" />
       )}
-      <div className="min-w-0 flex-1 py-2.5 pr-3 flex flex-col justify-center">
+      <div className={`min-w-0 flex-1 py-2.5 pr-3 flex flex-col justify-center ${meta?.image ? '' : 'pl-3'}`}>
+        {/* 제목을 못 가져온 링크라도 도메인을 앞세운다 — 긴 주소를 그대로 노출하면 읽히지도 않고
+            부모 입장에서 무엇으로 이어지는 링크인지 알 수 없다 */}
         <p className="text-sm font-semibold text-gray-800 line-clamp-2 break-words">
-          {title || url}
+          {title || site}
         </p>
         {meta?.description && (
           <p className="mt-0.5 text-xs text-gray-500 line-clamp-2 break-words">{meta.description}</p>
         )}
         <p className="mt-1 text-[11px] text-gray-400 flex items-center gap-1 truncate">
           <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="text-[9px]" />
-          {site}
+          {title ? site : '링크 열기'}
         </p>
       </div>
     </a>
