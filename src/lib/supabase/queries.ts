@@ -619,6 +619,26 @@ export interface PostInput {
   linkMeta: LinkMeta | null
 }
 
+// API 라우트 호출용 헤더 — 브라우저 세션이 localStorage에 있어서 쿠키로는 서버에 전달되지 않는다.
+// 액세스 토큰을 직접 실어 보내야 라우트가 "누가 부른 요청인지" 알 수 있다(@/lib/supabase/route 참고).
+async function authHeaders(): Promise<Record<string, string>> {
+  const sb = createClient()
+  const { data: { session } } = await sb.auth.getSession()
+  return {
+    'Content-Type': 'application/json',
+    ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}),
+  }
+}
+
+// 병원 현장에서 새 검사가 입력됐을 때 보호자들에게 즉시 알림
+export async function notifyNewExam(childId: string, hospitalName?: string): Promise<void> {
+  await fetch('/api/exam-notify', {
+    method: 'POST',
+    headers: await authHeaders(),
+    body: JSON.stringify({ childId, hospitalName }),
+  })
+}
+
 // 링크 미리보기 수집 — 원장이 글을 저장할 때 한 번만. 실패해도 링크는 그대로 저장한다.
 // reason: 왜 못 가져왔는지(응답 코드·태그 없음 등). 배포 환경에서만 재현되는 실패가 있어
 // 원장 화면에 그대로 보여줘야 원인을 짚을 수 있다.
@@ -626,7 +646,7 @@ export async function fetchLinkPreview(url: string): Promise<{ meta: LinkMeta | 
   try {
     const res = await fetch('/api/link-preview', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await authHeaders(),
       body: JSON.stringify({ url }),
     })
     const data = await res.json().catch(() => null)

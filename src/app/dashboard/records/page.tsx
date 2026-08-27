@@ -10,7 +10,7 @@ import { today } from '@/lib/utils/date'
 import { buildExamComparison } from '@/lib/aiReport'
 import { downscaleImage, extractExam, axialToPatch, refractionToPatch } from '@/lib/examExtract'
 import { getCurrentPosition } from '@/lib/geo'
-import { linkHospitalByLocation } from '@/lib/supabase/queries'
+import { linkHospitalByLocation, notifyNewExam } from '@/lib/supabase/queries'
 import type { AxialFields, RefractionFields } from '@/lib/examExtract'
 import type { ExamRecord } from '@/types'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -149,12 +149,9 @@ export default function RecordsPage() {
         // 병원 현장에서 입력한 경우에만 병원 태깅 + 보호자 알림(집에서 부모가 넣은 기록은 알림 대상 아님)
         await saveExam(signedForm, atHospitalRef.current ? hospital?.id : null)
         toast.success('검사기록이 저장되었습니다')
-        if (atHospitalRef.current) {
-          fetch('/api/exam-notify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ childId: activeChildId, hospitalName: hospital?.name }),
-          }).catch(() => { /* best-effort — 알림 실패가 저장을 되돌리진 않음 */ })
+        if (atHospitalRef.current && activeChildId) {
+          notifyNewExam(activeChildId, hospital?.name)
+            .catch(() => { /* best-effort — 알림 실패가 저장을 되돌리진 않음 */ })
         }
       }
       closeModal()

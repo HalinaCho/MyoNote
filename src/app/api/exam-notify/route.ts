@@ -1,7 +1,7 @@
 // 검사기록이 병원 위치와 매칭되었을 때(= 실제 방문으로 확인됨) 보호자들에게 즉시 발송.
 // 호출자는 부모 세션(쿠키)이며, 서버에서 is_guardian으로 권한 확인 후 service_role로 발송한다.
 
-import { createClient as createServerClient } from '@/lib/supabase/server'
+import { createRouteClient } from '@/lib/supabase/route'
 import { getServiceClient, configureWebPush, sendPushToUsers } from '@/lib/server/push'
 
 export const runtime = 'nodejs'
@@ -17,9 +17,10 @@ export async function POST(req: Request) {
   const { childId, hospitalName } = body
   if (!childId) return Response.json({ error: 'childId가 필요합니다.' }, { status: 400 })
 
-  const authed = await createServerClient()
+  const authed = createRouteClient(req)
+  if (!authed) return Response.json({ error: '로그인이 필요합니다.' }, { status: 401 })
   const { data: { user } } = await authed.auth.getUser()
-  if (!user) return Response.json({ error: '로그인이 필요합니다.' }, { status: 401 })
+  if (!user) return Response.json({ error: '로그인이 만료되었습니다.' }, { status: 401 })
 
   const { data: isGuardian } = await authed.rpc('is_guardian', { p_child_id: childId })
   if (!isGuardian) return Response.json({ error: '권한이 없습니다.' }, { status: 403 })

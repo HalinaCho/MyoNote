@@ -4,7 +4,7 @@
 // 보안: 원장이 넣은 임의 URL로 "서버가" 요청하는 구조라 SSRF 표면이다.
 // 사설/루프백 대역과 http(s) 외 프로토콜을 막고, 리다이렉트도 매 홉마다 다시 검사한다.
 
-import { createClient as createServerClient } from '@/lib/supabase/server'
+import { createRouteClient } from '@/lib/supabase/route'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -120,9 +120,10 @@ const clean = (v: string | null, max: number) =>
 
 export async function POST(req: Request) {
   // 원장(병원 스태프)만 호출할 수 있게 — 공개 URL 프록시로 악용되지 않도록
-  const authed = await createServerClient()
+  const authed = createRouteClient(req)
+  if (!authed) return Response.json({ error: '로그인이 필요합니다.' }, { status: 401 })
   const { data: { user } } = await authed.auth.getUser()
-  if (!user) return Response.json({ error: '로그인이 필요합니다.' }, { status: 401 })
+  if (!user) return Response.json({ error: '로그인이 만료되었습니다. 다시 로그인해주세요.' }, { status: 401 })
   const { data: hospitalId } = await authed.rpc('my_hospital_id')
   if (!hospitalId) return Response.json({ error: '권한이 없습니다.' }, { status: 403 })
 
