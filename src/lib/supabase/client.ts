@@ -1,13 +1,13 @@
-import { createBrowserClient } from '@supabase/ssr'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
-// 세션을 쿠키에 저장한다(@supabase/ssr). 예전에는 supabase-js의 createClient를 써서
-// 세션이 localStorage에 있었는데, 그러면 서버(API 라우트·미들웨어)가 로그인 상태를
-// 전혀 볼 수 없다 — 실제로 /api/exam-notify와 /api/link-preview가 그 탓에 401을 냈다.
+// 세션은 localStorage에 저장한다(supabase-js 기본).
 //
-// 쿠키는 요청마다 자동으로 같이 가므로 서버가 그대로 읽는다. Next.js App Router에서
-// 서버 쪽 인증을 하려면 이 방식이어야 한다.
+// 2026-08-27: 쿠키 저장(@supabase/ssr createBrowserClient)으로 바꿨다가 카카오 로그인이
+// 실패해서 되돌렸다. 서버에서 세션을 읽으려면 쿠키가 정석이지만, 로그인 자체가 깨지는 건
+// 감수할 수 없다. 서버 라우트는 Authorization 헤더로 토큰을 받아 처리한다
+// (`@/lib/supabase/route`). 쿠키 전환은 원인을 밝힌 뒤 다시 시도할 것.
 export function createClient() {
-  return createBrowserClient(
+  return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
