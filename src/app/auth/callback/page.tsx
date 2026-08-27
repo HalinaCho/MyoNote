@@ -26,7 +26,8 @@ function CallbackHandler() {
     if (code) {
       supabase.auth.exchangeCodeForSession(code).then(({ data, error }) => {
         if (error || !data.session) {
-          window.location.replace(`${siteUrl}/login?error=auth_failed`)
+          const detail = encodeURIComponent(error?.message ?? '세션 없음')
+          window.location.replace(`${siteUrl}/login?error=auth_failed&detail=${detail}`)
         } else {
           window.location.replace(`${siteUrl}${consumePostLoginRedirect()}`)
         }
@@ -54,7 +55,7 @@ function CallbackHandler() {
 
     const timeout = setTimeout(() => {
       subscription.unsubscribe()
-      window.location.replace(`${siteUrl}/login?error=auth_failed`)
+      window.location.replace(`${siteUrl}/login?error=auth_failed&detail=${encodeURIComponent('5초 내 세션 미생성')}`)
     }, 5000)
 
     return () => {

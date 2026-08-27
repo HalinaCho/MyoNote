@@ -11,10 +11,14 @@ import { faCheck } from '@fortawesome/free-solid-svg-icons'
 function ErrorMessage() {
   const searchParams = useSearchParams()
   if (!searchParams.get('error')) return null
+  // 콜백이 실패 사유를 함께 넘긴다 — 세션 저장 방식을 바꿀 때처럼
+  // "그냥 실패"만 보이면 원인을 짚을 수가 없다
+  const detail = searchParams.get('detail')
   return (
-    <p className="mt-3 text-center text-sm text-rose-500">
-      로그인에 실패했습니다. 다시 시도해주세요.
-    </p>
+    <div className="mt-3 text-center">
+      <p className="text-sm text-rose-500">로그인에 실패했습니다. 다시 시도해주세요.</p>
+      {detail && <p className="mt-1 text-xs text-gray-400 break-all">({detail})</p>}
+    </div>
   )
 }
 
