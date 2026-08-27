@@ -1,6 +1,6 @@
 // RN 이식 시 createClient만 교체하면 전체 재사용 가능
 import { createClient } from './client'
-import type { Child, ExamRecord, TreatmentLogs, LifestyleLogs, TreatmentDef, DesiredTreatment, Hospital, HospitalPost } from '@/types'
+import type { Child, ExamRecord, TreatmentLogs, LifestyleLogs, TreatmentDef, DesiredTreatment, Hospital, HospitalPost, LinkMeta } from '@/types'
 import type { AiReport } from '@/lib/aiReport'
 
 // 폼 입력 — treatments는 periods 없는 활성 집합 (context가 병합해 기간 부여)
@@ -571,12 +571,12 @@ export async function deleteHospitalLogo(hospitalId: string): Promise<void> {
 
 interface HospitalPostRow {
   id: string; body: string | null; images: string[] | null
-  youtube_url: string | null; created_at: string
+  link_url: string | null; link_meta: LinkMeta | null; created_at: string
 }
 
 const toPost = (r: HospitalPostRow): HospitalPost => ({
   id: r.id, body: r.body ?? '', images: r.images ?? [],
-  youtubeUrl: r.youtube_url, createdAt: r.created_at,
+  linkUrl: r.link_url, linkMeta: r.link_meta, createdAt: r.created_at,
 })
 
 // 원장 포털 — 자기 병원 소식 전체
@@ -584,7 +584,7 @@ export async function fetchHospitalPosts(hospitalId: string): Promise<HospitalPo
   const sb = createClient()
   const { data, error } = await sb
     .from('eyebody_hospital_posts')
-    .select('id, body, images, youtube_url, created_at')
+    .select('id, body, images, link_url, link_meta, created_at')
     .eq('hospital_id', hospitalId)
     .order('created_at', { ascending: false })
   if (error) throw error
@@ -598,10 +598,10 @@ export async function fetchFeedForChild(childId: string, limit = 20): Promise<Ho
   if (error) throw error
   return ((data ?? []) as {
     post_id: string; post_body: string | null; post_images: string[] | null
-    post_youtube_url: string | null; post_created_at: string
+    post_link_url: string | null; post_link_meta: LinkMeta | null; post_created_at: string
   }[]).map(r => ({
     id: r.post_id, body: r.post_body ?? '', images: r.post_images ?? [],
-    youtubeUrl: r.post_youtube_url, createdAt: r.post_created_at,
+    linkUrl: r.post_link_url, linkMeta: r.post_link_meta, createdAt: r.post_created_at,
   }))
 }
 
@@ -615,7 +615,22 @@ export async function uploadPostImage(
 export interface PostInput {
   body: string
   images: string[]
-  youtubeUrl: string | null
+  linkUrl: string | null
+  linkMeta: LinkMeta | null
+}
+
+// 링크 미리보기 수집 — 원장이 글을 저장할 때 한 번만. 실패해도 링크는 그대로 저장한다.
+export async function fetchLinkPreview(url: string): Promise<LinkMeta | null> {
+  try {
+    const res = await fetch('/api/link-preview', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+    })
+    if (!res.ok) return null
+    const data = await res.json()
+    return (data.meta as LinkMeta) ?? null
+  } catch { return null }
 }
 
 export async function createHospitalPost(
@@ -626,7 +641,8 @@ export async function createHospitalPost(
     id: postId, hospital_id: hospitalId,
     body: input.body.trim() || null,
     images: input.images,
-    youtube_url: input.youtubeUrl,
+    link_url: input.linkUrl,
+    link_meta: input.linkMeta,
   })
   if (error) throw new Error(error.message || '소식 등록에 실패했습니다')
 }
@@ -636,7 +652,8 @@ export async function updateHospitalPost(postId: string, input: PostInput): Prom
   const { error } = await sb.from('eyebody_hospital_posts').update({
     body: input.body.trim() || null,
     images: input.images,
-    youtube_url: input.youtubeUrl,
+    link_url: input.linkUrl,
+    link_meta: input.linkMeta,
     updated_at: new Date().toISOString(),
   }).eq('id', postId)
   if (error) throw new Error(error.message || '소식 수정에 실패했습니다')

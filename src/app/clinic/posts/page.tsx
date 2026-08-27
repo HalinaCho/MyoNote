@@ -26,7 +26,7 @@ export default function ClinicPostsPage() {
   const [editing, setEditing] = useState<HospitalPost | 'new' | null>(null)
   const [body, setBody] = useState('')
   const [images, setImages] = useState<Draft[]>([])
-  const [youtube, setYoutube] = useState('')
+  const [link, setLink] = useState('')
   const [saving, setSaving] = useState(false)
   const [picking, setPicking] = useState(false)
   const [deleting, setDeleting] = useState<HospitalPost | null>(null)
@@ -43,10 +43,10 @@ export default function ClinicPostsPage() {
     setEditing(post)
     setBody(post === 'new' ? '' : post.body)
     setImages(post === 'new' ? [] : post.images.map(url => ({ kind: 'uploaded' as const, url })))
-    setYoutube(post === 'new' ? '' : (post.youtubeUrl ?? ''))
+    setLink(post === 'new' ? '' : (post.linkUrl ?? ''))
     requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
   }
-  const closeForm = () => { setEditing(null); setBody(''); setImages([]); setYoutube('') }
+  const closeForm = () => { setEditing(null); setBody(''); setImages([]); setLink('') }
 
   const handlePick = async (files: FileList | null) => {
     if (!files?.length) return
@@ -75,14 +75,17 @@ export default function ClinicPostsPage() {
   const handleSave = async () => {
     if (!hospital || !editing) return
     const trimmed = body.trim()
-    if (!trimmed && images.length === 0 && !youtube.trim()) {
-      toast.error('내용, 사진, 영상 중 하나는 있어야 해요'); return
+    if (!trimmed && images.length === 0 && !link.trim()) {
+      toast.error('내용, 사진, 링크 중 하나는 있어야 해요'); return
     }
-    let youtubeUrl: string | null = null
-    if (youtube.trim()) {
-      const id = parseYoutubeId(youtube)
-      if (!id) { toast.error('유튜브 주소를 알아보지 못했어요. 링크를 다시 확인해주세요'); return }
-      youtubeUrl = `https://youtu.be/${id}`   // 형태를 통일해 저장
+    let linkUrl: string | null = null
+    if (link.trim()) {
+      const raw = link.trim()
+      const withScheme = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`
+      try { new URL(withScheme) } catch {
+        toast.error('링크 주소를 알아보지 못했어요. 다시 확인해주세요'); return
+      }
+      linkUrl = withScheme
     }
 
     setSaving(true)
@@ -94,7 +97,11 @@ export default function ClinicPostsPage() {
           ? Promise.resolve(img.url)
           : q.uploadPostImage(hospital.id, postId, i, img.dataUrl),
       ))
-      const input = { body: trimmed, images: urls, youtubeUrl }
+      // 미리보기(제목·썸네일)는 저장 시 한 번만 수집해 함께 넣는다 —
+      // 부모가 볼 때마다 외부 사이트를 긁으면 느리고, 원문이 막혀도 카드가 깨지면 안 된다.
+      // 유튜브는 그 자리에서 임베드되므로 미리보기가 필요 없다.
+      const linkMeta = linkUrl && !parseYoutubeId(linkUrl) ? await q.fetchLinkPreview(linkUrl) : null
+      const input = { body: trimmed, images: urls, linkUrl, linkMeta }
       if (editing === 'new') await q.createHospitalPost(hospital.id, postId, input)
       else await q.updateHospitalPost(postId, input)
       toast.success(editing === 'new' ? '소식을 올렸어요' : '수정했어요')
@@ -139,7 +146,7 @@ export default function ClinicPostsPage() {
         )}
       </div>
       <p className="text-xs text-gray-400 -mt-2">
-        여기 올린 글은 우리 병원에 연결된 보호자의 앱 홈에 보입니다. 사진은 글마다 최대 {q.POST_IMAGE_MAX}장.
+        여기 올린 글은 우리 병원에 연결된 보호자의 앱 홈에 보입니다(최신 3개). 사진은 글마다 최대 {q.POST_IMAGE_MAX}장.
       </p>
 
       {editing && (
@@ -193,10 +200,13 @@ export default function ClinicPostsPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">유튜브 링크 (선택)</label>
-            <input value={youtube} onChange={e => setYoutube(e.target.value)}
-              placeholder="https://youtu.be/..."
+            <label className="block text-xs font-medium text-gray-500 mb-1">링크 (선택)</label>
+            <input value={link} onChange={e => setLink(e.target.value)}
+              placeholder="https://blog.naver.com/... 또는 유튜브 주소"
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
+            <p className="text-[11px] text-gray-400 mt-1">
+              유튜브는 영상이 바로 재생되고, 블로그·뉴스 등은 제목·썸네일이 있는 카드로 보입니다.
+            </p>
           </div>
 
           <button onClick={handleSave} disabled={saving || picking}

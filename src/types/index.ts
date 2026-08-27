@@ -68,11 +68,20 @@ export interface Hospital {
   brandColor: string | null
 }
 
-// 병원 소식 피드 — 글 하나에 본문/이미지(최대 5장)/유튜브 링크를 섞어 담는다
+// 링크 미리보기 — 글 저장 시 한 번 수집해 보관(볼 때마다 원문을 긁지 않는다)
+export interface LinkMeta {
+  title?: string | null
+  description?: string | null
+  image?: string | null
+  siteName?: string | null
+}
+
+// 병원 소식 피드 — 글 하나에 본문/이미지(최대 5장)/링크를 섞어 담는다
 export interface HospitalPost {
   id: string
   body: string
   images: string[]
-  youtubeUrl: string | null
+  linkUrl: string | null
+  linkMeta: LinkMeta | null
   createdAt: string
 }

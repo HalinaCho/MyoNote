@@ -73,7 +73,8 @@ export default function HomePage() {
   // 마지막 리포트 이후 새 검사가 들어왔는지 — 조회가 끝난 뒤에만 판정(깜빡임 방지)
   const newExam = reportLoaded && hasUnseenExam(exams, lastReportAt)
   const brandColor = hospital?.brandColor || DEFAULT_BRAND_COLOR
-  const latestPost = posts[0] ?? null
+  const HOME_POSTS = 3                 // 홈에 펼쳐 보여줄 최신 글 수 — 나머지는 시트에서
+  const shownPosts = posts.slice(0, HOME_POSTS)
 
   return (
     <>
@@ -178,12 +179,12 @@ export default function HomePage() {
       {/* ── 병원 소식 (최신 1개를 피드처럼 그대로, 나머지는 시트에서) ── */}
       {/* 카드 전체를 버튼으로 감싸지 않는 이유: 안에 영상 iframe과 "더보기"가 들어가
           클릭이 서로 잡아먹는다. 시트 열기는 헤더의 "전체 보기" 버튼이 담당한다. */}
-      {latestPost && (
-        <section className="bg-white rounded-2xl p-4 mb-3 shadow-sm">
-          <h2 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
+      {shownPosts.length > 0 && (
+        <section className="mb-3">
+          <h2 className="font-bold text-gray-800 mb-2 px-1 flex items-center gap-2">
             <FontAwesomeIcon icon={faBullhorn} className="text-teal-500 text-sm" />
             병원 소식
-            {posts.length > 1 && (
+            {posts.length > shownPosts.length && (
               <button onClick={() => setShowFeed(true)}
                 className="ml-auto flex items-center gap-1 text-xs font-medium text-teal-600 hover:text-teal-700">
                 전체 {posts.length}개
@@ -191,7 +192,14 @@ export default function HomePage() {
               </button>
             )}
           </h2>
-          <PostView post={latestPost} preview />
+          {/* 글마다 카드 하나 — 한 카드에 몰아넣으면 어디까지가 한 글인지 구분이 안 된다 */}
+          <div className="space-y-2">
+            {shownPosts.map(post => (
+              <div key={post.id} className="bg-white rounded-2xl p-4 shadow-sm">
+                <PostView post={post} preview />
+              </div>
+            ))}
+          </div>
         </section>
       )}
 
