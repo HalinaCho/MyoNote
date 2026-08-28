@@ -8,7 +8,6 @@ import ChildFormModal from '@/components/child/ChildFormModal'
 import { today } from '@/lib/utils/date'
 import { hasUnseenExam } from '@/lib/aiReport'
 import { fetchLatestReport, fetchFeedForChild } from '@/lib/supabase/queries'
-import { HERO_BG, HERO_TEXT } from '@/lib/utils/color'
 import HospitalFeedSheet from '@/components/hospital/HospitalFeedSheet'
 import PostView from '@/components/hospital/PostView'
 import type { HospitalPost } from '@/types'
@@ -86,44 +85,43 @@ export default function HomePage() {
   const apptLabel = nextAppt
     ? new Date(nextAppt.nextAppointment).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })
     : ''
-  // 히어로 위 D-day 칩. 밝은 틴트 배경이라 임박 시엔 팔레트의 상태색(부분=amber-700,
-  // 미완료=rose-700)을 채워 넣어야 뜬다. 평소엔 흰 칩으로 조용히 둔다.
-  const apptChipCls = apptUrgency === 'near' ? 'bg-[#be123c] text-white'
-    : apptUrgency === 'soon' ? 'bg-[#b45309] text-white'
-    : 'bg-white text-[#0f766e] ring-1 ring-[#0f766e]/15'
+  // D-day 칩 — 팔레트의 "틴트 배경 + 틴트 위 텍스트" 짝을 그대로 쓴다.
+  // 평소는 teal, 7일 이내 amber(부분), 3일 이내 rose(미완료).
+  const apptChipCls = apptUrgency === 'near' ? 'bg-[#ffe4e6] text-[#be123c]'
+    : apptUrgency === 'soon' ? 'bg-[#fef3c7] text-[#b45309]'
+    : 'bg-teal-50 text-teal-700'
   const HOME_POSTS = 3                 // 홈에 펼쳐 보여줄 최신 글 수 — 나머지는 시트에서
   const shownPosts = posts.slice(0, HOME_POSTS)
 
   return (
     <>
-      {/* ── 병원 브랜딩 히어로 (연결된 병원이 있을 때만) ──
-          main의 좌우·위 여백(px-4 py-3)을 음수 마진으로 뚫어 화면 폭을 꽉 채우고,
-          아래를 넉넉히 비워(pb-16) 그 위로 카드들이 겹쳐 올라오게 한다.
-          그림자를 빼는 것도 같은 이유 — 그림자가 있으면 다시 "떠 있는 카드"로 보인다. */}
+      {/* ── 병원 카드 (연결된 병원이 있을 때만) ──
+          다른 카드와 같은 흰 카드. 색 면으로 구분하려 여러 번 시도했지만 이 앱의 밝은 톤에서는
+          어떤 색이든 덩어리로 튀었다. 구분은 색이 아니라 위치(맨 위)와 내용으로 충분하다.
+          병원 고유색은 카드 상단 얇은 선으로만 남는다. */}
       {hospital && (
-        <section className="-mx-4 -mt-3 pb-16" style={{ backgroundColor: HERO_BG }}>
-          {/* 병원 고유색은 이 한 줄로만 남는다 — 면 전체를 차지하지 않으면서 소속은 드러난다 */}
+        <section className="bg-white rounded-2xl mb-3 shadow-sm overflow-hidden">
           {hospital.brandColor && (
             <div className="h-1" style={{ backgroundColor: hospital.brandColor }} />
           )}
 
-          <div className="px-5 pt-5">
+          <div className="p-4">
             <div className="flex items-center gap-3">
               {hospital.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={hospital.logoUrl}
                   alt=""
-                  className="w-12 h-12 rounded-full bg-white object-contain flex-shrink-0"
+                  className="w-11 h-11 rounded-full bg-gray-50 object-contain flex-shrink-0"
                 />
               ) : (
-                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center flex-shrink-0">
-                  <FontAwesomeIcon icon={faHospital} className="text-lg" style={{ color: HERO_TEXT }} />
+                <div className="w-11 h-11 rounded-full bg-teal-50 flex items-center justify-center flex-shrink-0">
+                  <FontAwesomeIcon icon={faHospital} className="text-teal-500" />
                 </div>
               )}
               <div className="min-w-0 flex-1">
-                <p className="text-xs opacity-70" style={{ color: HERO_TEXT }}>연결된 병원</p>
-                <p className="text-lg font-bold truncate" style={{ color: HERO_TEXT }}>{hospital.name}</p>
+                <p className="text-xs text-gray-400">연결된 병원</p>
+                <p className="font-bold text-gray-800 truncate">{hospital.name}</p>
               </div>
             </div>
 
@@ -133,15 +131,14 @@ export default function HomePage() {
               <button
                 onClick={() => { setApptDate(nextAppt.nextAppointment); setEditingAppt(true) }}
                 aria-label={`방문 예정일 ${apptLabel}, 눌러서 수정`}
-                className="mt-4 pt-3 w-full flex items-center justify-between gap-3 border-t text-left transition-opacity active:opacity-70"
-                style={{ borderColor: `${HERO_TEXT}26` }}
+                className="mt-3 pt-3 w-full flex items-center justify-between gap-3 border-t border-gray-100 text-left transition-colors hover:bg-gray-50/60"
               >
                 <span className="min-w-0">
-                  <span className="flex items-center gap-1.5 text-[11px] opacity-70" style={{ color: HERO_TEXT }}>
+                  <span className="flex items-center gap-1.5 text-[11px] text-gray-400">
                     <FontAwesomeIcon icon={faCalendarDays} className="text-[10px]" />
                     방문 예정일
                   </span>
-                  <span className="block mt-0.5 text-[15px] font-semibold truncate" style={{ color: HERO_TEXT }}>
+                  <span className="block mt-0.5 text-[15px] font-semibold text-gray-800 truncate">
                     {apptLabel}
                   </span>
                 </span>
@@ -153,10 +150,6 @@ export default function HomePage() {
           </div>
         </section>
       )}
-
-      {/* 히어로가 있을 때만 카드 묶음을 위로 끌어올려 겹친다.
-          relative를 주는 이유: 겹치는 영역에서 카드가 히어로 위에 그려지도록 쌓임 순서를 확정. */}
-      <div className={hospital ? 'relative -mt-10' : ''}>
 
       {/* ── 새 검사 결과 도착 배너 ── */}
       {newExam && (
@@ -277,8 +270,6 @@ export default function HomePage() {
         </div>
         <FontAwesomeIcon icon={faChevronRight} className="text-xs text-gray-300 flex-shrink-0" />
       </button>
-
-      </div>
 
       <HospitalFeedSheet
         open={showFeed}
