@@ -87,6 +87,14 @@ export default function HomePage() {
   const apptLabel = nextAppt
     ? new Date(nextAppt.nextAppointment).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })
     : ''
+  const apptShort = nextAppt ? nextAppt.nextAppointment.slice(5).replace('-', '/') : ''   // 09/15
+
+  // 히어로 배지는 임의의 병원 브랜드 색 위에 얹힌다. 평소엔 배경 밝기에 맞춰 반투명으로 녹이고,
+  // 임박했을 때만 채운 색 + 흰 테두리로 띄운다 — 테두리가 있어야 어떤 브랜드 색 위에서도 분리된다.
+  const onDarkBrand = contrastText(brandColor) === '#ffffff'
+  const apptBadgeCls = apptUrgency === 'near' ? 'bg-rose-500 text-white ring-2 ring-white/70'
+    : apptUrgency === 'soon' ? 'bg-amber-500 text-white ring-2 ring-white/70'
+    : onDarkBrand ? 'bg-white/20 ring-1 ring-white/30' : 'bg-black/10 ring-1 ring-black/10'
   const HOME_POSTS = 3                 // 홈에 펼쳐 보여줄 최신 글 수 — 나머지는 시트에서
   const shownPosts = posts.slice(0, HOME_POSTS)
 
@@ -113,11 +121,26 @@ export default function HomePage() {
               <FontAwesomeIcon icon={faHospital} className="text-lg" style={{ color: contrastText(brandColor) }} />
             </div>
           )}
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             {/* 글자색은 배경 밝기에 맞춰 자동 — 원장이 밝은 색을 골라도 병원 이름이 묻히지 않게 */}
             <p className="text-xs" style={{ color: contrastMuted(brandColor) }}>연결된 병원</p>
             <p className="text-lg font-bold truncate" style={{ color: contrastText(brandColor) }}>{hospital.name}</p>
           </div>
+
+          {/* 다음 예약 — 비어 있던 히어로 우측에. 누르면 날짜를 고칠 수 있다 */}
+          {nextAppt && !editingAppt && (
+            <button
+              onClick={() => { setApptDate(nextAppt.nextAppointment); setEditingAppt(true) }}
+              aria-label={`다음 병원 예약 ${apptLabel}, 눌러서 수정`}
+              className={`flex-shrink-0 rounded-2xl px-3 py-2 text-center transition-transform active:scale-95 ${apptBadgeCls}`}
+              style={apptUrgency === 'far' ? { color: contrastText(brandColor) } : undefined}
+            >
+              <span className="block text-lg font-bold leading-none">
+                {dDays === 0 ? 'D-Day' : `D-${dDays}`}
+              </span>
+              <span className="block text-[11px] mt-0.5 opacity-80">{apptShort}</span>
+            </button>
+          )}
         </section>
       )}
 
@@ -140,8 +163,10 @@ export default function HomePage() {
         </button>
       )}
 
-      {/* ── 다음 예약일 ── */}
-      {nextAppt && (
+      {/* ── 다음 예약일 카드 ──
+          병원이 연결돼 있으면 히어로 우측 배지가 이 역할을 하므로 카드는 숨긴다.
+          날짜를 고치는 중이거나(배지를 눌렀을 때) 병원 미연결이라 히어로 자체가 없을 때만 띄운다. */}
+      {nextAppt && (editingAppt || !hospital) && (
         <section className={`rounded-2xl p-4 mb-3 transition-colors ${APPT_STYLE.card}`}>
           <div className="flex items-center justify-between">
             <h2 className={`text-xs font-semibold ${APPT_STYLE.label}`}>다음 병원 예약</h2>
