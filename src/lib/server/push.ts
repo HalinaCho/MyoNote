@@ -34,6 +34,13 @@ export async function fetchSubscriptions(
   return (data ?? []) as SubRow[]
 }
 
+// 발송 옵션 — 기본값을 그대로 쓰면 늦게 오거나 뒤늦게 뜬다.
+//  urgency 'high': 푸시 서비스에 "미루지 말고 지금 배달"이라고 알린다. 지정하지 않으면
+//    normal로 취급돼 절전 중인 기기에서 배달이 뒤로 밀린다.
+//  TTL 12시간: web-push 기본값은 4주다. 그대로 두면 그날 못 받은 "내일 병원 예약" 알림이
+//    몇 주 뒤에 튀어나올 수 있다. 하루 안에 못 받으면 의미가 없으므로 그때 버려지게 한다.
+const PUSH_OPTIONS = { urgency: 'high', TTL: 12 * 60 * 60 } as const
+
 // 구독별로 다른 payload를 보낼 수 있는 저수준 발송기 — 만료(404/410) 구독은 자동 정리.
 export async function sendPushJobs(
   sb: ReturnType<typeof getServiceClient>,
@@ -46,7 +53,8 @@ export async function sendPushJobs(
       try {
         await webpush.sendNotification(
           { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-          JSON.stringify(payload)
+          JSON.stringify(payload),
+          PUSH_OPTIONS
         )
         sent++
       } catch (err: unknown) {
