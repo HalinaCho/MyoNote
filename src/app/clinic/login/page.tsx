@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
 export default function ClinicLoginPage() {
@@ -68,6 +69,13 @@ export default function ClinicLoginPage() {
         >
           {loading ? '로그인 중…' : '로그인'}
         </button>
+
+        <p className="pt-2 text-center text-xs text-gray-400">
+          보호자이신가요?{' '}
+          <Link href="/login" className="text-gray-500 underline underline-offset-2 hover:text-teal-600">
+            보호자 로그인
+          </Link>
+        </p>
       </form>
     </div>
   )

@@ -42,8 +42,21 @@ export async function proxy(request: NextRequest) {
     return res
   }
 
-  const { data: { user } } = await supabase.auth.getUser()
   const path = request.nextUrl.pathname
+
+  // ── 원장 포털 전용 서브도메인(clinic.myonote.app) ──
+  // 이 호스트에서는 원장 포털 외에는 아무것도 노출하지 않는다. 부모 앱과 접점을 만들지 않는 게
+  // 목적이고, 도메인이 다르면 로그인 쿠키도 따로 저장돼 한 브라우저에서 부모·병원 계정을
+  // 동시에 쓸 수 있다(같은 도메인이면 세션이 하나뿐이라 번갈아 로그인해야 한다).
+  const isClinicHost = (request.headers.get('host') ?? '').startsWith('clinic.')
+  if (isClinicHost && !path.startsWith('/clinic')) return redirectTo('/clinic')
+
+  // 아래는 보호가 필요한 경로만. 로그인·개인정보처리방침 같은 공개 경로와 메인 도메인의
+  // 루트는 그대로 통과시킨다(루트는 기존대로 클라이언트가 판단 — 여기서 손대지 않는다).
+  // 인증 조회도 필요할 때만 해서 공개 페이지에 불필요한 왕복을 만들지 않는다.
+  if (!path.startsWith('/clinic') && !path.startsWith('/dashboard')) return response
+
+  const { data: { user } } = await supabase.auth.getUser()
 
   if (path.startsWith('/clinic')) {
     if (path === '/clinic/login') return response          // 로그인 화면 자체는 열려 있어야 한다
@@ -60,5 +73,16 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/clinic/:path*'],
+  // 서브도메인에서 부모용 화면이 새어나오지 않게 공개 경로까지 포함시킨다
+  // (매칭이 안 되면 proxy가 아예 실행되지 않아 그 경로는 그대로 노출된다).
+  // 정적 파일(_next, 아이콘 등)은 매칭하지 않는다.
+  matcher: [
+    '/',
+    '/login',
+    '/privacy',
+    '/auth/:path*',
+    '/connect/:path*',
+    '/dashboard/:path*',
+    '/clinic/:path*',
+  ],
 }

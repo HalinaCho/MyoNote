@@ -107,6 +107,15 @@ export default function LoginPage() {
         <Suspense>
           <ErrorMessage />
         </Suspense>
+
+        {/* 병원 포털 안내 — 부모가 99%이므로 눈에 띄지 않게 두되,
+            원장이 주소를 잊었거나 홈 화면 아이콘으로 여기 떨어졌을 때 빠져나갈 길은 남긴다 */}
+        <p className="mt-8 text-center text-xs text-gray-400">
+          병원 관계자이신가요?{' '}
+          <Link href="/clinic/login" className="text-gray-500 underline underline-offset-2 hover:text-teal-600">
+            병원 로그인
+          </Link>
+        </p>
       </div>
     </div>
   )
