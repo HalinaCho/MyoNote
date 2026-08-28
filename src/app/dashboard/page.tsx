@@ -8,7 +8,7 @@ import ChildFormModal from '@/components/child/ChildFormModal'
 import { today } from '@/lib/utils/date'
 import { hasUnseenExam } from '@/lib/aiReport'
 import { fetchLatestReport, fetchFeedForChild } from '@/lib/supabase/queries'
-import { contrastText, contrastMuted, DEFAULT_BRAND_COLOR } from '@/lib/utils/color'
+import { HERO_BG } from '@/lib/utils/color'
 import HospitalFeedSheet from '@/components/hospital/HospitalFeedSheet'
 import PostView from '@/components/hospital/PostView'
 import type { HospitalPost } from '@/types'
@@ -72,7 +72,6 @@ export default function HomePage() {
 
   // 마지막 리포트 이후 새 검사가 들어왔는지 — 조회가 끝난 뒤에만 판정(깜빡임 방지)
   const newExam = reportLoaded && hasUnseenExam(exams, lastReportAt)
-  const brandColor = hospital?.brandColor || DEFAULT_BRAND_COLOR
 
   // 예약일 카드는 "임박했을 때만" 색으로 반응한다. 항상 빨간 카드면 금세 무뎌져서
   // 정작 급할 때 안 보인다 — 평소엔 다른 카드와 같은 흰 카드로 둔다.
@@ -87,14 +86,11 @@ export default function HomePage() {
   const apptLabel = nextAppt
     ? new Date(nextAppt.nextAppointment).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })
     : ''
-  const apptShort = nextAppt ? nextAppt.nextAppointment.slice(5).replace('-', '/') : ''   // 09/15
-
-  // 히어로 배지는 임의의 병원 브랜드 색 위에 얹힌다. 평소엔 배경 밝기에 맞춰 반투명으로 녹이고,
-  // 임박했을 때만 채운 색 + 흰 테두리로 띄운다 — 테두리가 있어야 어떤 브랜드 색 위에서도 분리된다.
-  const onDarkBrand = contrastText(brandColor) === '#ffffff'
-  const apptBadgeCls = apptUrgency === 'near' ? 'bg-rose-500 text-white ring-2 ring-white/70'
-    : apptUrgency === 'soon' ? 'bg-amber-500 text-white ring-2 ring-white/70'
-    : onDarkBrand ? 'bg-white/20 ring-1 ring-white/30' : 'bg-black/10 ring-1 ring-black/10'
+  // 히어로 위 D-day 칩. 배경이 고정 색이라 대비를 계산할 필요 없이 팔레트 색을 그대로 쓴다.
+  // 임박하면 밝은 틴트로 띄우고(어두운 청록 위에서 가장 잘 뜬다) 글자는 짙은 회색.
+  const apptChipCls = apptUrgency === 'near' ? 'bg-[#fda4af] text-[#1f2937]'
+    : apptUrgency === 'soon' ? 'bg-[#fcd34d] text-[#1f2937]'
+    : 'bg-white/15 text-white ring-1 ring-white/25'
   const HOME_POSTS = 3                 // 홈에 펼쳐 보여줄 최신 글 수 — 나머지는 시트에서
   const shownPosts = posts.slice(0, HOME_POSTS)
 
@@ -105,42 +101,53 @@ export default function HomePage() {
           아래를 넉넉히 비워(pb-16) 그 위로 카드들이 겹쳐 올라오게 한다.
           그림자를 빼는 것도 같은 이유 — 그림자가 있으면 다시 "떠 있는 카드"로 보인다. */}
       {hospital && (
-        <section
-          className="-mx-4 -mt-3 flex items-center gap-3 px-5 pt-6 pb-16"
-          style={{ backgroundColor: brandColor }}
-        >
-          {hospital.logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={hospital.logoUrl}
-              alt=""
-              className="w-12 h-12 rounded-full bg-white object-contain flex-shrink-0"
-            />
-          ) : (
-            <div className="w-12 h-12 rounded-full bg-white/25 flex items-center justify-center flex-shrink-0">
-              <FontAwesomeIcon icon={faHospital} className="text-lg" style={{ color: contrastText(brandColor) }} />
-            </div>
+        <section className="-mx-4 -mt-3 pb-16" style={{ backgroundColor: HERO_BG }}>
+          {/* 병원 고유색은 이 한 줄로만 남는다 — 면 전체를 차지하지 않으면서 소속은 드러난다 */}
+          {hospital.brandColor && (
+            <div className="h-1" style={{ backgroundColor: hospital.brandColor }} />
           )}
-          <div className="min-w-0 flex-1">
-            {/* 글자색은 배경 밝기에 맞춰 자동 — 원장이 밝은 색을 골라도 병원 이름이 묻히지 않게 */}
-            <p className="text-xs" style={{ color: contrastMuted(brandColor) }}>연결된 병원</p>
-            <p className="text-lg font-bold truncate" style={{ color: contrastText(brandColor) }}>{hospital.name}</p>
-          </div>
 
-          {/* 다음 예약 — 비어 있던 히어로 우측에. 누르면 날짜를 고칠 수 있다 */}
-          {nextAppt && !editingAppt && (
-            <button
-              onClick={() => { setApptDate(nextAppt.nextAppointment); setEditingAppt(true) }}
-              aria-label={`다음 병원 예약 ${apptLabel}, 눌러서 수정`}
-              className={`flex-shrink-0 rounded-2xl px-3 py-2 text-center transition-transform active:scale-95 ${apptBadgeCls}`}
-              style={apptUrgency === 'far' ? { color: contrastText(brandColor) } : undefined}
-            >
-              <span className="block text-lg font-bold leading-none">
-                {dDays === 0 ? 'D-Day' : `D-${dDays}`}
-              </span>
-              <span className="block text-[11px] mt-0.5 opacity-80">{apptShort}</span>
-            </button>
-          )}
+          <div className="px-5 pt-5">
+            <div className="flex items-center gap-3">
+              {hospital.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={hospital.logoUrl}
+                  alt=""
+                  className="w-12 h-12 rounded-full bg-white object-contain flex-shrink-0"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                  <FontAwesomeIcon icon={faHospital} className="text-lg text-white" />
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="text-xs text-white/70">연결된 병원</p>
+                <p className="text-lg font-bold text-white truncate">{hospital.name}</p>
+              </div>
+            </div>
+
+            {/* 방문 예정일 — D-day만 두면 무슨 기념일처럼 읽힌다. 라벨과 날짜를 먼저 읽히게 두고
+                남은 날짜는 오른쪽 칩으로. 줄 전체가 수정 버튼이다. */}
+            {nextAppt && !editingAppt && (
+              <button
+                onClick={() => { setApptDate(nextAppt.nextAppointment); setEditingAppt(true) }}
+                aria-label={`방문 예정일 ${apptLabel}, 눌러서 수정`}
+                className="mt-4 pt-3 w-full flex items-center justify-between gap-3 border-t border-white/15 text-left transition-opacity active:opacity-70"
+              >
+                <span className="min-w-0">
+                  <span className="flex items-center gap-1.5 text-[11px] text-white/70">
+                    <FontAwesomeIcon icon={faCalendarDays} className="text-[10px]" />
+                    방문 예정일
+                  </span>
+                  <span className="block mt-0.5 text-[15px] font-semibold text-white truncate">{apptLabel}</span>
+                </span>
+                <span className={`flex-shrink-0 rounded-xl px-3 py-1.5 text-base font-bold tabular-nums ${apptChipCls}`}>
+                  {dDays === 0 ? 'D-Day' : `D-${dDays}`}
+                </span>
+              </button>
+            )}
+          </div>
         </section>
       )}
 
@@ -169,10 +176,10 @@ export default function HomePage() {
       {nextAppt && (editingAppt || !hospital) && (
         <section className={`rounded-2xl p-4 mb-3 transition-colors ${APPT_STYLE.card}`}>
           <div className="flex items-center justify-between">
-            <h2 className={`text-xs font-semibold ${APPT_STYLE.label}`}>다음 병원 예약</h2>
+            <h2 className={`text-xs font-semibold ${APPT_STYLE.label}`}>방문 예정일</h2>
             {!editingAppt && (
               <button onClick={() => { setApptDate(nextAppt.nextAppointment); setEditingAppt(true) }}
-                aria-label="예약일 수정"
+                aria-label="방문 예정일 수정"
                 className={`${APPT_STYLE.label} hover:opacity-70 text-sm p-1 transition-opacity`}>
                 <FontAwesomeIcon icon={faPen} />
               </button>

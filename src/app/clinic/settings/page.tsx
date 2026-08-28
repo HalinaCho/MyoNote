@@ -6,7 +6,7 @@ import QRCode from 'qrcode'
 import { useHospital } from '@/context/HospitalContext'
 import * as q from '@/lib/supabase/queries'
 import { downscaleImage } from '@/lib/examExtract'
-import { contrastText, contrastMuted, DEFAULT_BRAND_COLOR } from '@/lib/utils/color'
+import { HERO_BG, DEFAULT_BRAND_COLOR } from '@/lib/utils/color'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHospital, faImage, faEyeDropper } from '@fortawesome/free-solid-svg-icons'
 
@@ -173,23 +173,41 @@ export default function ClinicSettingsPage() {
       <div className="bg-white rounded-xl border border-gray-100 p-4 space-y-4">
         <div className="text-sm text-gray-500">브랜딩</div>
 
-        {/* 부모 홈 미리보기 — 저장하고 부모 폰으로 확인하러 갈 수 없으니 고르는 즉시 보여준다 */}
+        {/* 부모 홈 미리보기 — 저장하고 부모 폰으로 확인하러 갈 수 없으니 고르는 즉시 보여준다.
+            실제 홈과 같은 구조로 그린다(배경은 앱 고정색, 병원 색은 상단 한 줄) */}
         <div>
           <div className="text-xs text-gray-400 mb-1.5">보호자 앱 홈에서 이렇게 보입니다</div>
-          <div className="flex items-center gap-3 rounded-2xl px-4 py-3" style={{ backgroundColor: color }}>
-            {hospital.logoUrl ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img src={hospital.logoUrl} alt="" className="w-10 h-10 rounded-full bg-white object-contain flex-shrink-0" />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-white/25 flex items-center justify-center flex-shrink-0">
-                <FontAwesomeIcon icon={faHospital} style={{ color: contrastText(color) }} />
+          <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: HERO_BG }}>
+            <div className="h-1" style={{ backgroundColor: color }} />
+            <div className="px-4 py-3">
+              <div className="flex items-center gap-3">
+                {hospital.logoUrl ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img src={hospital.logoUrl} alt="" className="w-10 h-10 rounded-full bg-white object-contain flex-shrink-0" />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                    <FontAwesomeIcon icon={faHospital} className="text-white" />
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-white/70">연결된 병원</p>
+                  <p className="font-bold text-white truncate">{hospital.name}</p>
+                </div>
               </div>
-            )}
-            <div className="min-w-0">
-              <p className="text-xs" style={{ color: contrastMuted(color) }}>연결된 병원</p>
-              <p className="font-bold truncate" style={{ color: contrastText(color) }}>{hospital.name}</p>
+              <div className="mt-3 pt-2.5 flex items-center justify-between border-t border-white/15">
+                <span className="min-w-0">
+                  <span className="block text-[11px] text-white/70">방문 예정일</span>
+                  <span className="block text-[13px] font-semibold text-white">9월 15일 (월)</span>
+                </span>
+                <span className="rounded-xl px-2.5 py-1 text-sm font-bold bg-white/15 text-white ring-1 ring-white/25">
+                  D-15
+                </span>
+              </div>
             </div>
           </div>
+          <p className="mt-1.5 text-[11px] text-gray-400">
+            브랜드 컬러는 상단 띠에 쓰입니다. 배경은 앱 고정색이라 어떤 색을 골라도 글씨가 잘 보입니다.
+          </p>
         </div>
 
         <div>
