@@ -45,6 +45,15 @@ export async function proxy(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   const path = request.nextUrl.pathname
 
+  // 루트(/)로 들어온 경우 계정 종류에 맞는 곳으로 보낸다.
+  // 예전엔 "세션 있으면 무조건 부모 앱"이라, 원장 계정으로 접속하면 자녀가 없어
+  // 부모용 자녀등록 화면이 떴다 — 원장에게는 말이 안 되는 화면이다.
+  if (path === '/') {
+    if (!user) return redirectTo('/login')
+    const { data: hospitalId } = await supabase.rpc('my_hospital_id')
+    return redirectTo(hospitalId ? '/clinic' : '/dashboard')
+  }
+
   if (path.startsWith('/clinic')) {
     if (path === '/clinic/login') return response          // 로그인 화면 자체는 열려 있어야 한다
     if (!user) return redirectTo('/clinic/login')
@@ -60,5 +69,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/clinic/:path*'],
+  matcher: ['/', '/dashboard/:path*', '/clinic/:path*'],
 }
