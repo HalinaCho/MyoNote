@@ -174,21 +174,23 @@ export default function ClinicSettingsPage() {
         <div className="text-sm text-gray-500">브랜딩</div>
 
         {/* 부모 홈 미리보기 — 저장하고 부모 폰으로 확인하러 갈 수 없으니 고르는 즉시 보여준다.
-            실제 홈과 같은 구조로 그린다(배경은 앱 고정색, 병원 색은 상단 한 줄) */}
+            실제 홈과 같은 구조로 그린다(흰 카드, 병원 색은 로고 테두리) */}
         <div>
           <div className="text-xs text-gray-400 mb-1.5">보호자 앱 홈에서 이렇게 보입니다</div>
           <div className="rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm">
-            <div className="h-1" style={{ backgroundColor: color }} />
             <div className="px-4 py-3">
               <div className="flex items-center gap-3">
-                {hospital.logoUrl ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={hospital.logoUrl} alt="" className="w-10 h-10 rounded-full bg-white object-contain flex-shrink-0" />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center flex-shrink-0">
-                    <FontAwesomeIcon icon={faHospital} className="text-teal-500" />
-                  </div>
-                )}
+                <div className="rounded-full flex-shrink-0"
+                  style={{ boxShadow: `0 0 0 2px ${color}`, margin: 2 }}>
+                  {hospital.logoUrl ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img src={hospital.logoUrl} alt="" className="w-10 h-10 rounded-full bg-white object-contain" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center">
+                      <FontAwesomeIcon icon={faHospital} className="text-teal-500" />
+                    </div>
+                  )}
+                </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs text-gray-400">연결된 병원</p>
                   <p className="font-bold text-gray-800 truncate">{hospital.name}</p>
@@ -206,7 +208,7 @@ export default function ClinicSettingsPage() {
             </div>
           </div>
           <p className="mt-1.5 text-[11px] text-gray-400">
-            브랜드 컬러는 카드 상단 띠에 쓰입니다.
+            브랜드 컬러는 로고 테두리에 쓰입니다.
           </p>
         </div>
 

@@ -98,56 +98,59 @@ export default function HomePage() {
       {/* ── 병원 카드 (연결된 병원이 있을 때만) ──
           다른 카드와 같은 흰 카드. 색 면으로 구분하려 여러 번 시도했지만 이 앱의 밝은 톤에서는
           어떤 색이든 덩어리로 튀었다. 구분은 색이 아니라 위치(맨 위)와 내용으로 충분하다.
-          병원 고유색은 카드 상단 얇은 선으로만 남는다. */}
+          병원 고유색은 로고 테두리로만 남는다 — 카드 상단 선으로 두었더니 둥근 모서리에
+          사각형 선이 잘려 보였고, 로고 둘레는 모서리와 무관해 그 문제가 아예 없다. */}
       {hospital && (
-        <section className="bg-white rounded-2xl mb-3 shadow-sm overflow-hidden">
-          {hospital.brandColor && (
-            <div className="h-1" style={{ backgroundColor: hospital.brandColor }} />
-          )}
-
-          <div className="p-4">
-            <div className="flex items-center gap-3">
+        <section className="bg-white rounded-2xl mb-3 p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            {/* 테두리는 ring으로 준다 — border와 달리 요소 크기를 밀지 않아 로고가 안 찌그러진다 */}
+            <div
+              className="rounded-full flex-shrink-0"
+              style={hospital.brandColor
+                ? { boxShadow: `0 0 0 2px ${hospital.brandColor}`, margin: 2 }
+                : undefined}
+            >
               {hospital.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={hospital.logoUrl}
                   alt=""
-                  className="w-11 h-11 rounded-full bg-gray-50 object-contain flex-shrink-0"
+                  className="w-11 h-11 rounded-full bg-white object-contain"
                 />
               ) : (
-                <div className="w-11 h-11 rounded-full bg-teal-50 flex items-center justify-center flex-shrink-0">
+                <div className="w-11 h-11 rounded-full bg-teal-50 flex items-center justify-center">
                   <FontAwesomeIcon icon={faHospital} className="text-teal-500" />
                 </div>
               )}
-              <div className="min-w-0 flex-1">
-                <p className="text-xs text-gray-400">연결된 병원</p>
-                <p className="font-bold text-gray-800 truncate">{hospital.name}</p>
-              </div>
             </div>
-
-            {/* 방문 예정일 — D-day만 두면 무슨 기념일처럼 읽힌다. 라벨과 날짜를 먼저 읽히게 두고
-                남은 날짜는 오른쪽 칩으로. 줄 전체가 수정 버튼이다. */}
-            {nextAppt && !editingAppt && (
-              <button
-                onClick={() => { setApptDate(nextAppt.nextAppointment); setEditingAppt(true) }}
-                aria-label={`방문 예정일 ${apptLabel}, 눌러서 수정`}
-                className="mt-3 pt-3 w-full flex items-center justify-between gap-3 border-t border-gray-100 text-left transition-colors hover:bg-gray-50/60"
-              >
-                <span className="min-w-0">
-                  <span className="flex items-center gap-1.5 text-[11px] text-gray-400">
-                    <FontAwesomeIcon icon={faCalendarDays} className="text-[10px]" />
-                    방문 예정일
-                  </span>
-                  <span className="block mt-0.5 text-[15px] font-semibold text-gray-800 truncate">
-                    {apptLabel}
-                  </span>
-                </span>
-                <span className={`flex-shrink-0 rounded-xl px-3 py-1.5 text-base font-bold tabular-nums ${apptChipCls}`}>
-                  {dDays === 0 ? 'D-Day' : `D-${dDays}`}
-                </span>
-              </button>
-            )}
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-gray-400">연결된 병원</p>
+              <p className="font-bold text-gray-800 truncate">{hospital.name}</p>
+            </div>
           </div>
+
+          {/* 방문 예정일 — D-day만 두면 무슨 기념일처럼 읽힌다. 라벨과 날짜를 먼저 읽히게 두고
+              남은 날짜는 오른쪽 칩으로. 줄 전체가 수정 버튼이다. */}
+          {nextAppt && !editingAppt && (
+            <button
+              onClick={() => { setApptDate(nextAppt.nextAppointment); setEditingAppt(true) }}
+              aria-label={`방문 예정일 ${apptLabel}, 눌러서 수정`}
+              className="mt-3 pt-3 w-full flex items-center justify-between gap-3 border-t border-gray-100 text-left transition-colors hover:bg-gray-50/60"
+            >
+              <span className="min-w-0">
+                <span className="flex items-center gap-1.5 text-[11px] text-gray-400">
+                  <FontAwesomeIcon icon={faCalendarDays} className="text-[10px]" />
+                  방문 예정일
+                </span>
+                <span className="block mt-0.5 text-[15px] font-semibold text-gray-800 truncate">
+                  {apptLabel}
+                </span>
+              </span>
+              <span className={`flex-shrink-0 rounded-xl px-3 py-1.5 text-base font-bold tabular-nums ${apptChipCls}`}>
+                {dDays === 0 ? 'D-Day' : `D-${dDays}`}
+              </span>
+            </button>
+          )}
         </section>
       )}
 
