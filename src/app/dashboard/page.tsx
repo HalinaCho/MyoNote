@@ -8,7 +8,7 @@ import ChildFormModal from '@/components/child/ChildFormModal'
 import { today } from '@/lib/utils/date'
 import { hasUnseenExam } from '@/lib/aiReport'
 import { fetchLatestReport, fetchFeedForChild } from '@/lib/supabase/queries'
-import { HERO_BG } from '@/lib/utils/color'
+import { HERO_BG, HERO_TEXT } from '@/lib/utils/color'
 import HospitalFeedSheet from '@/components/hospital/HospitalFeedSheet'
 import PostView from '@/components/hospital/PostView'
 import type { HospitalPost } from '@/types'
@@ -86,11 +86,11 @@ export default function HomePage() {
   const apptLabel = nextAppt
     ? new Date(nextAppt.nextAppointment).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })
     : ''
-  // 히어로 위 D-day 칩. 배경이 고정 색이라 대비를 계산할 필요 없이 팔레트 색을 그대로 쓴다.
-  // 임박하면 밝은 틴트로 띄우고(어두운 청록 위에서 가장 잘 뜬다) 글자는 짙은 회색.
-  const apptChipCls = apptUrgency === 'near' ? 'bg-[#fda4af] text-[#1f2937]'
-    : apptUrgency === 'soon' ? 'bg-[#fcd34d] text-[#1f2937]'
-    : 'bg-white/15 text-white ring-1 ring-white/25'
+  // 히어로 위 D-day 칩. 밝은 틴트 배경이라 임박 시엔 팔레트의 상태색(부분=amber-700,
+  // 미완료=rose-700)을 채워 넣어야 뜬다. 평소엔 흰 칩으로 조용히 둔다.
+  const apptChipCls = apptUrgency === 'near' ? 'bg-[#be123c] text-white'
+    : apptUrgency === 'soon' ? 'bg-[#b45309] text-white'
+    : 'bg-white text-[#0f766e] ring-1 ring-[#0f766e]/15'
   const HOME_POSTS = 3                 // 홈에 펼쳐 보여줄 최신 글 수 — 나머지는 시트에서
   const shownPosts = posts.slice(0, HOME_POSTS)
 
@@ -117,13 +117,13 @@ export default function HomePage() {
                   className="w-12 h-12 rounded-full bg-white object-contain flex-shrink-0"
                 />
               ) : (
-                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                  <FontAwesomeIcon icon={faHospital} className="text-lg text-white" />
+                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center flex-shrink-0">
+                  <FontAwesomeIcon icon={faHospital} className="text-lg" style={{ color: HERO_TEXT }} />
                 </div>
               )}
               <div className="min-w-0 flex-1">
-                <p className="text-xs text-white/70">연결된 병원</p>
-                <p className="text-lg font-bold text-white truncate">{hospital.name}</p>
+                <p className="text-xs opacity-70" style={{ color: HERO_TEXT }}>연결된 병원</p>
+                <p className="text-lg font-bold truncate" style={{ color: HERO_TEXT }}>{hospital.name}</p>
               </div>
             </div>
 
@@ -133,14 +133,17 @@ export default function HomePage() {
               <button
                 onClick={() => { setApptDate(nextAppt.nextAppointment); setEditingAppt(true) }}
                 aria-label={`방문 예정일 ${apptLabel}, 눌러서 수정`}
-                className="mt-4 pt-3 w-full flex items-center justify-between gap-3 border-t border-white/15 text-left transition-opacity active:opacity-70"
+                className="mt-4 pt-3 w-full flex items-center justify-between gap-3 border-t text-left transition-opacity active:opacity-70"
+                style={{ borderColor: `${HERO_TEXT}26` }}
               >
                 <span className="min-w-0">
-                  <span className="flex items-center gap-1.5 text-[11px] text-white/70">
+                  <span className="flex items-center gap-1.5 text-[11px] opacity-70" style={{ color: HERO_TEXT }}>
                     <FontAwesomeIcon icon={faCalendarDays} className="text-[10px]" />
                     방문 예정일
                   </span>
-                  <span className="block mt-0.5 text-[15px] font-semibold text-white truncate">{apptLabel}</span>
+                  <span className="block mt-0.5 text-[15px] font-semibold truncate" style={{ color: HERO_TEXT }}>
+                    {apptLabel}
+                  </span>
                 </span>
                 <span className={`flex-shrink-0 rounded-xl px-3 py-1.5 text-base font-bold tabular-nums ${apptChipCls}`}>
                   {dDays === 0 ? 'D-Day' : `D-${dDays}`}

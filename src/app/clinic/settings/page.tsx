@@ -6,7 +6,7 @@ import QRCode from 'qrcode'
 import { useHospital } from '@/context/HospitalContext'
 import * as q from '@/lib/supabase/queries'
 import { downscaleImage } from '@/lib/examExtract'
-import { HERO_BG, DEFAULT_BRAND_COLOR } from '@/lib/utils/color'
+import { HERO_BG, HERO_TEXT, DEFAULT_BRAND_COLOR } from '@/lib/utils/color'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHospital, faImage, faEyeDropper } from '@fortawesome/free-solid-svg-icons'
 
@@ -185,21 +185,23 @@ export default function ClinicSettingsPage() {
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img src={hospital.logoUrl} alt="" className="w-10 h-10 rounded-full bg-white object-contain flex-shrink-0" />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                    <FontAwesomeIcon icon={faHospital} className="text-white" />
+                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center flex-shrink-0">
+                    <FontAwesomeIcon icon={faHospital} style={{ color: HERO_TEXT }} />
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs text-white/70">연결된 병원</p>
-                  <p className="font-bold text-white truncate">{hospital.name}</p>
+                  <p className="text-xs opacity-70" style={{ color: HERO_TEXT }}>연결된 병원</p>
+                  <p className="font-bold truncate" style={{ color: HERO_TEXT }}>{hospital.name}</p>
                 </div>
               </div>
-              <div className="mt-3 pt-2.5 flex items-center justify-between border-t border-white/15">
+              <div className="mt-3 pt-2.5 flex items-center justify-between border-t"
+                style={{ borderColor: `${HERO_TEXT}26` }}>
                 <span className="min-w-0">
-                  <span className="block text-[11px] text-white/70">방문 예정일</span>
-                  <span className="block text-[13px] font-semibold text-white">9월 15일 (월)</span>
+                  <span className="block text-[11px] opacity-70" style={{ color: HERO_TEXT }}>방문 예정일</span>
+                  <span className="block text-[13px] font-semibold" style={{ color: HERO_TEXT }}>9월 15일 (월)</span>
                 </span>
-                <span className="rounded-xl px-2.5 py-1 text-sm font-bold bg-white/15 text-white ring-1 ring-white/25">
+                <span className="rounded-xl px-2.5 py-1 text-sm font-bold bg-white ring-1"
+                  style={{ color: HERO_TEXT, borderColor: 'transparent' }}>
                   D-15
                 </span>
               </div>
