@@ -73,6 +73,20 @@ export default function HomePage() {
   // 마지막 리포트 이후 새 검사가 들어왔는지 — 조회가 끝난 뒤에만 판정(깜빡임 방지)
   const newExam = reportLoaded && hasUnseenExam(exams, lastReportAt)
   const brandColor = hospital?.brandColor || DEFAULT_BRAND_COLOR
+
+  // 예약일 카드는 "임박했을 때만" 색으로 반응한다. 항상 빨간 카드면 금세 무뎌져서
+  // 정작 급할 때 안 보인다 — 평소엔 다른 카드와 같은 흰 카드로 둔다.
+  const apptUrgency = dDays == null ? 'far' : dDays <= 3 ? 'near' : dDays <= 7 ? 'soon' : 'far'
+  const APPT_STYLE = {
+    near: { card: 'bg-rose-50 border-2 border-rose-200', dday: 'text-rose-500',   label: 'text-rose-400',  sub: 'text-rose-500/80' },
+    soon: { card: 'bg-amber-50 border-2 border-amber-200', dday: 'text-amber-600', label: 'text-amber-500', sub: 'text-amber-600/80' },
+    far:  { card: 'bg-white shadow-sm', dday: 'text-teal-600', label: 'text-gray-400', sub: 'text-gray-500' },
+  }[apptUrgency]
+
+  // "9월 15일 (월)" — 부모가 달력을 떠올리기 쉬운 형태로
+  const apptLabel = nextAppt
+    ? new Date(nextAppt.nextAppointment).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })
+    : ''
   const HOME_POSTS = 3                 // 홈에 펼쳐 보여줄 최신 글 수 — 나머지는 시트에서
   const shownPosts = posts.slice(0, HOME_POSTS)
 
@@ -128,12 +142,13 @@ export default function HomePage() {
 
       {/* ── 다음 예약일 ── */}
       {nextAppt && (
-        <section className="bg-white rounded-2xl p-4 mb-3 shadow-sm">
-          <div className="flex items-center justify-between mb-1">
-            <h2 className="font-bold text-gray-800">다음 병원 예약일</h2>
+        <section className={`rounded-2xl p-4 mb-3 transition-colors ${APPT_STYLE.card}`}>
+          <div className="flex items-center justify-between">
+            <h2 className={`text-xs font-semibold ${APPT_STYLE.label}`}>다음 병원 예약</h2>
             {!editingAppt && (
               <button onClick={() => { setApptDate(nextAppt.nextAppointment); setEditingAppt(true) }}
-                className="text-gray-300 hover:text-gray-500 text-sm p-1 transition-colors">
+                aria-label="예약일 수정"
+                className={`${APPT_STYLE.label} hover:opacity-70 text-sm p-1 transition-opacity`}>
                 <FontAwesomeIcon icon={faPen} />
               </button>
             )}
@@ -158,21 +173,17 @@ export default function HomePage() {
               </button>
             </div>
           ) : (
-            <div className="flex items-center justify-between mt-2">
-              <span className="flex items-center gap-1.5 text-gray-700 text-sm font-medium">
-                <FontAwesomeIcon icon={faCalendarDays} className="text-gray-400 text-xs" />
-                {nextAppt.nextAppointment}
-              </span>
-              <span className={`text-base font-bold px-3 py-1 rounded-full
-                ${dDays! <= 3 ? 'bg-rose-50 text-rose-500'
-                  : dDays! <= 7 ? 'bg-[#fde68a]/40 text-amber-600'
-                  : 'bg-teal-50 text-teal-500'}`}>
+            <div>
+              {/* 남은 날짜가 주인공 — 배지로 작게 두면 다른 카드 제목들에 묻힌다 */}
+              <p className={`text-3xl font-bold leading-none mt-1 ${APPT_STYLE.dday}`}>
                 {dDays === 0 ? 'D-Day' : `D-${dDays}`}
-              </span>
+              </p>
+              <p className={`mt-1.5 text-sm font-medium flex items-center gap-1.5 ${APPT_STYLE.sub}`}>
+                <FontAwesomeIcon icon={faCalendarDays} className="text-xs opacity-70" />
+                {apptLabel}
+              </p>
             </div>
           )}
-          {nextAppt.clinic && !editingAppt &&
-            <p className="text-xs text-gray-400 mt-1">{nextAppt.clinic}</p>}
         </section>
       )}
 
