@@ -405,6 +405,20 @@ export async function fetchMyConnectedHospital(childId: string): Promise<Hospita
   }
 }
 
+export interface HomeStats {
+  totalPatients: number
+  newThisMonth: number
+  examsThisMonth: number
+}
+
+export async function fetchHomeStats(hospitalId: string): Promise<HomeStats> {
+  const sb = createClient()
+  const { data, error } = await sb.rpc('hospital_home_stats', { p_hospital_id: hospitalId })
+  if (error) throw error
+  const row = data as { total_patients: number; new_this_month: number; exams_this_month: number }
+  return { totalPatients: row.total_patients, newThisMonth: row.new_this_month, examsThisMonth: row.exams_this_month }
+}
+
 export interface OverduePatient {
   childId: string
   childName: string

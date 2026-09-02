@@ -68,7 +68,7 @@ export function AxialPctView() {
 const SCROLL_THRESHOLD = 8
 const PER_POINT = 52
 
-function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: string }[] }) {
+export function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: string }[] }) {
   const [showOD, setShowOD] = useState(true)
   const [showOS, setShowOS] = useState(true)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -261,7 +261,7 @@ function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: strin
 
 // ── 또래 비교 뷰 ──────────────────────────────────────────────────
 
-function PctView({
+export function PctView({
   exams, birth,
 }: { exams: { date: string; axOD: string; axOS: string }[]; birth?: string }) {
   const [showPctInfo, setShowPctInfo] = useState(false)
