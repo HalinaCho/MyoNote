@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useHospital } from '@/context/HospitalContext'
 import * as q from '@/lib/supabase/queries'
+import { errMessage } from '@/lib/utils/error'
 import { calcAgeLabel } from '@/lib/utils/date'
 import { calcRecentCompliance } from '@/lib/utils/compliance'
 import { makeTreatmentsForDate } from '@/lib/treatments'
@@ -59,7 +60,7 @@ export default function ClinicPatientsAllPage() {
     if (!hospital) return
     Promise.all([q.fetchPatientRoster(hospital.id), q.fetchPatientCare(hospital.id, 30), q.fetchOverduePatients(hospital.id)])
       .then(([roster, careMap, od]) => { setPatients(roster); setCare(careMap); setOverdue(od) })
-      .catch(err => setError(err instanceof Error ? err.message : '조회에 실패했습니다'))
+      .catch(err => setError(errMessage(err)))
   }, [hospital])
 
   // 저장소 접근이 막힌 브라우저(시크릿 모드 등)에서도 검색 자체는 동작해야 하므로 전부 try/catch.

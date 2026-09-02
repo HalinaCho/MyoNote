@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useHospital } from '@/context/HospitalContext'
 import * as q from '@/lib/supabase/queries'
+import { errMessage } from '@/lib/utils/error'
 import { calcAgeLabel } from '@/lib/utils/date'
 import { TrendView, PctView, GrowthRateCard } from '@/components/analytics/AxialTab'
 import { ForecastView } from '@/components/analytics/ForecastCard'
@@ -56,7 +57,7 @@ function ClinicPatientsPageInner() {
   useEffect(() => {
     if (!hospital) return
     q.fetchPatientRoster(hospital.id).then(setRoster)
-      .catch(err => setRosterError(err instanceof Error ? err.message : '조회에 실패했습니다'))
+      .catch(err => setRosterError(errMessage(err)))
   }, [hospital])
 
   useEffect(() => {
@@ -73,7 +74,7 @@ function ClinicPatientsPageInner() {
     if (!hospital || !childId) return
     q.fetchPatientDetail(hospital.id, childId)
       .then(data => setDetail({ childId, data }))
-      .catch(err => setDetailError({ childId, message: err instanceof Error ? err.message : '조회에 실패했습니다' }))
+      .catch(err => setDetailError({ childId, message: errMessage(err) }))
   }, [hospital, childId])
 
   const saveRecent = (list: RecentEntry[]) => {

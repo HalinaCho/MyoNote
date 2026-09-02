@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useHospital } from '@/context/HospitalContext'
 import * as q from '@/lib/supabase/queries'
+import { errMessage } from '@/lib/utils/error'
 import { calcAgeLabel } from '@/lib/utils/date'
 import { axialGrowth } from '@/lib/axialGrowth'
 import { makeTreatmentsForDate } from '@/lib/treatments'
@@ -96,7 +97,7 @@ export default function ClinicDashboardPage() {
       q.fetchPatientSummaries(hospital.id),
     ])
       .then(([s, r, o, m, ps]) => { setStats(s); setRoster(r); setOverdue(o); setMonthly(m); setSummaries(ps) })
-      .catch(err => setError(err instanceof Error ? err.message : '조회에 실패했습니다'))
+      .catch(err => setError(errMessage(err)))
   }, [hospital])
 
   if (hospitalError) return <p className="text-sm text-rose-500">{hospitalError}</p>
