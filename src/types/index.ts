@@ -84,4 +84,5 @@ export interface HospitalPost {
   linkUrl: string | null
   linkMeta: LinkMeta | null
   createdAt: string
+  publishAt: string   // 보호자 앱에 나타나는 시각(예약 발행). 부모 앱 피드에서는 createdAt과 같다
 }

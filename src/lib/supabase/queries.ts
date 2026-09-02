@@ -633,12 +633,14 @@ export async function deleteHospitalLogo(hospitalId: string): Promise<void> {
 
 interface HospitalPostRow {
   id: string; body: string | null; images: string[] | null
-  link_url: string | null; link_meta: LinkMeta | null; created_at: string
+  link_url: string | null; link_meta: LinkMeta | null
+  created_at: string; publish_at?: string
 }
 
 const toPost = (r: HospitalPostRow): HospitalPost => ({
   id: r.id, body: r.body ?? '', images: r.images ?? [],
-  linkUrl: r.link_url, linkMeta: r.link_meta, createdAt: r.created_at,
+  linkUrl: r.link_url, linkMeta: r.link_meta,
+  createdAt: r.created_at, publishAt: r.publish_at ?? r.created_at,
 })
 
 // 원장 포털 — 자기 병원 소식 전체
@@ -646,9 +648,10 @@ export async function fetchHospitalPosts(hospitalId: string): Promise<HospitalPo
   const sb = createClient()
   const { data, error } = await sb
     .from('eyebody_hospital_posts')
-    .select('id, body, images, link_url, link_meta, created_at')
+    .select('id, body, images, link_url, link_meta, created_at, publish_at')
     .eq('hospital_id', hospitalId)
-    .order('created_at', { ascending: false })
+    // 예약 발행 글이 맨 위 — 원장이 "다음에 나갈 글"을 먼저 보게 된다
+    .order('publish_at', { ascending: false })
   if (error) throw error
   return ((data ?? []) as HospitalPostRow[]).map(toPost)
 }
@@ -662,8 +665,10 @@ export async function fetchFeedForChild(childId: string, limit = 20): Promise<Ho
     post_id: string; post_body: string | null; post_images: string[] | null
     post_link_url: string | null; post_link_meta: LinkMeta | null; post_created_at: string
   }[]).map(r => ({
+    // 피드는 이미 발행된 글만 오고, 날짜도 발행 시각으로 내려온다(예약 글이 옛날 글처럼 보이지 않게)
     id: r.post_id, body: r.post_body ?? '', images: r.post_images ?? [],
-    linkUrl: r.post_link_url, linkMeta: r.post_link_meta, createdAt: r.post_created_at,
+    linkUrl: r.post_link_url, linkMeta: r.post_link_meta,
+    createdAt: r.post_created_at, publishAt: r.post_created_at,
   }))
 }
 
@@ -679,6 +684,7 @@ export interface PostInput {
   images: string[]
   linkUrl: string | null
   linkMeta: LinkMeta | null
+  publishAt: string    // ISO. 지금 올리면 현재 시각, 예약이면 미래 시각
 }
 
 // API 라우트 호출용 헤더 — 브라우저 세션이 localStorage에 있어서 쿠키로는 서버에 전달되지 않는다.
@@ -729,6 +735,7 @@ export async function createHospitalPost(
     images: input.images,
     link_url: input.linkUrl,
     link_meta: input.linkMeta,
+    publish_at: input.publishAt,
   })
   if (error) throw new Error(error.message || '소식 등록에 실패했습니다')
 }
@@ -740,6 +747,7 @@ export async function updateHospitalPost(postId: string, input: PostInput): Prom
     images: input.images,
     link_url: input.linkUrl,
     link_meta: input.linkMeta,
+    publish_at: input.publishAt,
     updated_at: new Date().toISOString(),
   }).eq('id', postId)
   if (error) throw new Error(error.message || '소식 수정에 실패했습니다')
