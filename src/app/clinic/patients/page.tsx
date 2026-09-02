@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useHospital } from '@/context/HospitalContext'
 import * as q from '@/lib/supabase/queries'
 import { calcAgeLabel } from '@/lib/utils/date'
-import { TrendView, PctView } from '@/components/analytics/AxialTab'
+import { TrendView, PctView, GrowthRateCard } from '@/components/analytics/AxialTab'
 import EmptyState from '@/components/ui/EmptyState'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
@@ -112,7 +112,8 @@ function ClinicPatientsPageInner() {
         </Link>
       </div>
 
-      <div className="relative">
+      {/* 넓은 화면에서 검색창까지 늘어나면 허전해 보인다 — 입력 폭만 따로 제한 */}
+      <div className="relative max-w-md">
         <FontAwesomeIcon icon={faMagnifyingGlass}
           className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-300" />
         <input
@@ -198,70 +199,79 @@ function PatientPanel({
   const nextAppointment = detail.exams.find(e => e.nextAppointment)?.nextAppointment ?? null
 
   return (
-    <div className="space-y-5">
-      <div>
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h2 className="font-bold text-lg text-gray-800">{detail.childName}</h2>
         <p className="text-xs text-gray-400">
           {calcAgeLabel(detail.birth)} · 다음 예약 {nextAppointment ?? '-'}
         </p>
       </div>
 
-      {chartExams.length < 2 ? (
-        <EmptyState message="안축장 기록이 2개 이상 있어야 추세를 볼 수 있습니다." />
-      ) : (
-        <TrendView exams={chartExams} />
-      )}
-      {chartExams.length >= 1 && <PctView exams={chartExams} birth={detail.birth} />}
-
-      <section>
-        <h3 className="font-bold text-gray-800 mb-2 text-sm">검사 이력 ({detail.exams.length})</h3>
-        {detail.exams.length === 0 ? (
-          <p className="text-sm text-gray-400">아직 검사기록이 없습니다.</p>
+      {/* 데스크톱은 2단 — 그래프 둘을 나란히 두어 스크롤 없이 같이 보이게 한다 */}
+      <div className="grid gap-4 lg:grid-cols-2 items-start">
+        {chartExams.length < 2 ? (
+          <EmptyState message="안축장 기록이 2개 이상 있어야 추세를 볼 수 있습니다." />
         ) : (
-          <div className="bg-white rounded-xl border border-gray-100 overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-[11px] text-gray-400 border-b border-gray-50">
-                  <th className="text-left font-medium px-3 py-2">검사일</th>
-                  <th className="text-right font-medium px-3 py-2">안축장 OD</th>
-                  <th className="text-right font-medium px-3 py-2">안축장 OS</th>
-                  <th className="text-right font-medium px-3 py-2">SEQ OD</th>
-                  <th className="text-right font-medium px-3 py-2">SEQ OS</th>
-                  <th className="text-left font-medium px-3 py-2">병원</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {detail.exams.map((e, i) => {
-                  const prev = detail.exams[i + 1]
-                  return (
-                    <tr key={e.id}>
-                      <td className="px-3 py-2 whitespace-nowrap text-gray-700">{e.date}</td>
-                      <td className="px-3 py-2 text-right whitespace-nowrap">
-                        {fmt2(e.axOD)}
-                        <span className="ml-1 text-[11px] text-gray-400">{fmtDelta(e.axOD, prev?.axOD ?? null)}</span>
-                      </td>
-                      <td className="px-3 py-2 text-right whitespace-nowrap">
-                        {fmt2(e.axOS)}
-                        <span className="ml-1 text-[11px] text-gray-400">{fmtDelta(e.axOS, prev?.axOS ?? null)}</span>
-                      </td>
-                      <td className="px-3 py-2 text-right text-gray-700">{fmt2(e.serOD)}</td>
-                      <td className="px-3 py-2 text-right text-gray-700">{fmt2(e.serOS)}</td>
-                      <td className="px-3 py-2 text-xs text-gray-400 whitespace-nowrap">
-                        {e.byUs && <FontAwesomeIcon icon={faHospital} className="mr-1 text-teal-500" />}
-                        {e.clinic || '-'}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+          <TrendView exams={chartExams} hideGrowth />
         )}
-        <p className="mt-2 text-[11px] text-gray-400">
-          <FontAwesomeIcon icon={faHospital} className="mr-1 text-teal-500" />
-          표시는 우리 병원에서 입력된 검사입니다. 조회 전용 화면이라 여기서는 수정할 수 없습니다.
-        </p>
-      </section>
+        {chartExams.length >= 1 ? (
+          <PctView exams={chartExams} birth={detail.birth} />
+        ) : (
+          <EmptyState message="안축장 기록이 있어야 또래 비교를 볼 수 있습니다." />
+        )}
+        {chartExams.length >= 2 && <GrowthRateCard exams={chartExams} />}
+
+        <section className="bg-white rounded-2xl p-4 shadow-sm">
+          <h3 className="font-bold text-gray-800 mb-2">검사 이력 ({detail.exams.length})</h3>
+          {detail.exams.length === 0 ? (
+            <p className="text-sm text-gray-400">아직 검사기록이 없습니다.</p>
+          ) : (
+            // 기록이 쌓여도 페이지가 길어지지 않게 표 안에서만 스크롤한다
+            <div className="overflow-auto" style={{ maxHeight: 320 }}>
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 bg-white">
+                  <tr className="text-[11px] text-gray-400 border-b border-gray-50">
+                    <th className="text-left font-medium px-3 py-2">검사일</th>
+                    <th className="text-right font-medium px-3 py-2">안축장 OD</th>
+                    <th className="text-right font-medium px-3 py-2">안축장 OS</th>
+                    <th className="text-right font-medium px-3 py-2">SEQ OD</th>
+                    <th className="text-right font-medium px-3 py-2">SEQ OS</th>
+                    <th className="text-left font-medium px-3 py-2">병원</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {detail.exams.map((e, i) => {
+                    const prev = detail.exams[i + 1]
+                    return (
+                      <tr key={e.id}>
+                        <td className="px-3 py-2 whitespace-nowrap text-gray-700">{e.date}</td>
+                        <td className="px-3 py-2 text-right whitespace-nowrap">
+                          {fmt2(e.axOD)}
+                          <span className="ml-1 text-[11px] text-gray-400">{fmtDelta(e.axOD, prev?.axOD ?? null)}</span>
+                        </td>
+                        <td className="px-3 py-2 text-right whitespace-nowrap">
+                          {fmt2(e.axOS)}
+                          <span className="ml-1 text-[11px] text-gray-400">{fmtDelta(e.axOS, prev?.axOS ?? null)}</span>
+                        </td>
+                        <td className="px-3 py-2 text-right text-gray-700">{fmt2(e.serOD)}</td>
+                        <td className="px-3 py-2 text-right text-gray-700">{fmt2(e.serOS)}</td>
+                        <td className="px-3 py-2 text-xs text-gray-400 whitespace-nowrap">
+                          {e.byUs && <FontAwesomeIcon icon={faHospital} className="mr-1 text-teal-500" />}
+                          {e.clinic || '-'}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <p className="mt-2 text-[11px] text-gray-400">
+            <FontAwesomeIcon icon={faHospital} className="mr-1 text-teal-500" />
+            표시는 우리 병원에서 입력된 검사입니다. 여기서는 수정할 수 없습니다.
+          </p>
+        </section>
+      </div>
     </div>
   )
 }

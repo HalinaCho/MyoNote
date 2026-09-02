@@ -45,7 +45,8 @@ export default function ClinicShell({ children }: { children: React.ReactNode })
     <HospitalProvider>
       <div className="min-h-screen bg-gray-50 flex flex-col">
         <ClinicHeader />
-        <main className="flex-1 max-w-3xl w-full mx-auto px-4 py-6">{children}</main>
+        {/* 원장 포털은 진료실 PC에서 쓰는 웹 화면 — 부모 앱(모바일 폭)과 달리 넓게 쓴다 */}
+        <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-6">{children}</main>
       </div>
       <Toaster position="bottom-center" toastOptions={{ style: { maxWidth: 360, fontSize: 14 } }} />
     </HospitalProvider>
@@ -64,7 +65,7 @@ function ClinicHeader() {
 
   return (
     <header className="bg-white border-b border-gray-200">
-      <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
+      <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
         <div className="font-bold text-gray-800">{hospital?.name ?? '병원 포털'}</div>
         <nav className="flex items-center gap-1">
           {NAV.map(({ href, label, icon }) => {

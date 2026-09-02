@@ -68,7 +68,8 @@ export function AxialPctView() {
 const SCROLL_THRESHOLD = 8
 const PER_POINT = 52
 
-export function TrendView({ exams }: { exams: { date: string; axOD: string; axOS: string }[] }) {
+// hideGrowth: 성장률 카드를 따로 배치하는 화면(원장 포털 2단 그리드)에서 차트만 쓰기 위한 옵션
+export function TrendView({ exams, hideGrowth }: { exams: { date: string; axOD: string; axOS: string }[]; hideGrowth?: boolean }) {
   const [showOD, setShowOD] = useState(true)
   const [showOS, setShowOS] = useState(true)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -254,7 +255,7 @@ export function TrendView({ exams }: { exams: { date: string; axOD: string; axOS
           </div>
         </div>
       </div>
-      <GrowthRateCard exams={exams} />
+      {!hideGrowth && <GrowthRateCard exams={exams} />}
     </>
   )
 }
@@ -517,7 +518,7 @@ function PctSummaryInline({
 
 // ── 성장률 카드 ───────────────────────────────────────────────────
 
-function GrowthRateCard({ exams }: { exams: { date: string; axOD: string; axOS: string }[] }) {
+export function GrowthRateCard({ exams }: { exams: { date: string; axOD: string; axOS: string }[] }) {
   const toPts = (pick: (e: { axOD: string; axOS: string }) => string) =>
     exams.map(e => ({ date: e.date, value: parseFloat(pick(e)) })).filter(p => Number.isFinite(p.value))
   const odG = axialGrowth(toPts(e => e.axOD))
