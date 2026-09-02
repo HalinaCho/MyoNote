@@ -408,15 +408,63 @@ export async function fetchMyConnectedHospital(childId: string): Promise<Hospita
 export interface HomeStats {
   totalPatients: number
   newThisMonth: number
+  newLastMonth: number
   examsThisMonth: number
+  examsLastMonth: number
 }
 
 export async function fetchHomeStats(hospitalId: string): Promise<HomeStats> {
   const sb = createClient()
   const { data, error } = await sb.rpc('hospital_home_stats', { p_hospital_id: hospitalId })
   if (error) throw error
-  const row = data as { total_patients: number; new_this_month: number; exams_this_month: number }
-  return { totalPatients: row.total_patients, newThisMonth: row.new_this_month, examsThisMonth: row.exams_this_month }
+  const row = data as {
+    total_patients: number; new_this_month: number; new_last_month: number
+    exams_this_month: number; exams_last_month: number
+  }
+  return {
+    totalPatients: row.total_patients,
+    newThisMonth: row.new_this_month, newLastMonth: row.new_last_month ?? 0,
+    examsThisMonth: row.exams_this_month, examsLastMonth: row.exams_last_month ?? 0,
+  }
+}
+
+export interface MonthlyStat {
+  month: string        // 'YYYY-MM'
+  exams: number
+  connected: number
+  churned: number
+}
+
+export async function fetchMonthlyStats(hospitalId: string, months = 12): Promise<MonthlyStat[]> {
+  const sb = createClient()
+  const { data, error } = await sb.rpc('hospital_monthly_stats', { p_hospital_id: hospitalId, p_months: months })
+  if (error) throw error
+  return (data ?? []) as MonthlyStat[]
+}
+
+// 위험도·치료 분포 계산용 원자료 — 성장률 판정은 클라이언트(axialGrowth)에서 한다
+export interface PatientSummary {
+  childId: string
+  childName: string
+  birth: string
+  treatments: TreatmentDef[]
+  exams: { date: string; axOD: number | null; axOS: number | null }[]
+}
+
+export async function fetchPatientSummaries(hospitalId: string): Promise<PatientSummary[]> {
+  const sb = createClient()
+  const { data, error } = await sb.rpc('hospital_patient_summary', { p_hospital_id: hospitalId })
+  if (error) throw error
+  const rows = (data ?? []) as {
+    child_id: string; child_name: string; birth_date: string
+    treatments: TreatmentDef[]
+    exams: { date: string; ax_od: number | null; ax_os: number | null }[]
+  }[]
+  return rows.map(r => ({
+    childId: r.child_id, childName: r.child_name, birth: r.birth_date,
+    treatments: r.treatments ?? [],
+    exams: (r.exams ?? []).map(e => ({ date: e.date, axOD: e.ax_od, axOS: e.ax_os })),
+  }))
 }
 
 export interface OverduePatient {

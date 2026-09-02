@@ -7,6 +7,8 @@ import { useHospital } from '@/context/HospitalContext'
 import * as q from '@/lib/supabase/queries'
 import { calcAgeLabel } from '@/lib/utils/date'
 import { TrendView, PctView, GrowthRateCard } from '@/components/analytics/AxialTab'
+import { ForecastView } from '@/components/analytics/ForecastCard'
+import { makeTreatmentsForDate } from '@/lib/treatments'
 import EmptyState from '@/components/ui/EmptyState'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
@@ -207,19 +209,17 @@ function PatientPanel({
         </p>
       </div>
 
-      {/* 데스크톱은 2단 — 그래프 둘을 나란히 두어 스크롤 없이 같이 보이게 한다 */}
-      <div className="grid gap-4 lg:grid-cols-2 items-start">
-        {chartExams.length < 2 ? (
-          <EmptyState message="안축장 기록이 2개 이상 있어야 추세를 볼 수 있습니다." />
-        ) : (
-          <TrendView exams={chartExams} hideGrowth />
-        )}
-        {chartExams.length >= 1 ? (
-          <PctView exams={chartExams} birth={detail.birth} />
-        ) : (
-          <EmptyState message="안축장 기록이 있어야 또래 비교를 볼 수 있습니다." />
-        )}
-        {chartExams.length >= 2 && <GrowthRateCard exams={chartExams} />}
+      {/* 열별 스택 — 그리드로 묶으면 카드 높이가 서로 끌려가 빈칸이 생긴다 */}
+      <div className="flex flex-col xl:flex-row gap-4 items-start">
+        <div className="flex-1 min-w-0 w-full space-y-4">
+          {chartExams.length < 2 ? (
+            <EmptyState message="안축장 기록이 2개 이상 있어야 추세를 볼 수 있습니다." />
+          ) : (
+            <>
+              <TrendView exams={chartExams} hideGrowth />
+              <GrowthRateCard exams={chartExams} />
+            </>
+          )}
 
         <section className="bg-white rounded-2xl p-4 shadow-sm">
           <h3 className="font-bold text-gray-800 mb-2">검사 이력 ({detail.exams.length})</h3>
@@ -271,6 +271,22 @@ function PatientPanel({
             표시는 우리 병원에서 입력된 검사입니다. 여기서는 수정할 수 없습니다.
           </p>
         </section>
+        </div>
+
+        <div className="flex-1 min-w-0 w-full space-y-4">
+          {chartExams.length >= 1 ? (
+            <PctView exams={chartExams} birth={detail.birth} />
+          ) : (
+            <EmptyState message="안축장 기록이 있어야 또래 비교를 볼 수 있습니다." />
+          )}
+          {chartExams.length >= 2 && (
+            <ForecastView
+              birth={detail.birth}
+              exams={chartExams}
+              activeTreatments={makeTreatmentsForDate(detail.treatments)(new Date().toISOString().slice(0, 10))}
+            />
+          )}
+        </div>
       </div>
     </div>
   )

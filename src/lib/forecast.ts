@@ -10,8 +10,11 @@
 //  1) 나이별 진행 감속 — 또래(P50) 곡선의 감속 비율을 반영해 직선이 아닌 곡선으로 투영
 //  2) 신뢰구간 콘 — 측정 산포(회귀 잔차)+문헌 기반 불확실성이 먼 미래로 갈수록 넓어짐
 
-import type { Child, ExamRecord, TreatmentDef } from '@/types'
+import type { TreatmentDef } from '@/types'
 import { calcAgeYears, calcPercentile, normP50, normSlope } from '@/lib/axialPercentile'
+
+// 예측에 실제로 필요한 검사 필드만 — 부모 앱(ExamRecord)과 원장 포털이 같은 함수를 쓰기 위해
+export interface ForecastExam { date: string; axOD: string; axOS: string }
 
 // ── 케어별 축성장 감속 효과 (0~1, 문헌 평균 보수값) ──────────────
 // dreamlens: Ortho-K RCT 32–63% 중 보수값 / atropine: LAMP study
@@ -112,7 +115,7 @@ function round(v: number, p = 2): number {
 
 function buildEye(
   eye: 'OD' | 'OS',
-  exams: ExamRecord[],
+  exams: ForecastExam[],
   birth: string,
   defaultEff: number,   // 문헌 기본 효과 — 케어 중 아이의 자연속도 역산 기준(고정)
   appliedEff: number,   // 슬라이더 효과 — 케어 유지(treated) 선에 적용
@@ -201,8 +204,8 @@ function buildEye(
 }
 
 export function buildForecast(opts: {
-  child: Child
-  exams: ExamRecord[]
+  birth: string
+  exams: ForecastExam[]
   activeTreatments: TreatmentDef[]
   efficacy?: number   // 슬라이더 오버라이드 (0~1)
   horizon?: number    // 예측 연수 오버라이드
@@ -210,8 +213,8 @@ export function buildForecast(opts: {
   const care = resolveCare(opts.activeTreatments)
   const efficacy = Math.min(0.95, Math.max(0, opts.efficacy ?? care.efficacy))
   const horizon = Math.min(5, Math.max(1, Math.round(opts.horizon ?? HORIZON_YEARS)))
-  const OD = buildEye('OD', opts.exams, opts.child.birth, care.efficacy, efficacy, care.onCare, horizon)
-  const OS = buildEye('OS', opts.exams, opts.child.birth, care.efficacy, efficacy, care.onCare, horizon)
+  const OD = buildEye('OD', opts.exams, opts.birth, care.efficacy, efficacy, care.onCare, horizon)
+  const OS = buildEye('OS', opts.exams, opts.birth, care.efficacy, efficacy, care.onCare, horizon)
   const fasterEye: 'OD' | 'OS' | null =
     OD && OS ? (OD.measuredRate >= OS.measuredRate ? 'OD' : 'OS') : OD ? 'OD' : OS ? 'OS' : null
   const decelerated = (OD ?? OS) ? normSlope((OD ?? OS)!.currentAge) > 0.05 : false

@@ -3,14 +3,15 @@
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Toaster } from 'react-hot-toast'
 import { createClient } from '@/lib/supabase/client'
 import { HospitalProvider, useHospital } from '@/context/HospitalContext'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faHouse, faUsers, faBullhorn, faGear, faRightFromBracket } from '@fortawesome/free-solid-svg-icons'
+import { faChartPie, faUsers, faBullhorn, faGear, faRightFromBracket } from '@fortawesome/free-solid-svg-icons'
 
 const NAV = [
-  { href: '/clinic', label: '홈', icon: faHouse },
+  { href: '/clinic', label: '대시보드', icon: faChartPie },
   { href: '/clinic/patients', label: '환자', icon: faUsers },
   { href: '/clinic/posts', label: '소식', icon: faBullhorn },
   { href: '/clinic/settings', label: '설정', icon: faGear },
@@ -43,17 +44,17 @@ export default function ClinicShell({ children }: { children: React.ReactNode })
 
   return (
     <HospitalProvider>
-      <div className="min-h-screen bg-gray-50 flex flex-col">
-        <ClinicHeader />
-        {/* 원장 포털은 진료실 PC에서 쓰는 웹 화면 — 부모 앱(모바일 폭)과 달리 넓게 쓴다 */}
-        <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-6">{children}</main>
+      {/* 진료실 PC에서 쓰는 웹 대시보드 — 데스크톱은 좌측 사이드바, 좁은 화면은 상단 바로 접힌다 */}
+      <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
+        <ClinicNav />
+        <main className="flex-1 min-w-0 px-4 md:px-6 py-5 md:py-6">{children}</main>
       </div>
       <Toaster position="bottom-center" toastOptions={{ style: { maxWidth: 360, fontSize: 14 } }} />
     </HospitalProvider>
   )
 }
 
-function ClinicHeader() {
+function ClinicNav() {
   const pathname = usePathname()
   const router = useRouter()
   const { hospital } = useHospital()
@@ -64,27 +65,40 @@ function ClinicHeader() {
   }
 
   return (
-    <header className="bg-white border-b border-gray-200">
-      <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
-        <div className="font-bold text-gray-800">{hospital?.name ?? '병원 포털'}</div>
-        <nav className="flex items-center gap-1">
-          {NAV.map(({ href, label, icon }) => {
-            const active = href === '/clinic' ? pathname === href : pathname.startsWith(href)
-            return (
-              <Link key={href} href={href}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors
-                  ${active ? 'bg-teal-50 text-teal-600' : 'text-gray-500 hover:bg-gray-50'}`}>
-                <FontAwesomeIcon icon={icon} className="text-xs" />
-                {label}
-              </Link>
-            )
-          })}
-          <button onClick={handleLogout}
-            className="ml-1 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-gray-400 hover:bg-gray-50">
-            <FontAwesomeIcon icon={faRightFromBracket} className="text-xs" />
-          </button>
-        </nav>
+    <nav className="bg-white border-b md:border-b-0 md:border-r border-gray-200
+                    md:w-56 md:shrink-0 md:min-h-screen md:sticky md:top-0
+                    flex md:flex-col items-center md:items-stretch gap-1 md:gap-0
+                    px-3 md:px-3 py-2 md:py-4">
+      <div className="flex items-center gap-2 min-w-0 md:px-2 md:pb-4 md:mb-2 md:border-b md:border-gray-100">
+        {hospital?.logoUrl ? (
+          <Image src={hospital.logoUrl} alt="" width={28} height={28}
+            className="w-7 h-7 rounded-lg object-cover border border-gray-100 shrink-0" unoptimized />
+        ) : (
+          <span className="w-7 h-7 rounded-lg shrink-0"
+            style={{ backgroundColor: hospital?.brandColor ?? '#14b8a6' }} />
+        )}
+        <span className="font-bold text-gray-800 text-sm truncate">{hospital?.name ?? '병원 포털'}</span>
       </div>
-    </header>
+
+      <div className="flex-1 flex md:flex-col items-center md:items-stretch gap-1 md:gap-0.5 min-w-0 justify-end md:justify-start">
+        {NAV.map(({ href, label, icon }) => {
+          const active = href === '/clinic' ? pathname === href : pathname.startsWith(href)
+          return (
+            <Link key={href} href={href}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                ${active ? 'bg-teal-50 text-teal-600' : 'text-gray-500 hover:bg-gray-50'}`}>
+              <FontAwesomeIcon icon={icon} className="text-xs w-4" />
+              {label}
+            </Link>
+          )
+        })}
+      </div>
+
+      <button onClick={handleLogout}
+        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-400 hover:bg-gray-50 md:mt-2">
+        <FontAwesomeIcon icon={faRightFromBracket} className="text-xs w-4" />
+        <span className="hidden md:inline">로그아웃</span>
+      </button>
+    </nav>
   )
 }

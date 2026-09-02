@@ -9,7 +9,8 @@ import {
   Chart as ChartJS, CategoryScale, LinearScale,
   PointElement, LineElement, Tooltip, Legend, Filler,
 } from 'chart.js'
-import { buildForecast, type EyeForecast } from '@/lib/forecast'
+import { buildForecast, type EyeForecast, type ForecastExam } from '@/lib/forecast'
+import type { TreatmentDef } from '@/types'
 import { normCurve } from '@/lib/axialPercentile'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChartLine, faTriangleExclamation, faRotateLeft } from '@fortawesome/free-solid-svg-icons'
@@ -26,9 +27,6 @@ const SOURCE =
 
 export default function ForecastCard() {
   const { activeChild, exams, activeTreatments, isLoading } = useChild()
-  const [eye, setEye] = useState<'OD' | 'OS'>('OD')
-  const [effOverride, setEffOverride] = useState<number | null>(null)  // 0~1
-  const [horizon, setHorizon] = useState(3)
 
   if (isLoading) return <TabSkeleton />
   if (!activeChild?.birth) {
@@ -38,9 +36,19 @@ export default function ForecastCard() {
       </div>
     )
   }
+  return <ForecastView birth={activeChild.birth} exams={exams} activeTreatments={activeTreatments} />
+}
+
+// 컨텍스트 없이 데이터만 받는 본체 — 원장 포털(환자 상세)에서도 같은 카드를 그대로 쓴다
+export function ForecastView({
+  birth, exams, activeTreatments,
+}: { birth: string; exams: ForecastExam[]; activeTreatments: TreatmentDef[] }) {
+  const [eye, setEye] = useState<'OD' | 'OS'>('OD')
+  const [effOverride, setEffOverride] = useState<number | null>(null)  // 0~1
+  const [horizon, setHorizon] = useState(3)
 
   const forecast = buildForecast({
-    child: activeChild, exams, activeTreatments,
+    birth, exams, activeTreatments,
     efficacy: effOverride ?? undefined, horizon,
   })
   if (!forecast.OD && !forecast.OS) {
