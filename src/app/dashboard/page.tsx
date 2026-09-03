@@ -6,6 +6,7 @@ import toast from 'react-hot-toast'
 import { useChild } from '@/context/ChildContext'
 import ChildFormModal from '@/components/child/ChildFormModal'
 import { today } from '@/lib/utils/date'
+import { safeBrandColor, onWhite, tint } from '@/lib/utils/color'
 import { hasUnseenExam } from '@/lib/aiReport'
 import { fetchLatestReport, fetchFeedForChild } from '@/lib/supabase/queries'
 import HospitalFeedSheet from '@/components/hospital/HospitalFeedSheet'
@@ -85,11 +86,18 @@ export default function HomePage() {
   const apptLabel = nextAppt
     ? new Date(nextAppt.nextAppointment).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })
     : ''
+  // 병원 브랜드 컬러 — 값이 없거나 깨졌으면 기본 teal로 돌아온다(예전 bg-teal-50과 같은 모습).
+  const brand = safeBrandColor(hospital?.brandColor)
+
   // D-day 칩 — 팔레트의 "틴트 배경 + 틴트 위 텍스트" 짝을 그대로 쓴다.
-  // 평소는 teal, 7일 이내 amber(부분), 3일 이내 rose(미완료).
+  // 평소에는 병원 색: 부모가 홈에서 제일 자주 보는 숫자라 "병원이 잡아준 날"로 읽힌다.
+  // 7일 이내 amber, 3일 이내 rose — 임박 신호가 병원 색보다 우선한다(병원 색이 이걸 덮으면 안 된다).
   const apptChipCls = apptUrgency === 'near' ? 'bg-[#ffe4e6] text-[#be123c]'
     : apptUrgency === 'soon' ? 'bg-[#fef3c7] text-[#b45309]'
-    : 'bg-teal-50 text-teal-700'
+    : ''
+  const apptChipStyle = apptUrgency === 'far'
+    ? { background: tint(brand, 0.12), color: onWhite(brand, 0.12) }
+    : undefined
   const HOME_POSTS = 3                 // 홈에 펼쳐 보여줄 최신 글 수 — 나머지는 시트에서
   const shownPosts = posts.slice(0, HOME_POSTS)
 
@@ -98,17 +106,18 @@ export default function HomePage() {
       {/* ── 병원 카드 (연결된 병원이 있을 때만) ──
           다른 카드와 같은 흰 카드. 색 면으로 구분하려 여러 번 시도했지만 이 앱의 밝은 톤에서는
           어떤 색이든 덩어리로 튀었다. 구분은 색이 아니라 위치(맨 위)와 내용으로 충분하다.
-          병원 고유색은 로고 테두리로만 남는다 — 카드 상단 선으로 두었더니 둥근 모서리에
-          사각형 선이 잘려 보였고, 로고 둘레는 모서리와 무관해 그 문제가 아예 없다. */}
+          (카드 상단 선도 시도했으나 둥근 모서리에 사각형 선이 잘려 보여서 접었다.)
+          병원 고유색은 원래 teal이 칠해져 있던 두 자리 — 로고 뒤 원과 D-day 배지 — 에만 들어간다.
+          새 색면을 더하는 게 아니라 이미 있던 색을 갈아끼우는 것이라 덩어리로 튀지 않는다. */}
       {hospital && (
         <section className="bg-white rounded-2xl mb-3 p-4 shadow-sm">
           <div className="flex items-center gap-3">
-            {/* 테두리는 ring으로 준다 — border와 달리 요소 크기를 밀지 않아 로고가 안 찌그러진다 */}
+            {/* 로고 자리 — 하드한 2px 테두리 대신 브랜드색 옅은 원 위에 로고를 얹는다.
+                흰 바탕에 채도 높은 선이 그어지면 스티커처럼 겉돌지만, 면으로 깔면 로고 뒤 후광이 된다.
+                로고가 없는 병원은 이 원이 곧 아이콘 배경이라 분기 없이 그대로 성립한다. */}
             <div
-              className="rounded-full flex-shrink-0"
-              style={hospital.brandColor
-                ? { boxShadow: `0 0 0 2px ${hospital.brandColor}`, margin: 2 }
-                : undefined}
+              className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ background: tint(brand, 0.10) }}
             >
               {hospital.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -118,9 +127,7 @@ export default function HomePage() {
                   className="w-11 h-11 rounded-full bg-white object-contain"
                 />
               ) : (
-                <div className="w-11 h-11 rounded-full bg-teal-50 flex items-center justify-center">
-                  <FontAwesomeIcon icon={faHospital} className="text-teal-500" />
-                </div>
+                <FontAwesomeIcon icon={faHospital} style={{ color: onWhite(brand, 0.10) }} />
               )}
             </div>
             <div className="min-w-0 flex-1">
@@ -146,7 +153,8 @@ export default function HomePage() {
                   {apptLabel}
                 </span>
               </span>
-              <span className={`flex-shrink-0 rounded-xl px-3 py-1.5 text-base font-bold tabular-nums ${apptChipCls}`}>
+              <span className={`flex-shrink-0 rounded-xl px-3 py-1.5 text-base font-bold tabular-nums ${apptChipCls}`}
+                style={apptChipStyle}>
                 {dDays === 0 ? 'D-Day' : `D-${dDays}`}
               </span>
             </button>

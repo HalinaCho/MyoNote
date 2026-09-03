@@ -6,7 +6,7 @@ import QRCode from 'qrcode'
 import { useHospital } from '@/context/HospitalContext'
 import * as q from '@/lib/supabase/queries'
 import { downscaleImage } from '@/lib/examExtract'
-import { DEFAULT_BRAND_COLOR } from '@/lib/utils/color'
+import { DEFAULT_BRAND_COLOR, safeBrandColor, onWhite, tint } from '@/lib/utils/color'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHospital, faImage, faEyeDropper, faMobileScreen } from '@fortawesome/free-solid-svg-icons'
 
@@ -41,7 +41,7 @@ export default function ClinicSettingsPage() {
   const [hexDraft, setHexDraft] = useState<string | null>(null)   // HEX 입력 중 타이핑 값(미완성 상태 허용)
   const colorInputRef = useRef<HTMLInputElement>(null)
   const [savingColor, setSavingColor] = useState(false)
-  const savedColor = hospital?.brandColor ?? DEFAULT_BRAND_COLOR
+  const savedColor = safeBrandColor(hospital?.brandColor)
   const color = colorDraft ?? savedColor
   const colorDirty = colorDraft !== null && colorDraft !== savedColor
 
@@ -260,19 +260,17 @@ export default function ClinicSettingsPage() {
             <div className="flex items-center gap-1.5 text-[11px] text-gray-400 mb-2">
               <FontAwesomeIcon icon={faMobileScreen} /> 보호자 앱 홈에서 보이는 모습
             </div>
-            <div className="bg-gray-100 rounded-2xl p-3">
+            <div className="bg-[#edf7f6] rounded-2xl p-3">
               <div className="rounded-2xl overflow-hidden bg-white shadow-sm">
                 <div className="px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <div className="rounded-full flex-shrink-0"
-                      style={{ boxShadow: `0 0 0 2px ${color}`, margin: 2 }}>
+                    <div className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{ background: tint(color, 0.10) }}>
                       {hospital.logoUrl ? (
                         /* eslint-disable-next-line @next/next/no-img-element */
                         <img src={hospital.logoUrl} alt="" className="w-10 h-10 rounded-full bg-white object-contain" />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center">
-                          <FontAwesomeIcon icon={faHospital} className="text-teal-500" />
-                        </div>
+                        <FontAwesomeIcon icon={faHospital} style={{ color: onWhite(color, 0.10) }} />
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -285,15 +283,19 @@ export default function ClinicSettingsPage() {
                       <span className="block text-[11px] text-gray-400">방문 예정일</span>
                       <span className="block text-[13px] font-semibold text-gray-800">9월 15일 (월)</span>
                     </span>
-                    <span className="rounded-xl px-2.5 py-1 text-sm font-bold bg-teal-50 text-teal-700">
+                    <span className="rounded-xl px-2.5 py-1 text-sm font-bold"
+                      style={{ background: tint(color, 0.12), color: onWhite(color, 0.12) }}>
                       D-15
                     </span>
                   </div>
                 </div>
               </div>
             </div>
-            <p className="mt-2 text-[11px] text-gray-400">
-              브랜드 컬러는 로고 테두리에 쓰입니다.
+            <p className="mt-2 text-[11px] text-gray-400 leading-relaxed">
+              브랜드 컬러는 로고 배경과 방문 예정일 배지에 쓰입니다.
+              글자가 읽히도록 배지 글자색은 자동으로 진하게 보정됩니다.
+              <br />
+              예약이 7일 이내로 다가오면 이 배지는 주의 색(주황·빨강)으로 바뀝니다.
             </p>
           </section>
 
