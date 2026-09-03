@@ -41,16 +41,16 @@ export async function GET(req: Request) {
 
   const today = kstToday()
 
-  // ① 오늘 이후 다음 예약
-  const { data: exams, error: examErr } = await sb
-    .from('eyebody_exam_records')
-    .select('id, child_id, clinic, next_appointment')
+  // ① 오늘 이후 다음 예약 — 예약일은 아이 행에 있다(검사 기록이 아니라)
+  const { data: children, error: childErr } = await sb
+    .from('eyebody_children')
+    .select('id, next_appointment')
     .not('next_appointment', 'is', null)
     .gte('next_appointment', today)
-  if (examErr) return Response.json({ error: examErr.message }, { status: 500 })
-  if (!exams?.length) return Response.json({ ok: true, sent: 0, note: '예정된 예약 없음' })
+  if (childErr) return Response.json({ error: childErr.message }, { status: 500 })
+  if (!children?.length) return Response.json({ ok: true, sent: 0, note: '예정된 예약 없음' })
 
-  const childIds = [...new Set(exams.map(e => e.child_id))]
+  const childIds = children.map(c => c.id)
 
   // ② 자녀별 보호자
   const { data: guardians } = await sb
@@ -86,22 +86,21 @@ export async function GET(req: Request) {
 
   // ④ 발송 대상 구성 (같은 구독에 중복 발송 방지)
   const jobs: { sub: SubRow; payload: { title: string; body: string; url: string; tag: string } }[] = []
-  const seen = new Set<string>()   // `${endpoint}|${examId}`
+  const seen = new Set<string>()   // `${endpoint}|${childId}`
 
-  for (const exam of exams) {
-    const dDays = dayDiff(today, exam.next_appointment as string)
-    const users = guardiansByChild.get(exam.child_id) ?? []
+  for (const child of children) {
+    const dDays = dayDiff(today, child.next_appointment as string)
+    const users = guardiansByChild.get(child.id) ?? []
     for (const uid of users) {
       const alertDay = alertDayByUser.get(uid)
       if (alertDay == null) continue
       const hit = dDays === alertDay || dDays === 0
       if (!hit) continue
-      const clinic = exam.clinic ? ` · ${exam.clinic}` : ''
       const title = dDays === 0 ? '오늘 병원 예약일이에요' : `병원 예약 D-${dDays}`
-      const body = `${exam.next_appointment}${clinic}`
-      const payload = { title, body, url: '/dashboard', tag: `appt-${exam.id}` }
+      const body = child.next_appointment as string
+      const payload = { title, body, url: '/dashboard', tag: `appt-${child.id}` }
       for (const sub of subsByUser.get(uid) ?? []) {
-        const key = `${sub.endpoint}|${exam.id}`
+        const key = `${sub.endpoint}|${child.id}`
         if (seen.has(key)) continue
         seen.add(key)
         jobs.push({ sub, payload })

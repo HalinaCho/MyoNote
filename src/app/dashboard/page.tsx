@@ -13,14 +13,14 @@ import HospitalFeedSheet from '@/components/hospital/HospitalFeedSheet'
 import PostView from '@/components/hospital/PostView'
 import type { HospitalPost } from '@/types'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faXmark, faCalendarDays, faPen, faCommentDots, faHospital, faBullhorn, faFileWaveform, faChevronRight } from '@fortawesome/free-solid-svg-icons'
+import { faXmark, faCalendarDays, faCommentDots, faHospital, faBullhorn, faFileWaveform, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import OnboardingFlow from '@/components/onboarding/OnboardingFlow'
 import TabSkeleton from '@/components/ui/TabSkeleton'
 import ChatSheet from '@/components/chat/ChatSheet'
 
 export default function HomePage() {
   const router = useRouter()
-  const { activeChild, activeChildId, exams, isLoading, updateExam, hospital } = useChild()
+  const { activeChild, activeChildId, exams, isLoading, setAppointment, hospital } = useChild()
   const [showAddChild, setShowAddChild] = useState(false)
   const [showChat, setShowChat] = useState(false)
   const [editingAppt, setEditingAppt] = useState(false)
@@ -63,29 +63,36 @@ export default function HomePage() {
     return <OnboardingFlow />
   }
 
-  const nextAppt = exams
-    .filter(e => e.nextAppointment && e.nextAppointment >= todayStr)
-    .sort((a, b) => a.nextAppointment.localeCompare(b.nextAppointment))[0]
-  const dDays = nextAppt
-    ? Math.round((new Date(nextAppt.nextAppointment).getTime() - new Date(todayStr).getTime()) / 86400000)
+  // 예약일은 아이 행의 값 하나가 정본 — 검사 기록에서 골라내지 않는다
+  const appt = activeChild.nextAppointment
+  const dDays = appt
+    ? Math.round((new Date(appt).getTime() - new Date(todayStr).getTime()) / 86400000)
     : null
 
   // 마지막 리포트 이후 새 검사가 들어왔는지 — 조회가 끝난 뒤에만 판정(깜빡임 방지)
   const newExam = reportLoaded && hasUnseenExam(exams, lastReportAt)
 
-  // 예약일 카드는 "임박했을 때만" 색으로 반응한다. 항상 빨간 카드면 금세 무뎌져서
-  // 정작 급할 때 안 보인다 — 평소엔 다른 카드와 같은 흰 카드로 둔다.
+  // 예약일은 "임박했을 때만" 색으로 반응한다. 항상 빨간 표시면 금세 무뎌져서 정작 급할 때 안 보인다.
+  // 지난 예약(음수)도 near에 들어가 빨갛게 뜬다 — 부모가 새 날짜로 고쳐야 하는 상태라서.
   const apptUrgency = dDays == null ? 'far' : dDays <= 3 ? 'near' : dDays <= 7 ? 'soon' : 'far'
-  const APPT_STYLE = {
-    near: { card: 'bg-rose-50 border-2 border-rose-200', dday: 'text-rose-500',   label: 'text-rose-400',  sub: 'text-rose-500/80' },
-    soon: { card: 'bg-amber-50 border-2 border-amber-200', dday: 'text-amber-600', label: 'text-amber-500', sub: 'text-amber-600/80' },
-    far:  { card: 'bg-white shadow-sm', dday: 'text-teal-600', label: 'text-gray-400', sub: 'text-gray-500' },
-  }[apptUrgency]
 
   // "9월 15일 (월)" — 부모가 달력을 떠올리기 쉬운 형태로
-  const apptLabel = nextAppt
-    ? new Date(nextAppt.nextAppointment).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })
+  const apptLabel = appt
+    ? new Date(appt).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })
     : ''
+  const dDayLabel = dDays == null ? '' : dDays === 0 ? 'D-Day' : dDays > 0 ? `D-${dDays}` : `D+${-dDays}`
+
+  const saveAppt = async () => {
+    if (!apptDate) return
+    try { await setAppointment(apptDate); toast.success('예약일이 저장되었습니다') }
+    catch { toast.error('저장에 실패했습니다') }
+    setEditingAppt(false)
+  }
+  const clearAppt = async () => {
+    try { await setAppointment(null); toast.success('예약일을 지웠습니다') }
+    catch { toast.error('삭제에 실패했습니다') }
+    setEditingAppt(false)
+  }
   // 병원 브랜드 컬러 — 값이 없거나 깨졌으면 기본 teal로 돌아온다(예전 bg-teal-50과 같은 모습).
   const brand = safeBrandColor(hospital?.brandColor)
 
@@ -100,14 +107,15 @@ export default function HomePage() {
 
   return (
     <>
-      {/* ── 병원 카드 (연결된 병원이 있을 때만) ──
+      {/* ── 병원 카드 + 방문 예정일 ──
+          병원이 없으면 예약일만 담은 흰 카드가 된다(예약일 입력 진입점은 늘 있어야 하므로).
           다른 카드와 같은 흰 카드. 색 면으로 구분하려 여러 번 시도했지만 이 앱의 밝은 톤에서는
           어떤 색이든 덩어리로 튀었다. 구분은 색이 아니라 위치(맨 위)와 내용으로 충분하다.
           (카드 상단 선도 시도했으나 둥근 모서리에 사각형 선이 잘려 보여서 접었다.)
           병원 고유색은 원래 teal이 칠해져 있던 두 자리 — 로고 뒤 원과 D-day 배지 — 에만 들어간다.
           새 색면을 더하는 게 아니라 이미 있던 색을 갈아끼우는 것이라 덩어리로 튀지 않는다. */}
-      {hospital && (
-        <section className="bg-white rounded-2xl mb-3 p-4 shadow-sm">
+      <section className="bg-white rounded-2xl mb-3 p-4 shadow-sm">
+        {hospital && (
           <div className="flex items-center gap-3">
             {/* 로고 자리 — 하드한 2px 테두리 대신 브랜드색 옅은 원 위에 로고를 얹는다.
                 흰 바탕에 채도 높은 선이 그어지면 스티커처럼 겉돌지만, 면으로 깔면 로고 뒤 후광이 된다.
@@ -132,31 +140,65 @@ export default function HomePage() {
               <p className="font-bold text-gray-800 truncate">{hospital.name}</p>
             </div>
           </div>
+        )}
 
-          {/* 방문 예정일 — D-day만 두면 무슨 기념일처럼 읽힌다. 라벨과 날짜를 먼저 읽히게 두고
-              남은 날짜는 오른쪽 칩으로. 줄 전체가 수정 버튼이다. */}
-          {nextAppt && !editingAppt && (
+        {/* 방문 예정일 — 부모가 예약일을 넣는 유일한 경로라, 예약이 없을 때도 자리를 지킨다.
+            D-day만 두면 무슨 기념일처럼 읽히므로 라벨과 날짜를 먼저 읽히게 두고 남은 날짜는 오른쪽 칩으로.
+            수정은 이 줄 안에서 바로 — 별도 카드로 내려보내면 화면이 위아래로 점프한다. */}
+        <div className={hospital ? 'mt-3 pt-3 border-t border-gray-100' : ''}>
+          {editingAppt ? (
+            <>
+              <p className="flex items-center gap-1.5 text-[11px] text-gray-400">
+                <FontAwesomeIcon icon={faCalendarDays} className="text-[10px]" />
+                방문 예정일
+              </p>
+              <div className="mt-1.5 flex items-center gap-2">
+                <input type="date" value={apptDate} onChange={e => setApptDate(e.target.value)}
+                  className="flex-1 min-w-0 h-10 border border-gray-200 rounded-lg px-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 accent-teal-500" />
+                <button onClick={saveAppt}
+                  className="flex-shrink-0 bg-teal-500 hover:bg-teal-600 text-white text-sm font-medium px-3 h-10 rounded-lg transition-colors">
+                  저장
+                </button>
+                <button onClick={() => setEditingAppt(false)} aria-label="취소"
+                  className="flex-shrink-0 text-gray-400 hover:text-gray-600 px-1">
+                  <FontAwesomeIcon icon={faXmark} />
+                </button>
+              </div>
+              {/* 날짜를 비워서 지우는 건 부모가 발견하지 못한다 — 명시적인 버튼을 둔다 */}
+              {appt && (
+                <button onClick={clearAppt} className="mt-2 text-[11px] text-gray-400 hover:text-rose-500 transition-colors">
+                  예약일 지우기
+                </button>
+              )}
+            </>
+          ) : (
             <button
-              onClick={() => { setApptDate(nextAppt.nextAppointment); setEditingAppt(true) }}
-              aria-label={`방문 예정일 ${apptLabel}, 눌러서 수정`}
-              className="mt-3 pt-3 w-full flex items-center justify-between gap-3 border-t border-gray-100 text-left transition-colors hover:bg-gray-50/60"
+              onClick={() => { setApptDate(appt ?? ''); setEditingAppt(true) }}
+              aria-label={appt ? `방문 예정일 ${apptLabel}, 눌러서 수정` : '방문 예정일 입력'}
+              className="w-full flex items-center justify-between gap-3 text-left transition-colors hover:bg-gray-50/60"
             >
               <span className="min-w-0">
                 <span className="flex items-center gap-1.5 text-[11px] text-gray-400">
                   <FontAwesomeIcon icon={faCalendarDays} className="text-[10px]" />
                   방문 예정일
                 </span>
-                <span className="block mt-0.5 text-[15px] font-semibold text-gray-800 truncate">
-                  {apptLabel}
+                <span className={`block mt-0.5 text-[15px] font-semibold truncate ${appt ? 'text-gray-800' : 'text-gray-400'}`}>
+                  {appt ? apptLabel : '아직 정해지지 않았어요'}
                 </span>
               </span>
-              <span className={`flex-shrink-0 rounded-xl px-3 py-1.5 text-base font-bold tabular-nums ${apptChipCls}`}>
-                {dDays === 0 ? 'D-Day' : `D-${dDays}`}
-              </span>
+              {appt ? (
+                <span className={`flex-shrink-0 rounded-xl px-3 py-1.5 text-base font-bold tabular-nums ${apptChipCls}`}>
+                  {dDayLabel}
+                </span>
+              ) : (
+                <span className="flex-shrink-0 rounded-xl bg-teal-50 text-teal-700 px-3 py-1.5 text-sm font-semibold">
+                  + 입력
+                </span>
+              )}
             </button>
           )}
-        </section>
-      )}
+        </div>
+      </section>
 
       {/* ── 새 검사 결과 도착 배너 ── */}
       {newExam && (
@@ -171,55 +213,6 @@ export default function HomePage() {
           </div>
           <FontAwesomeIcon icon={faChevronRight} className="text-xs text-teal-400 flex-shrink-0" />
         </button>
-      )}
-
-      {/* ── 다음 예약일 카드 ──
-          병원이 연결돼 있으면 히어로 우측 배지가 이 역할을 하므로 카드는 숨긴다.
-          날짜를 고치는 중이거나(배지를 눌렀을 때) 병원 미연결이라 히어로 자체가 없을 때만 띄운다. */}
-      {nextAppt && (editingAppt || !hospital) && (
-        <section className={`rounded-2xl p-4 mb-3 transition-colors ${APPT_STYLE.card}`}>
-          <div className="flex items-center justify-between">
-            <h2 className={`text-xs font-semibold ${APPT_STYLE.label}`}>방문 예정일</h2>
-            {!editingAppt && (
-              <button onClick={() => { setApptDate(nextAppt.nextAppointment); setEditingAppt(true) }}
-                aria-label="방문 예정일 수정"
-                className={`${APPT_STYLE.label} hover:opacity-70 text-sm p-1 transition-opacity`}>
-                <FontAwesomeIcon icon={faPen} />
-              </button>
-            )}
-          </div>
-          {editingAppt ? (
-            <div className="mt-2 flex items-center gap-2">
-              <input type="date" value={apptDate} onChange={e => setApptDate(e.target.value)}
-                className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 accent-teal-500" />
-              <button onClick={async () => {
-                if (!apptDate) return
-                try {
-                  await updateExam(nextAppt.id, { ...nextAppt, nextAppointment: apptDate })
-                  toast.success('예약일이 수정되었습니다')
-                } catch { toast.error('수정에 실패했습니다') }
-                setEditingAppt(false)
-              }} className="bg-teal-500 hover:bg-teal-600 text-white text-sm px-3 py-2 rounded-lg font-medium transition-colors">
-                저장
-              </button>
-              <button onClick={() => setEditingAppt(false)}
-                className="text-gray-400 hover:text-gray-600 text-sm p-2">
-                <FontAwesomeIcon icon={faXmark} />
-              </button>
-            </div>
-          ) : (
-            <div>
-              {/* 남은 날짜가 주인공 — 배지로 작게 두면 다른 카드 제목들에 묻힌다 */}
-              <p className={`text-3xl font-bold leading-none mt-1 ${APPT_STYLE.dday}`}>
-                {dDays === 0 ? 'D-Day' : `D-${dDays}`}
-              </p>
-              <p className={`mt-1.5 text-sm font-medium flex items-center gap-1.5 ${APPT_STYLE.sub}`}>
-                <FontAwesomeIcon icon={faCalendarDays} className="text-xs opacity-70" />
-                {apptLabel}
-              </p>
-            </div>
-          )}
-        </section>
       )}
 
       {/* ── 병원 소식 (최신 1개를 피드처럼 그대로, 나머지는 시트에서) ── */}
@@ -250,7 +243,7 @@ export default function HomePage() {
       )}
 
       {/* ── 아무것도 없을 때 안내 ── */}
-      {reportLoaded && !hospital && !nextAppt && !newExam && (
+      {reportLoaded && !hospital && !appt && !newExam && (
         <section className="bg-white rounded-2xl p-5 mb-3 shadow-sm text-center">
           <p className="text-sm text-gray-500">아직 연결된 병원이 없어요.</p>
           <p className="text-xs text-gray-400 mt-1 leading-relaxed">

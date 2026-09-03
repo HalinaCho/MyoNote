@@ -25,6 +25,7 @@ export interface Child {
   role: 'owner' | 'editor' | 'viewer'
   outdoorGoal: number  // 야외활동 목표 (시간/일), 기본 2.0
   phoneGoal: number    // 스마트폰 목표 (시간/일), 기본 2.0
+  nextAppointment: string | null  // 다음 예약일 'YYYY-MM-DD' (정본은 여기 하나뿐)
 }
 
 // ── 검사 기록 ─────────────────────────────────────────────────
@@ -43,7 +44,6 @@ export interface ExamRecord {
   vaOD: string         // 나안시력 우안 (소수시력 0.01~2.0)
   vaOS: string         // 나안시력 좌안 (소수시력 0.01~2.0)
   note: string
-  nextAppointment: string  // 다음 예약일 'YYYY-MM-DD'
   createdAt?: string       // 기록이 저장된 시각(ISO) — "새 검사 도착" 판정용
 }
 

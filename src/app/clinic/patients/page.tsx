@@ -198,15 +198,12 @@ function PatientPanel({
     .sort((a, b) => a.date.localeCompare(b.date))
     .map(e => ({ date: e.date, axOD: e.axOD != null ? String(e.axOD) : '', axOS: e.axOS != null ? String(e.axOS) : '' }))
 
-  // exams는 최신순 — 가장 최근 검사에 적힌 다음 예약일이 현재 유효한 예약
-  const nextAppointment = detail.exams.find(e => e.nextAppointment)?.nextAppointment ?? null
-
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h2 className="font-bold text-lg text-gray-800">{detail.childName}</h2>
         <p className="text-xs text-gray-400">
-          {calcAgeLabel(detail.birth)} · 다음 예약 {nextAppointment ?? '-'}
+          {calcAgeLabel(detail.birth)} · 다음 예약 {detail.nextAppointment ?? '-'}
         </p>
       </div>
 

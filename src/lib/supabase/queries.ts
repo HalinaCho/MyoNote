@@ -29,7 +29,8 @@ export async function fetchChildren(): Promise<Child[]> {
   const sb = createClient()
   const { data, error } = await sb
     .from('eyebody_child_guardians')
-    .select('role, eyebody_children(id, name, birth_date, gender, treatments, outdoor_goal, phone_goal)')
+    // '*' — 컬럼을 열거하면 아직 마이그레이션이 안 돌아간 DB(next_appointment 없음)에서 조회가 통째로 실패한다
+    .select('role, eyebody_children(*)')
     .order('created_at', { ascending: true })
   if (error) throw error
   return (data ?? []).map((r: any) => ({
@@ -41,7 +42,16 @@ export async function fetchChildren(): Promise<Child[]> {
     role:           r.role,
     outdoorGoal:    r.eyebody_children.outdoor_goal ?? 2,
     phoneGoal:      r.eyebody_children.phone_goal   ?? 2,
+    nextAppointment: r.eyebody_children.next_appointment ?? null,
   }))
+}
+
+// 다음 예약일 저장 — 홈에서만 부른다. null이면 예약 없음(지우기).
+export async function updateChildAppointment(childId: string, date: string | null): Promise<void> {
+  const sb = createClient()
+  const { error } = await sb.from('eyebody_children')
+    .update({ next_appointment: date }).eq('id', childId)
+  if (error) throw error
 }
 
 export async function addChild(input: AddChildInput): Promise<Child> {
@@ -57,7 +67,7 @@ export async function addChild(input: AddChildInput): Promise<Child> {
   if (error) throw error
 
   const id = data as string
-  return { id, ...input, outdoorGoal: input.outdoorGoal ?? 2, phoneGoal: input.phoneGoal ?? 2, role: 'owner' }
+  return { id, ...input, outdoorGoal: input.outdoorGoal ?? 2, phoneGoal: input.phoneGoal ?? 2, role: 'owner', nextAppointment: null }
 }
 
 export async function updateChild(input: UpdateChildInput): Promise<void> {
@@ -103,7 +113,6 @@ export async function fetchChildData(childId: string) {
     vaOD:  r.va_od  != null ? String(r.va_od)  : '',
     vaOS:  r.va_os  != null ? String(r.va_os)  : '',
     note:  r.note ?? '',
-    nextAppointment: r.next_appointment ?? '',
     createdAt: r.created_at ?? undefined,
   }))
 
@@ -166,7 +175,6 @@ export async function saveExam(childId: string, exam: Omit<ExamRecord, 'id'>, en
     va_od: exam.vaOD ? parseFloat(exam.vaOD) : null,
     va_os: exam.vaOS ? parseFloat(exam.vaOS) : null,
     note: exam.note || null,
-    next_appointment: exam.nextAppointment || null,
   }).select().single()
   if (error) throw error
   return {
@@ -182,7 +190,6 @@ export async function saveExam(childId: string, exam: Omit<ExamRecord, 'id'>, en
     vaOD:  data.va_od  != null ? String(data.va_od)  : '',
     vaOS:  data.va_os  != null ? String(data.va_os)  : '',
     note:  data.note ?? '',
-    nextAppointment: data.next_appointment ?? '',
     createdAt: data.created_at ?? undefined,
   }
 }
@@ -206,7 +213,6 @@ export async function updateExam(id: string, exam: Omit<ExamRecord, 'id'>): Prom
     va_od: exam.vaOD ? parseFloat(exam.vaOD) : null,
     va_os: exam.vaOS ? parseFloat(exam.vaOS) : null,
     note: exam.note || null,
-    next_appointment: exam.nextAppointment || null,
   }).eq('id', id).select().single()
   if (error) throw error
   return {
@@ -222,7 +228,6 @@ export async function updateExam(id: string, exam: Omit<ExamRecord, 'id'>): Prom
     vaOD:  data.va_od  != null ? String(data.va_od)  : '',
     vaOS:  data.va_os  != null ? String(data.va_os)  : '',
     note:  data.note ?? '',
-    nextAppointment: data.next_appointment ?? '',
     createdAt: data.created_at ?? undefined,
   }
 }
@@ -559,7 +564,6 @@ export interface PatientExam {
   axOS: number | null
   serOD: number | null
   serOS: number | null
-  nextAppointment: string | null
   byUs: boolean          // 이 병원에서 입력된 검사인지(위치 매칭으로 태깅된 기록)
 }
 
@@ -567,19 +571,23 @@ export interface PatientDetail {
   childId: string
   childName: string
   birth: string
+  nextAppointment: string | null   // 예약일은 검사가 아니라 아이에 붙는다
   treatments: TreatmentDef[]
   logs: TreatmentLogs
   exams: PatientExam[]
 }
 
 interface PatientDetailRow {
-  child: { id: string; name: string; birth_date: string; treatments: TreatmentDef[] }
+  child: {
+    id: string; name: string; birth_date: string
+    treatments: TreatmentDef[]; next_appointment: string | null
+  }
   logs: TreatmentLogs
   exams: {
     id: string; exam_date: string; clinic: string | null
     ax_od: number | null; ax_os: number | null
     ser_od: number | null; ser_os: number | null
-    next_appointment: string | null; by_us: boolean | null
+    by_us: boolean | null
   }[]
 }
 
@@ -591,12 +599,13 @@ export async function fetchPatientDetail(hospitalId: string, childId: string): P
   const row = data as PatientDetailRow
   return {
     childId: row.child.id, childName: row.child.name, birth: row.child.birth_date,
+    nextAppointment: row.child.next_appointment ?? null,
     treatments: row.child.treatments ?? [],
     logs: row.logs ?? {},
     exams: (row.exams ?? []).map(e => ({
       id: e.id, date: e.exam_date, clinic: e.clinic ?? '',
       axOD: e.ax_od, axOS: e.ax_os, serOD: e.ser_od, serOS: e.ser_os,
-      nextAppointment: e.next_appointment, byUs: !!e.by_us,
+      byUs: !!e.by_us,
     })),
   }
 }

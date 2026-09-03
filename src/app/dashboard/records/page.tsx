@@ -14,7 +14,7 @@ import { linkHospitalByLocation, notifyNewExam } from '@/lib/supabase/queries'
 import type { AxialFields, RefractionFields } from '@/lib/examExtract'
 import type { ExamRecord } from '@/types'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPen, faXmark, faCircleInfo, faCalendarDays, faPlus, faRightLeft, faCamera, faArrowsRotate, faChevronDown, faChevronUp, faArrowUpFromBracket } from '@fortawesome/free-solid-svg-icons'
+import { faPen, faXmark, faCircleInfo, faPlus, faRightLeft, faCamera, faArrowsRotate, faChevronDown, faChevronUp, faArrowUpFromBracket } from '@fortawesome/free-solid-svg-icons'
 
 // Sph는 부호 있는 값(+/−), Cyl은 minus-cyl 크기(양수, 실제값은 음수).
 // SEQ = Sph + (−Cyl)/2 = Sph − Cyl크기/2
@@ -33,7 +33,7 @@ const fmtSigned = (v: string) => { const n = parseFloat(v); return isNaN(n) ? '�
 // 안축장 변화량(mm) — 부호 포함
 const fmtDeltaMm = (v: number) => `${v > 0 ? '+' : ''}${v.toFixed(2)}mm`
 
-const EMPTY_EXAM = { date: today(), clinic: '', axOD: '', axOS: '', sphOD: '', sphOS: '', cylOD: '', cylOS: '', vaOD: '', vaOS: '', note: '', nextAppointment: '' }
+const EMPTY_EXAM = { date: today(), clinic: '', axOD: '', axOS: '', sphOD: '', sphOS: '', cylOD: '', cylOS: '', vaOD: '', vaOS: '', note: '' }
 
 // 나안시력(소수시력)은 0.01~2.0 밖이면 오타로 본다 (2.0 초과 시력은 실무에서 쓰지 않음)
 const VA_MIN = 0.01, VA_MAX = 2.0
@@ -66,7 +66,6 @@ export default function RecordsPage() {
   const [showCRInfo, setShowCRInfo] = useState(false)
   const [showOcrInfo, setShowOcrInfo] = useState(false)
   const [showRefraction, setShowRefraction] = useState(false)  // 굴절도수(선택) 섹션 펼침
-  const [apptFocus, setApptFocus] = useState(false)            // 다음 예약일 포커스(플레이스홀더 오버레이용)
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())  // 접힌 연도(기본 전부 펼침)
   const [deleting, setDeleting] = useState<ExamRecord | null>(null)
   const [confirmPosSph, setConfirmPosSph] = useState<string | null>(null)  // 양수 Sph 저장 전 확인
@@ -78,8 +77,6 @@ export default function RecordsPage() {
   const clinicTouchedRef  = useRef(false)   // 안과 칸을 직접 고쳤으면 자동입력으로 덮어쓰지 않음
 
   const years = [...new Set(exams.map(e => e.date.slice(0, 4)))].sort().reverse()
-  // 다음 예약은 가장 최신 검사에서만 의미 있음 → 최신 카드에만 노출
-  const latestExamId = exams.length ? exams.reduce((a, b) => (b.date > a.date ? b : a)).id : null
   const toggleYear = (y: string) => setCollapsed(prev => {
     const next = new Set(prev)
     if (next.has(y)) next.delete(y); else next.add(y)
@@ -115,7 +112,7 @@ export default function RecordsPage() {
       sphOD: e.sphOD, sphOS: e.sphOS,                       // Sph: 부호 유지(+/−)
       cylOD: stripMinus(e.cylOD), cylOS: stripMinus(e.cylOS), // Cyl: 크기로(음수 표기 제거)
       vaOD: e.vaOD ?? '', vaOS: e.vaOS ?? '',   // 옛 기록엔 없는 필드 — undefined면 빈 칸
-      note: e.note, nextAppointment: e.nextAppointment ?? '',
+      note: e.note,
     })
     setShowRefraction(!!(e.sphOD || e.sphOS || e.cylOD || e.cylOS))  // 굴절값 있으면 펼쳐서 보이게
     setModal(true)
@@ -289,7 +286,7 @@ export default function RecordsPage() {
                 {e.note && <div className="text-xs text-gray-400 px-1">{e.note}</div>}
               </div>
 
-              <ExamCardFooter exams={exams} examId={e.id} isLatest={e.id === latestExamId} nextAppointment={e.nextAppointment} onAddAppt={() => openEdit(e)} />
+              <ExamCardFooter exams={exams} examId={e.id} />
             </div>
                   ))}
                 </div>
@@ -459,19 +456,6 @@ export default function RecordsPage() {
                 )}
               </div>
 
-              <Field className="py-3" label="다음 예약일">
-                {/* type=date는 일반 placeholder 미지원 → 빈 상태(비포커스)에만 YY.MM.DD 오버레이 */}
-                <div className="relative">
-                  <input type="date" value={form.nextAppointment}
-                    onChange={e=>setForm(f=>({...f,nextAppointment:e.target.value}))}
-                    onFocus={()=>setApptFocus(true)} onBlur={()=>setApptFocus(false)}
-                    className={`${INPUT} ${!form.nextAppointment && !apptFocus ? 'text-transparent' : ''}`}/>
-                  {!form.nextAppointment && !apptFocus && (
-                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-gray-400">YYYY.MM.DD</span>
-                  )}
-                </div>
-              </Field>
-
               <Field className="pt-3" label="추가 정보 (선택)">
                 <textarea rows={2} placeholder="메모 — 특이사항 등" value={form.note}
                   onChange={e=>setForm(f=>({...f,note:e.target.value}))} className={TEXTAREA}/>
@@ -563,12 +547,10 @@ const VERDICT_BAND: Record<'faster' | 'similar' | 'slower', string> = {
 const VERDICT_COLOR: Record<'faster' | 'similar' | 'slower', string> = {
   faster: 'text-rose-500', similar: 'text-amber-600', slower: 'text-teal-600',
 }
-function ExamCardFooter({ exams, examId, isLatest, nextAppointment, onAddAppt }: {
-  exams: ExamRecord[]; examId: string; isLatest: boolean; nextAppointment?: string | null; onAddAppt: () => void
-}) {
+function ExamCardFooter({ exams, examId }: { exams: ExamRecord[]; examId: string }) {
   const cmp = buildExamComparison(exams, examId)
   const [open, setOpen] = useState(false)
-  if (!cmp && !isLatest) return null   // 비교도 없고 최신도 아니면 푸터 자체 생략
+  if (!cmp) return null   // 비교할 지난 검사가 없으면 푸터 자체 생략
   const eyes = (od: number | null, os: number | null) => {
     const parts: string[] = []
     if (od != null) parts.push(`우안 ${fmtDeltaMm(od)}`)
@@ -577,32 +559,16 @@ function ExamCardFooter({ exams, examId, isLatest, nextAppointment, onAddAppt }:
   }
   return (
     <div className="mt-2.5 pt-2.5 border-t border-gray-50">
-      {/* 한 줄: 좌=비교 토글(있을 때), 우=다음 예약(최신 카드만) */}
-      <div className="flex items-center gap-2">
-        {cmp && (
-          <button
-            onClick={() => setOpen(o => !o)}
-            className="flex items-center gap-1.5 text-xs font-medium text-teal-600"
-            aria-expanded={open}
-          >
-            <FontAwesomeIcon icon={faRightLeft} className="text-[11px]" />
-            지난 검사와 비교
-            <FontAwesomeIcon icon={open ? faChevronUp : faChevronDown} className="text-[10px] text-gray-400" />
-          </button>
-        )}
-        {isLatest && (nextAppointment ? (
-          <span className="ml-auto flex items-center gap-1.5 text-xs text-teal-500">
-            <FontAwesomeIcon icon={faCalendarDays} className="text-[11px]" />
-            다음 예약 {nextAppointment}
-          </span>
-        ) : (
-          <button onClick={onAddAppt} className="ml-auto flex items-center gap-1.5 text-xs text-amber-600 hover:text-amber-700">
-            <FontAwesomeIcon icon={faCalendarDays} className="text-[11px]" />
-            다음 예약일 입력
-          </button>
-        ))}
-      </div>
-      {cmp && open && (
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-1.5 text-xs font-medium text-teal-600"
+        aria-expanded={open}
+      >
+        <FontAwesomeIcon icon={faRightLeft} className="text-[11px]" />
+        지난 검사와 비교
+        <FontAwesomeIcon icon={open ? faChevronUp : faChevronDown} className="text-[10px] text-gray-400" />
+      </button>
+      {open && (
         <div className="mt-2 bg-teal-50/60 rounded-lg p-3 text-sm text-gray-700 space-y-1.5">
           <p className="flex gap-2">
             <span className="text-teal-400 mt-0.5 select-none">•</span>

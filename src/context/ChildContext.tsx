@@ -27,6 +27,7 @@ interface ChildContextType {
   saveExam: (exam: Omit<ExamRecord, 'id'>, enteredByHospitalId?: string | null) => Promise<ExamRecord>
   updateExam: (id: string, exam: Omit<ExamRecord, 'id'>) => Promise<void>
   deleteExam: (id: string) => Promise<void>
+  setAppointment: (date: string | null) => Promise<void>   // 다음 예약일 — 홈에서만 수정
   saveLifestyle: (dateStr: string, data: { outdoor: number; phone: number; sleep: number }) => Promise<void>
   deleteLifestyle: (dateStr: string) => Promise<void>
 }
@@ -147,6 +148,13 @@ export function ChildProvider({ children: node }: { children: React.ReactNode })
     setExams(prev => sortExams(prev.map(e => e.id === id ? updated : e)))
   }
 
+  // 예약일은 아이 행의 값이라 children 상태만 갈아끼우면 된다(검사 목록은 관련 없음)
+  const setAppointment = async (date: string | null) => {
+    if (!activeChildId) return
+    await q.updateChildAppointment(activeChildId, date)
+    setChildren(prev => prev.map(c => c.id === activeChildId ? { ...c, nextAppointment: date } : c))
+  }
+
   const deleteExam = async (id: string) => {
     await q.deleteExam(id)
     setExams(prev => prev.filter(e => e.id !== id))
@@ -170,7 +178,7 @@ export function ChildProvider({ children: node }: { children: React.ReactNode })
       logs, exams, lifestyle, hospital, isLoading,
       switchChild, refreshChildren, refreshHospital,
       addChild, updateChild, deleteChild,
-      saveTreatmentLog, saveExam, updateExam, deleteExam, saveLifestyle, deleteLifestyle,
+      saveTreatmentLog, saveExam, updateExam, deleteExam, setAppointment, saveLifestyle, deleteLifestyle,
     }}>
       {node}
     </ChildContext.Provider>
