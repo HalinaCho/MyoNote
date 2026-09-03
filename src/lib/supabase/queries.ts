@@ -83,7 +83,9 @@ export async function deleteChild(id: string): Promise<void> {
 export async function fetchChildData(childId: string) {
   const sb = createClient()
   const [examsRes, logsRes, lifeRes] = await Promise.all([
-    sb.from('eyebody_exam_records').select('id,exam_date,clinic,ax_od,ax_os,sph_od,sph_os,cyl_od,cyl_os,ser_od,ser_os,note,next_appointment,created_at').eq('child_id', childId).order('exam_date', { ascending: false }),
+    // '*' — 컬럼을 열거하면 아직 마이그레이션이 안 돌아간 DB(나안시력 컬럼 없음)에서 조회 전체가 실패한다.
+    // '*'면 없는 컬럼은 그냥 undefined로 와서 빈 값으로 표시된다.
+    sb.from('eyebody_exam_records').select('*').eq('child_id', childId).order('exam_date', { ascending: false }),
     sb.from('eyebody_treatment_logs').select('log_date, done, atropine, dreamlens').eq('child_id', childId),
     sb.from('eyebody_activity_logs').select('log_date, outdoor_hours, phone_hours, sleep_hours').eq('child_id', childId),
   ])
@@ -98,6 +100,8 @@ export async function fetchChildData(childId: string) {
     cylOS: r.cyl_os != null ? String(r.cyl_os) : '',
     serOD: r.ser_od != null ? String(r.ser_od) : '',
     serOS: r.ser_os != null ? String(r.ser_os) : '',
+    vaOD:  r.va_od  != null ? String(r.va_od)  : '',
+    vaOS:  r.va_os  != null ? String(r.va_os)  : '',
     note:  r.note ?? '',
     nextAppointment: r.next_appointment ?? '',
     createdAt: r.created_at ?? undefined,
@@ -159,6 +163,8 @@ export async function saveExam(childId: string, exam: Omit<ExamRecord, 'id'>, en
     sph_od: sphOD, sph_os: sphOS,
     cyl_od: cylOD, cyl_os: cylOS,
     ser_od: serOD, ser_os: serOS,
+    va_od: exam.vaOD ? parseFloat(exam.vaOD) : null,
+    va_os: exam.vaOS ? parseFloat(exam.vaOS) : null,
     note: exam.note || null,
     next_appointment: exam.nextAppointment || null,
   }).select().single()
@@ -173,6 +179,8 @@ export async function saveExam(childId: string, exam: Omit<ExamRecord, 'id'>, en
     cylOS: data.cyl_os != null ? String(data.cyl_os) : '',
     serOD: data.ser_od != null ? String(data.ser_od) : '',
     serOS: data.ser_os != null ? String(data.ser_os) : '',
+    vaOD:  data.va_od  != null ? String(data.va_od)  : '',
+    vaOS:  data.va_os  != null ? String(data.va_os)  : '',
     note:  data.note ?? '',
     nextAppointment: data.next_appointment ?? '',
     createdAt: data.created_at ?? undefined,
@@ -195,6 +203,8 @@ export async function updateExam(id: string, exam: Omit<ExamRecord, 'id'>): Prom
     sph_od: sphOD, sph_os: sphOS,
     cyl_od: cylOD, cyl_os: cylOS,
     ser_od: serOD, ser_os: serOS,
+    va_od: exam.vaOD ? parseFloat(exam.vaOD) : null,
+    va_os: exam.vaOS ? parseFloat(exam.vaOS) : null,
     note: exam.note || null,
     next_appointment: exam.nextAppointment || null,
   }).eq('id', id).select().single()
@@ -209,6 +219,8 @@ export async function updateExam(id: string, exam: Omit<ExamRecord, 'id'>): Prom
     cylOS: data.cyl_os != null ? String(data.cyl_os) : '',
     serOD: data.ser_od != null ? String(data.ser_od) : '',
     serOS: data.ser_os != null ? String(data.ser_os) : '',
+    vaOD:  data.va_od  != null ? String(data.va_od)  : '',
+    vaOS:  data.va_os  != null ? String(data.va_os)  : '',
     note:  data.note ?? '',
     nextAppointment: data.next_appointment ?? '',
     createdAt: data.created_at ?? undefined,

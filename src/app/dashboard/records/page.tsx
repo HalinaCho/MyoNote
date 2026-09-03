@@ -33,7 +33,11 @@ const fmtSigned = (v: string) => { const n = parseFloat(v); return isNaN(n) ? '�
 // 안축장 변화량(mm) — 부호 포함
 const fmtDeltaMm = (v: number) => `${v > 0 ? '+' : ''}${v.toFixed(2)}mm`
 
-const EMPTY_EXAM = { date: today(), clinic: '', axOD: '', axOS: '', sphOD: '', sphOS: '', cylOD: '', cylOS: '', note: '', nextAppointment: '' }
+const EMPTY_EXAM = { date: today(), clinic: '', axOD: '', axOS: '', sphOD: '', sphOS: '', cylOD: '', cylOS: '', vaOD: '', vaOS: '', note: '', nextAppointment: '' }
+
+// 나안시력(소수시력)은 0.01~2.0 밖이면 오타로 본다 (2.0 초과 시력은 실무에서 쓰지 않음)
+const VA_MIN = 0.01, VA_MAX = 2.0
+const vaOutOfRange = (v: string) => v !== '' && !(parseFloat(v) >= VA_MIN && parseFloat(v) <= VA_MAX)
 
 // 검사 입력을 "시작할 때"(모달 열기) 현재 위치를 등록된 병원 좌표와 대조 → 매칭되면 그 병원을
 // "현재 담당 병원"으로 자동 연결(이전 병원 연결은 자동 종료)한다.
@@ -108,6 +112,7 @@ export default function RecordsPage() {
       date: e.date, clinic: e.clinic, axOD: e.axOD, axOS: e.axOS,
       sphOD: e.sphOD, sphOS: e.sphOS,                       // Sph: 부호 유지(+/−)
       cylOD: stripMinus(e.cylOD), cylOS: stripMinus(e.cylOS), // Cyl: 크기로(음수 표기 제거)
+      vaOD: e.vaOD ?? '', vaOS: e.vaOS ?? '',   // 옛 기록엔 없는 필드 — undefined면 빈 칸
       note: e.note, nextAppointment: e.nextAppointment ?? '',
     })
     setShowRefraction(!!(e.sphOD || e.sphOS || e.cylOD || e.cylOS))  // 굴절값 있으면 펼쳐서 보이게
@@ -127,6 +132,9 @@ export default function RecordsPage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.date) { toast.error('검사일을 입력해주세요'); return }
+    if (vaOutOfRange(form.vaOD) || vaOutOfRange(form.vaOS)) {
+      toast.error(`나안시력은 ${VA_MIN} ~ ${VA_MAX.toFixed(1)} 사이로 입력해주세요`); return
+    }
     const pos = positiveSph()
     if (pos.length > 0) { setConfirmPosSph(pos.join(', ')); return }   // 양수 Sph → 확인 모달
     await doSave()
@@ -248,6 +256,12 @@ export default function RecordsPage() {
                   <div className="flex justify-between bg-teal-50 rounded-lg px-3 py-2">
                     <span className="text-teal-700 font-medium">안축장 (OD/OS)</span>
                     <span className="font-bold text-teal-700">{e.axOD||'—'} / {e.axOS||'—'} mm</span>
+                  </div>
+                )}
+                {(e.vaOD || e.vaOS) && (
+                  <div className="flex justify-between bg-gray-50 rounded-lg px-3 py-2">
+                    <span className="text-gray-500">나안시력 (OD/OS)</span>
+                    <span className="font-medium">{e.vaOD||'—'} / {e.vaOS||'—'}</span>
                   </div>
                 )}
                 {(e.sphOD || e.sphOS) && (
@@ -385,6 +399,23 @@ export default function RecordsPage() {
                   <span className="text-xs text-center text-gray-500 font-medium">좌안(OS)</span>
                   <input type="number" step="0.01" value={form.axOS} onChange={e=>setForm(f=>({...f,axOS:e.target.value}))} className={INPUT}/>
                 </div>
+              </Field>
+
+              <Field className="py-3" label={
+                <span>
+                  나안시력
+                  <span className="ml-1.5 align-middle text-[10px] font-semibold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">선택</span>
+                </span>
+              }>
+                <div className="grid gap-2 items-center" style={{gridTemplateColumns:'4.5rem 1fr 4.5rem 1fr'}}>
+                  <span className="text-xs text-center text-gray-500 font-medium">우안(OD)</span>
+                  <input type="number" step="0.01" value={form.vaOD} onChange={e=>setForm(f=>({...f,vaOD:e.target.value}))} className={INPUT}/>
+                  <span className="text-xs text-center text-gray-500 font-medium">좌안(OS)</span>
+                  <input type="number" step="0.01" value={form.vaOS} onChange={e=>setForm(f=>({...f,vaOS:e.target.value}))} className={INPUT}/>
+                </div>
+                <p className="text-[11px] text-gray-400 mt-2 leading-snug">
+                  소수시력으로 입력해주세요 (0.01 ~ 2.0, 예: 0.5).
+                </p>
               </Field>
 
               <div className="py-3">

@@ -40,6 +40,8 @@ export interface ExamRecord {
   cylOS: string        // Cylinder 좌안 (D)
   serOD: string        // SEQ 우안 = sph + cyl/2 (D)
   serOS: string        // SEQ 좌안 = sph + cyl/2 (D)
+  vaOD: string         // 나안시력 우안 (소수시력 0.01~2.0)
+  vaOS: string         // 나안시력 좌안 (소수시력 0.01~2.0)
   note: string
   nextAppointment: string  // 다음 예약일 'YYYY-MM-DD'
   createdAt?: string       // 기록이 저장된 시각(ISO) — "새 검사 도착" 판정용
