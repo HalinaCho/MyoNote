@@ -8,7 +8,7 @@ import * as q from '@/lib/supabase/queries'
 import { downscaleImage } from '@/lib/examExtract'
 import { DEFAULT_BRAND_COLOR } from '@/lib/utils/color'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faHospital, faImage, faEyeDropper } from '@fortawesome/free-solid-svg-icons'
+import { faHospital, faImage, faEyeDropper, faMobileScreen } from '@fortawesome/free-solid-svg-icons'
 
 const LOGO_MAX_BYTES = 5 * 1024 * 1024   // 리사이즈 전 원본 기준 — 너무 큰 파일은 브라우저에서 디코드가 버겁다
 
@@ -142,158 +142,180 @@ export default function ClinicSettingsPage() {
   }
 
   return (
-    <div className="space-y-4">
-      <h1 className="font-bold text-gray-800">설정</h1>
-
-      <div className="bg-white rounded-xl border border-gray-100 p-4">
-        <div className="text-sm text-gray-500 mb-1">병원명</div>
-        <div className="text-base font-semibold text-gray-800">{hospital.name}</div>
-      </div>
-
-      <div className="bg-white rounded-xl border border-gray-100 p-4 flex flex-col items-center gap-3">
-        <div className="text-sm text-gray-500 self-start">환자 연결 QR</div>
-        {qrDataUrl ? (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img src={qrDataUrl} alt="환자 연결 QR 코드" width={220} height={220} />
-        ) : (
-          <div className="w-[220px] h-[220px] bg-gray-100 rounded animate-pulse" />
-        )}
-        <p className="text-xs text-gray-400 text-center">
-          환자(보호자)가 이 QR을 스캔하면 자동으로 병원과 연결됩니다.
+    <div className="max-w-5xl space-y-4">
+      <div>
+        <h1 className="font-bold text-lg text-gray-800">설정</h1>
+        <p className="text-xs text-gray-400 mt-0.5">
+          보호자 앱에 보이는 병원 브랜딩과 환자 연결 QR을 관리합니다.
         </p>
-        <button
-          onClick={handleRegenerate}
-          disabled={regenerating}
-          className="text-xs text-gray-400 hover:text-rose-500 underline disabled:opacity-50"
-        >
-          {regenerating ? '재발급 중…' : 'QR 재발급 (이전 QR 무효화)'}
-        </button>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-100 p-4 space-y-4">
-        <div className="text-sm text-gray-500">브랜딩</div>
+      {/* 좌: 설정 폼 / 우: 미리보기·QR — 소식 탭과 같은 편집·미리보기 배치 */}
+      <div className="flex flex-col lg:flex-row gap-4 items-start">
+        <div className="flex-1 min-w-0 w-full space-y-4">
+          <section className="bg-white rounded-2xl border border-gray-100 p-4">
+            <h2 className="font-bold text-gray-800 text-sm mb-2">병원 정보</h2>
+            <div className="text-xs text-gray-400">병원명</div>
+            <div className="text-base font-semibold text-gray-800">{hospital.name}</div>
+          </section>
 
-        {/* 부모 홈 미리보기 — 저장하고 부모 폰으로 확인하러 갈 수 없으니 고르는 즉시 보여준다.
-            실제 홈과 같은 구조로 그린다(흰 카드, 병원 색은 로고 테두리) */}
-        <div>
-          <div className="text-xs text-gray-400 mb-1.5">보호자 앱 홈에서 이렇게 보입니다</div>
-          <div className="rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm">
-            <div className="px-4 py-3">
-              <div className="flex items-center gap-3">
-                <div className="rounded-full flex-shrink-0"
-                  style={{ boxShadow: `0 0 0 2px ${color}`, margin: 2 }}>
-                  {hospital.logoUrl ? (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img src={hospital.logoUrl} alt="" className="w-10 h-10 rounded-full bg-white object-contain" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center">
-                      <FontAwesomeIcon icon={faHospital} className="text-teal-500" />
-                    </div>
-                  )}
+          <section className="bg-white rounded-2xl border border-gray-100 p-4 space-y-4">
+            <h2 className="font-bold text-gray-800 text-sm">브랜딩</h2>
+
+            <div>
+              <div className="text-xs font-medium text-gray-500 mb-1.5">로고</div>
+              {/* 영역 전체가 드롭 존이자 파일 선택 버튼 — 끌어다 놓아도, 눌러서 골라도 된다 */}
+              <label
+                onDragOver={e => { e.preventDefault(); setDragOver(true) }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={handleDrop}
+                className={`flex items-center gap-3 rounded-xl border-2 border-dashed px-4 py-3 cursor-pointer transition-colors
+                  ${uploadingLogo ? 'opacity-40 pointer-events-none' : ''}
+                  ${dragOver ? 'border-teal-400 bg-teal-50' : 'border-gray-200 hover:bg-gray-50'}`}
+              >
+                {hospital.logoUrl ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img src={hospital.logoUrl} alt="" className="w-12 h-12 rounded-lg object-contain bg-gray-50 flex-shrink-0" />
+                ) : (
+                  <div className="w-12 h-12 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
+                    <FontAwesomeIcon icon={faImage} className="text-gray-300" />
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-700">
+                    {uploadingLogo ? '처리 중…'
+                      : dragOver ? '여기에 놓으세요'
+                      : hospital.logoUrl ? '로고 바꾸기' : '로고 올리기'}
+                  </p>
+                  <p className="text-[11px] text-gray-400 mt-0.5">
+                    파일을 끌어다 놓거나 눌러서 선택하세요 · 투명 배경 PNG 권장 · 5MB 이하
+                  </p>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs text-gray-400">연결된 병원</p>
-                  <p className="font-bold text-gray-800 truncate">{hospital.name}</p>
-                </div>
-              </div>
-              <div className="mt-3 pt-2.5 flex items-center justify-between border-t border-gray-100">
-                <span className="min-w-0">
-                  <span className="block text-[11px] text-gray-400">방문 예정일</span>
-                  <span className="block text-[13px] font-semibold text-gray-800">9월 15일 (월)</span>
-                </span>
-                <span className="rounded-xl px-2.5 py-1 text-sm font-bold bg-teal-50 text-teal-700">
-                  D-15
-                </span>
-              </div>
+                <input type="file" accept="image/*" className="hidden"
+                  onChange={e => { handleLogo(e.target.files?.[0]); e.currentTarget.value = '' }} />
+              </label>
+              {hospital.logoUrl && (
+                <button onClick={handleLogoDelete} disabled={uploadingLogo}
+                  className="mt-1.5 text-xs text-gray-400 hover:text-rose-500 underline disabled:opacity-50">
+                  로고 삭제
+                </button>
+              )}
             </div>
-          </div>
-          <p className="mt-1.5 text-[11px] text-gray-400">
-            브랜드 컬러는 로고 테두리에 쓰입니다.
-          </p>
-        </div>
 
-        <div>
-          <div className="text-xs font-medium text-gray-500 mb-1.5">로고</div>
-          {/* 영역 전체가 드롭 존이자 파일 선택 버튼 — 끌어다 놓아도, 눌러서 골라도 된다 */}
-          <label
-            onDragOver={e => { e.preventDefault(); setDragOver(true) }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={handleDrop}
-            className={`flex items-center gap-3 rounded-xl border-2 border-dashed px-4 py-3 cursor-pointer transition-colors
-              ${uploadingLogo ? 'opacity-40 pointer-events-none' : ''}
-              ${dragOver ? 'border-teal-400 bg-teal-50' : 'border-gray-200 hover:bg-gray-50'}`}
-          >
-            {hospital.logoUrl ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img src={hospital.logoUrl} alt="" className="w-12 h-12 rounded-lg object-contain bg-gray-50 flex-shrink-0" />
-            ) : (
-              <div className="w-12 h-12 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
-                <FontAwesomeIcon icon={faImage} className="text-gray-300" />
+            <div>
+              <div className="text-xs font-medium text-gray-500 mb-1.5">브랜드 컬러</div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <input type="color" ref={colorInputRef} value={color}
+                  onChange={e => { setColorDraft(e.target.value); setHexDraft(null) }}
+                  aria-label="브랜드 컬러 직접 선택"
+                  className="w-12 h-9 rounded-lg border border-gray-200 bg-white p-1 cursor-pointer" />
+                {hasEyeDropper && (
+                  <button type="button" onClick={handleEyeDropper}
+                    className="flex items-center gap-1.5 text-sm px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50">
+                    <FontAwesomeIcon icon={faEyeDropper} className="text-xs text-gray-400" />
+                    로고에서 색 뽑기
+                  </button>
+                )}
+                <input
+                  value={hexDraft ?? color}
+                  onChange={e => {
+                    const v = e.target.value.startsWith('#') ? e.target.value : `#${e.target.value}`
+                    setHexDraft(v)
+                    if (isHex(v)) setColorDraft(v.toLowerCase())   // 유효할 때만 실제 색에 반영
+                  }}
+                  onBlur={() => setHexDraft(null)}                 // 입력을 떠나면 확정된 색을 다시 보여준다
+                  aria-label="브랜드 컬러 HEX 코드"
+                  maxLength={7}
+                  className="w-24 h-9 border border-gray-200 rounded-lg px-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+                {color !== DEFAULT_BRAND_COLOR && (
+                  <button onClick={() => { setColorDraft(DEFAULT_BRAND_COLOR); setHexDraft(null) }}
+                    className="text-xs text-gray-400 hover:text-gray-600 underline">기본색으로</button>
+                )}
               </div>
-            )}
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-gray-700">
-                {uploadingLogo ? '처리 중…'
-                  : dragOver ? '여기에 놓으세요'
-                  : hospital.logoUrl ? '로고 바꾸기' : '로고 올리기'}
-              </p>
-              <p className="text-[11px] text-gray-400 mt-0.5">
-                파일을 끌어다 놓거나 눌러서 선택하세요 · 투명 배경 PNG 권장 · 5MB 이하
-              </p>
-            </div>
-            <input type="file" accept="image/*" className="hidden"
-              onChange={e => { handleLogo(e.target.files?.[0]); e.currentTarget.value = '' }} />
-          </label>
-          {hospital.logoUrl && (
-            <button onClick={handleLogoDelete} disabled={uploadingLogo}
-              className="mt-1.5 text-xs text-gray-400 hover:text-rose-500 underline disabled:opacity-50">
-              로고 삭제
-            </button>
-          )}
-        </div>
 
-        <div>
-          <div className="text-xs font-medium text-gray-500 mb-1.5">브랜드 컬러</div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <input type="color" ref={colorInputRef} value={color}
-              onChange={e => { setColorDraft(e.target.value); setHexDraft(null) }}
-              aria-label="브랜드 컬러 직접 선택"
-              className="w-12 h-9 rounded-lg border border-gray-200 bg-white p-1 cursor-pointer" />
-            {hasEyeDropper && (
-              <button type="button" onClick={handleEyeDropper}
-                className="flex items-center gap-1.5 text-sm px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50">
-                <FontAwesomeIcon icon={faEyeDropper} className="text-xs text-gray-400" />
-                로고에서 색 뽑기
+              {hasEyeDropper && (
+                <p className="text-[11px] text-gray-400 mt-1.5">
+                  로고에서 색을 딸 때는 왼쪽 색상칸 대신 <strong className="font-medium">로고에서 색 뽑기</strong>를 눌러주세요.
+                  색상칸의 대화상자는 열린 채로 남아 로고를 가립니다.
+                </p>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3 flex-wrap border-t border-gray-50 pt-3">
+              <button onClick={handleColorSave} disabled={!colorDirty || savingColor}
+                className="w-full sm:w-auto sm:px-8 bg-teal-500 hover:bg-teal-600 disabled:bg-gray-200 disabled:text-gray-400 text-white font-semibold py-2.5 rounded-xl transition-colors">
+                {savingColor ? '저장 중…' : colorDirty ? '컬러 저장' : '저장됨'}
               </button>
-            )}
-            <input
-              value={hexDraft ?? color}
-              onChange={e => {
-                const v = e.target.value.startsWith('#') ? e.target.value : `#${e.target.value}`
-                setHexDraft(v)
-                if (isHex(v)) setColorDraft(v.toLowerCase())   // 유효할 때만 실제 색에 반영
-              }}
-              onBlur={() => setHexDraft(null)}                 // 입력을 떠나면 확정된 색을 다시 보여준다
-              aria-label="브랜드 컬러 HEX 코드"
-              maxLength={7}
-              className="w-24 h-9 border border-gray-200 rounded-lg px-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-teal-500"
-            />
-            {color !== DEFAULT_BRAND_COLOR && (
-              <button onClick={() => { setColorDraft(DEFAULT_BRAND_COLOR); setHexDraft(null) }}
-                className="text-xs text-gray-400 hover:text-gray-600 underline">기본색으로</button>
-            )}
-          </div>
+              <span className="text-[11px] text-gray-400">로고는 고르는 즉시 저장됩니다.</span>
+            </div>
+          </section>
+        </div>
 
-          {hasEyeDropper && (
-            <p className="text-[11px] text-gray-400 mt-1.5">
-              로고에서 색을 딸 때는 왼쪽 색상칸 대신 <strong className="font-medium">로고에서 색 뽑기</strong>를 눌러주세요.
-              색상칸의 대화상자는 열린 채로 남아 로고를 가립니다.
+        {/* ── 우: 미리보기 + 환자 연결 QR ───────────────────── */}
+        <div className="w-full lg:w-[340px] lg:shrink-0 space-y-4">
+          {/* 부모 홈 미리보기 — 저장하고 부모 폰으로 확인하러 갈 수 없으니 고르는 즉시 보여준다.
+              실제 홈과 같은 구조로 그린다(흰 카드, 병원 색은 로고 테두리) */}
+          <section className="bg-white rounded-2xl border border-gray-100 p-4">
+            <div className="flex items-center gap-1.5 text-[11px] text-gray-400 mb-2">
+              <FontAwesomeIcon icon={faMobileScreen} /> 보호자 앱 홈에서 보이는 모습
+            </div>
+            <div className="bg-gray-100 rounded-2xl p-3">
+              <div className="rounded-2xl overflow-hidden bg-white shadow-sm">
+                <div className="px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-full flex-shrink-0"
+                      style={{ boxShadow: `0 0 0 2px ${color}`, margin: 2 }}>
+                      {hospital.logoUrl ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img src={hospital.logoUrl} alt="" className="w-10 h-10 rounded-full bg-white object-contain" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center">
+                          <FontAwesomeIcon icon={faHospital} className="text-teal-500" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs text-gray-400">연결된 병원</p>
+                      <p className="font-bold text-gray-800 truncate">{hospital.name}</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-2.5 flex items-center justify-between border-t border-gray-100">
+                    <span className="min-w-0">
+                      <span className="block text-[11px] text-gray-400">방문 예정일</span>
+                      <span className="block text-[13px] font-semibold text-gray-800">9월 15일 (월)</span>
+                    </span>
+                    <span className="rounded-xl px-2.5 py-1 text-sm font-bold bg-teal-50 text-teal-700">
+                      D-15
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p className="mt-2 text-[11px] text-gray-400">
+              브랜드 컬러는 로고 테두리에 쓰입니다.
             </p>
-          )}
-          <button onClick={handleColorSave} disabled={!colorDirty || savingColor}
-            className="mt-3 w-full bg-teal-500 hover:bg-teal-600 disabled:bg-gray-200 disabled:text-gray-400 text-white font-semibold py-2.5 rounded-xl transition-colors">
-            {savingColor ? '저장 중…' : colorDirty ? '컬러 저장' : '저장됨'}
-          </button>
+          </section>
+
+          <section className="bg-white rounded-2xl border border-gray-100 p-4 flex flex-col items-center gap-3">
+            <h2 className="font-bold text-gray-800 text-sm self-start">환자 연결 QR</h2>
+            {qrDataUrl ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img src={qrDataUrl} alt="환자 연결 QR 코드" width={220} height={220} />
+            ) : (
+              <div className="w-[220px] h-[220px] bg-gray-100 rounded animate-pulse" />
+            )}
+            <p className="text-xs text-gray-400 text-center">
+              환자(보호자)가 이 QR을 스캔하면 자동으로 병원과 연결됩니다.
+            </p>
+            <button
+              onClick={handleRegenerate}
+              disabled={regenerating}
+              className="text-xs text-gray-400 hover:text-rose-500 underline disabled:opacity-50"
+            >
+              {regenerating ? '재발급 중…' : 'QR 재발급 (이전 QR 무효화)'}
+            </button>
+          </section>
         </div>
       </div>
     </div>
