@@ -54,6 +54,8 @@ async function linkHospitalHere(childId: string): Promise<boolean> {
 const INPUT = 'w-full h-9 bg-gray-50 focus:bg-white border border-gray-200 rounded-lg px-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 accent-teal-500'
 // 여러 줄(메모)용 — 높이는 rows로 자동, 나머지 스타일은 INPUT과 통일
 const TEXTAREA = 'w-full bg-gray-50 focus:bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500'
+// 측정값 표 — [항목명][우안][좌안] 3열. 굴절값 섹션도 같은 값을 써야 열이 어긋나지 않는다.
+const MEASURE_GRID = { gridTemplateColumns: '5.5rem 1fr 1fr' }
 
 export default function RecordsPage() {
   const { activeChildId, exams, isLoading, saveExam, updateExam, deleteExam, hospital, refreshHospital } = useChild()
@@ -132,6 +134,8 @@ export default function RecordsPage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.date) { toast.error('검사일을 입력해주세요'); return }
+    // 안축장만 필수 (나안시력·굴절값은 비어 있어도 저장된다)
+    if (!form.axOD || !form.axOS) { toast.error('안축장 우안·좌안을 모두 입력해주세요'); return }
     if (vaOutOfRange(form.vaOD) || vaOutOfRange(form.vaOS)) {
       toast.error(`나안시력은 ${VA_MIN} ~ ${VA_MAX.toFixed(1)} 사이로 입력해주세요`); return
     }
@@ -387,36 +391,26 @@ export default function RecordsPage() {
               </div>
               {/* 필드 그룹 — 카드 대신 얇은 구분선으로 구역 구분 */}
               <div className="divide-y divide-gray-100">
-              <Field className="pb-3" label={
-                <span className="flex items-center justify-between">
-                  <span>안축장 (mm)<span className="ml-1.5 align-middle text-[10px] font-semibold text-teal-600 bg-teal-50 px-1.5 py-0.5 rounded">필수</span></span>
-                  <SwapEyesButton onClick={()=>setForm(f=>({...f,axOD:f.axOS,axOS:f.axOD}))} />
-                </span>
-              }>
-                <div className="grid gap-2 items-center" style={{gridTemplateColumns:'4.5rem 1fr 4.5rem 1fr'}}>
-                  <span className="text-xs text-center text-gray-500 font-medium">우안(OD)</span>
-                  <input type="number" step="0.01" value={form.axOD} onChange={e=>setForm(f=>({...f,axOD:e.target.value}))} className={INPUT}/>
-                  <span className="text-xs text-center text-gray-500 font-medium">좌안(OS)</span>
-                  <input type="number" step="0.01" value={form.axOS} onChange={e=>setForm(f=>({...f,axOS:e.target.value}))} className={INPUT}/>
-                </div>
-              </Field>
+              {/* 측정값 표 — 우안/좌안을 열 헤더로 한 번만 쓰고 항목을 행으로 둔다.
+                  굴절값 섹션도 같은 MEASURE_GRID를 써서 열이 그대로 이어진다. */}
+              <div className="pb-3">
+                <div className="grid gap-2 items-center" style={MEASURE_GRID}>
+                  <span/>
+                  <span className="text-xs text-center text-gray-400 font-medium">우안(OD)</span>
+                  <span className="text-xs text-center text-gray-400 font-medium">좌안(OS)</span>
 
-              <Field className="py-3" label={
-                <span>
-                  나안시력
-                  <span className="ml-1.5 align-middle text-[10px] font-semibold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">선택</span>
-                </span>
-              }>
-                <div className="grid gap-2 items-center" style={{gridTemplateColumns:'4.5rem 1fr 4.5rem 1fr'}}>
-                  <span className="text-xs text-center text-gray-500 font-medium">우안(OD)</span>
-                  <input type="number" step="0.01" value={form.vaOD} onChange={e=>setForm(f=>({...f,vaOD:e.target.value}))} className={INPUT}/>
-                  <span className="text-xs text-center text-gray-500 font-medium">좌안(OS)</span>
-                  <input type="number" step="0.01" value={form.vaOS} onChange={e=>setForm(f=>({...f,vaOS:e.target.value}))} className={INPUT}/>
+                  <RowLabel>안축장<span className="text-rose-500">*</span><span className="ml-1 text-[10px] font-normal text-gray-400">mm</span></RowLabel>
+                  <input type="number" step="0.01" aria-label="우안 안축장" value={form.axOD} onChange={e=>setForm(f=>({...f,axOD:e.target.value}))} className={INPUT}/>
+                  <input type="number" step="0.01" aria-label="좌안 안축장" value={form.axOS} onChange={e=>setForm(f=>({...f,axOS:e.target.value}))} className={INPUT}/>
+
+                  <RowLabel>나안시력<span className="ml-1 text-[10px] font-semibold text-gray-400 bg-gray-100 px-1 py-0.5 rounded">선택</span></RowLabel>
+                  <input type="number" step="0.01" aria-label="우안 나안시력" value={form.vaOD} onChange={e=>setForm(f=>({...f,vaOD:e.target.value}))} className={INPUT}/>
+                  <input type="number" step="0.01" aria-label="좌안 나안시력" value={form.vaOS} onChange={e=>setForm(f=>({...f,vaOS:e.target.value}))} className={INPUT}/>
                 </div>
                 <p className="text-[11px] text-gray-400 mt-2 leading-snug">
-                  소수시력으로 입력해주세요 (0.01 ~ 2.0, 예: 0.5).
+                  <span className="text-rose-500">*</span> 필수. 나안시력은 소수시력으로 입력해주세요 (0.01 ~ 2.0, 예: 0.5).
                 </p>
-              </Field>
+              </div>
 
               <div className="py-3">
                 <button type="button" onClick={() => setShowRefraction(v => !v)}
@@ -429,8 +423,7 @@ export default function RecordsPage() {
                 </button>
                 {showRefraction && (
                   <div className="mt-1">
-                    <div className="flex justify-between items-center mb-2">
-                      <SwapEyesButton onClick={()=>setForm(f=>({...f,sphOD:f.sphOS,sphOS:f.sphOD,cylOD:f.cylOS,cylOS:f.cylOD}))} />
+                    <div className="flex justify-end items-center mb-2">
                       <button type="button" onClick={() => setShowCRInfo(v => !v)}
                         className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full transition-colors
                           ${showCRInfo ? 'bg-teal-500 text-white' : 'bg-teal-50 text-teal-500 hover:bg-teal-100'}`}>
@@ -445,19 +438,18 @@ export default function RecordsPage() {
                         <p>어린이는 조절력이 강해 일반 검사만으로는 실제 근시 도수가 낮게 측정될 수 있습니다. CR검사 결과가 실제 굴절 상태를 더 정확하게 반영하므로, 입력 시 CR검사 수치를 우선 입력해주세요.</p>
                       </div>
                     )}
-                    <div className="grid gap-2 mb-1 text-xs text-center text-gray-400 font-medium px-1" style={{gridTemplateColumns:'4.5rem 1fr 1fr 1fr'}}>
-                      <span/><span>Sph</span><span>Cyl</span><span>SEQ (자동)</span>
-                    </div>
-                    <div className="grid gap-2 items-center mb-2" style={{gridTemplateColumns:'4.5rem 1fr 1fr 1fr'}}>
-                      <span className="text-xs text-center text-gray-500 font-medium">우안(OD)</span>
-                      <SignedInput value={form.sphOD} onChange={v=>setForm(f=>({...f,sphOD:v}))} placeholder=""/>
-                      <NegInput value={form.cylOD} onChange={v=>setForm(f=>({...f,cylOD:v}))} placeholder=""/>
+                    {/* 위 측정값 표의 우안/좌안 열을 그대로 이어 쓴다 — 헤더를 다시 그리지 않는다 */}
+                    <div className="grid gap-2 items-center" style={MEASURE_GRID}>
+                      <RowLabel>Sph</RowLabel>
+                      <SignedInput value={form.sphOD} onChange={v=>setForm(f=>({...f,sphOD:v}))} ariaLabel="우안 Sph"/>
+                      <SignedInput value={form.sphOS} onChange={v=>setForm(f=>({...f,sphOS:v}))} ariaLabel="좌안 Sph"/>
+
+                      <RowLabel>Cyl</RowLabel>
+                      <NegInput value={form.cylOD} onChange={v=>setForm(f=>({...f,cylOD:v}))} ariaLabel="우안 Cyl"/>
+                      <NegInput value={form.cylOS} onChange={v=>setForm(f=>({...f,cylOS:v}))} ariaLabel="좌안 Cyl"/>
+
+                      <RowLabel>SEQ<span className="ml-1 text-[10px] font-normal text-gray-400">자동</span></RowLabel>
                       <div className="h-9 flex items-center justify-center bg-teal-50 rounded-lg text-sm font-bold text-teal-700">{seqOD}</div>
-                    </div>
-                    <div className="grid gap-2 items-center" style={{gridTemplateColumns:'4.5rem 1fr 1fr 1fr'}}>
-                      <span className="text-xs text-center text-gray-500 font-medium">좌안(OS)</span>
-                      <SignedInput value={form.sphOS} onChange={v=>setForm(f=>({...f,sphOS:v}))} placeholder=""/>
-                      <NegInput value={form.cylOS} onChange={v=>setForm(f=>({...f,cylOS:v}))} placeholder=""/>
                       <div className="h-9 flex items-center justify-center bg-teal-50 rounded-lg text-sm font-bold text-teal-700">{seqOS}</div>
                     </div>
                     <p className="text-[11px] text-gray-400 mt-2 leading-snug">
@@ -501,16 +493,9 @@ export default function RecordsPage() {
   )
 }
 
-// OCR이 우안(OD)/좌안(OS)을 반대로 읽는 경우가 잦아, 한 번에 되돌리는 좌우 스왑 버튼.
-function SwapEyesButton({ onClick }: { onClick: () => void }) {
-  return (
-    <button type="button" onClick={onClick}
-      className="shrink-0 flex items-center gap-1 text-[11px] font-medium text-gray-400 hover:text-teal-600 transition-colors"
-      title="우안(OD)과 좌안(OS) 값을 서로 바꿉니다">
-      <FontAwesomeIcon icon={faRightLeft} className="text-[10px]" />
-      좌우 바꾸기
-    </button>
-  )
+// 측정값 표의 행 이름 칸 (안축장·나안시력·Sph·Cyl·SEQ)
+function RowLabel({ children }: { children: React.ReactNode }) {
+  return <span className="text-xs text-gray-600 font-medium">{children}</span>
 }
 
 function Field({ label, children, className = '' }: { label: React.ReactNode; children: React.ReactNode; className?: string }) {
@@ -522,7 +507,7 @@ function Field({ label, children, className = '' }: { label: React.ReactNode; ch
   )
 }
 
-function NegInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
+function NegInput({ value, onChange, ariaLabel }: { value: string; onChange: (v: string) => void; ariaLabel: string }) {
   const handleBlur = () => {
     if (value === '') return
     const n = parseFloat(value)
@@ -532,7 +517,7 @@ function NegInput({ value, onChange, placeholder }: { value: string; onChange: (
     <div className="relative">
       <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500 font-medium pointer-events-none select-none">−</span>
       <input
-        type="text" inputMode="decimal" placeholder={placeholder}
+        type="text" inputMode="decimal" aria-label={ariaLabel}
         value={value}
         onChange={e => onChange(e.target.value)}
         onBlur={handleBlur}
@@ -546,7 +531,7 @@ function NegInput({ value, onChange, placeholder }: { value: string; onChange: (
 // 메인 입력경로는 OCR 자동입력(부호 포함)이라 토글 없이 단순 입력으로 충분 — 입력칸을 넓게 씀.
 // 부호는 사용자가 입력한 그대로 보존(자동 변환 없음) — 근시는 −를 직접 입력. 크기만 소수 2자리 정규화.
 // −를 깜빡해 양수가 되는 실수는 저장 시 양수(+) 확인 모달로 잡는다.
-function SignedInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
+function SignedInput({ value, onChange, ariaLabel }: { value: string; onChange: (v: string) => void; ariaLabel: string }) {
   const handleBlur = () => {
     const raw = value.trim()
     if (raw === '') { if (value !== '') onChange(''); return }
@@ -557,7 +542,7 @@ function SignedInput({ value, onChange, placeholder }: { value: string; onChange
   }
   return (
     <input
-      type="text" inputMode="decimal" placeholder={placeholder}
+      type="text" inputMode="decimal" aria-label={ariaLabel}
       value={value}
       onChange={e => onChange(e.target.value)}
       onBlur={handleBlur}
