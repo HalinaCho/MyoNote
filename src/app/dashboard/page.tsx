@@ -90,14 +90,11 @@ export default function HomePage() {
   const brand = safeBrandColor(hospital?.brandColor)
 
   // D-day 칩 — 팔레트의 "틴트 배경 + 틴트 위 텍스트" 짝을 그대로 쓴다.
-  // 평소에는 병원 색: 부모가 홈에서 제일 자주 보는 숫자라 "병원이 잡아준 날"로 읽힌다.
-  // 7일 이내 amber, 3일 이내 rose — 임박 신호가 병원 색보다 우선한다(병원 색이 이걸 덮으면 안 된다).
+  // 평소는 myonote teal, 7일 이내 amber, 3일 이내 rose. 병원 색은 쓰지 않는다 —
+  // 예약일은 앱이 관리하는 정보라 앱 색으로 두고, 병원 색은 로고 자리에만 남긴다.
   const apptChipCls = apptUrgency === 'near' ? 'bg-[#ffe4e6] text-[#be123c]'
     : apptUrgency === 'soon' ? 'bg-[#fef3c7] text-[#b45309]'
-    : ''
-  const apptChipStyle = apptUrgency === 'far'
-    ? { background: tint(brand, 0.12), color: onWhite(brand, 0.12) }
-    : undefined
+    : 'bg-teal-50 text-teal-700'
   const HOME_POSTS = 3                 // 홈에 펼쳐 보여줄 최신 글 수 — 나머지는 시트에서
   const shownPosts = posts.slice(0, HOME_POSTS)
 
@@ -153,8 +150,7 @@ export default function HomePage() {
                   {apptLabel}
                 </span>
               </span>
-              <span className={`flex-shrink-0 rounded-xl px-3 py-1.5 text-base font-bold tabular-nums ${apptChipCls}`}
-                style={apptChipStyle}>
+              <span className={`flex-shrink-0 rounded-xl px-3 py-1.5 text-base font-bold tabular-nums ${apptChipCls}`}>
                 {dDays === 0 ? 'D-Day' : `D-${dDays}`}
               </span>
             </button>

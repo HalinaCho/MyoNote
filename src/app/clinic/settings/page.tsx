@@ -283,8 +283,8 @@ export default function ClinicSettingsPage() {
                       <span className="block text-[11px] text-gray-400">방문 예정일</span>
                       <span className="block text-[13px] font-semibold text-gray-800">9월 15일 (월)</span>
                     </span>
-                    <span className="rounded-xl px-2.5 py-1 text-sm font-bold"
-                      style={{ background: tint(color, 0.12), color: onWhite(color, 0.12) }}>
+                    {/* D-day 배지는 병원 색을 쓰지 않는다 — 예약일은 앱이 관리하는 정보라 앱 색으로 둔다 */}
+                    <span className="rounded-xl px-2.5 py-1 text-sm font-bold bg-teal-50 text-teal-700">
                       D-15
                     </span>
                   </div>
@@ -292,10 +292,8 @@ export default function ClinicSettingsPage() {
               </div>
             </div>
             <p className="mt-2 text-[11px] text-gray-400 leading-relaxed">
-              브랜드 컬러는 로고 배경과 방문 예정일 배지에 쓰입니다.
-              글자가 읽히도록 배지 글자색은 자동으로 진하게 보정됩니다.
-              <br />
-              예약이 7일 이내로 다가오면 이 배지는 주의 색(주황·빨강)으로 바뀝니다.
+              브랜드 컬러는 로고 배경에 쓰입니다. 로고가 없으면 병원 아이콘 색으로 쓰이며,
+              글자가 읽히도록 자동으로 진하게 보정됩니다.
             </p>
           </section>
 
