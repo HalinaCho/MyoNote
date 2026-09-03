@@ -51,9 +51,12 @@ self.addEventListener('push', e => {
   const title = data.title || '마이오노트'
   const options = {
     body: data.body || '',
-    // icon(오른쪽 큰 아이콘)은 두지 않는다 — badge와 같은 그림이 좌우로 두 번 떠서
-    // 제목·본문이 쓸 가로 폭을 잡아먹었다. 앱 이름 옆 작은 아이콘 하나면 충분하다.
-    badge: '/icon-192.png',
+    // 안드로이드는 큰 아이콘 자리를 비워둘 수 없다 — icon을 빼면 앱 이름 첫 글자로
+    // 동그란 모노그램("M")을 대신 그린다. 그럴 바엔 로고를 두는 편이 낫다.
+    icon: '/icon-192.png',
+    // badge는 알파 채널만 써서 단색 실루엣으로 그린다. 배경이 꽉 찬 icon-192를 쓰면
+    // 상태바에 통짜 네모가 뜬다 — 투명 배경에 흰 글리프인 전용 이미지를 쓴다.
+    badge: '/badge-96.png',
     tag: data.tag || 'myonote',          // 같은 tag는 덮어써 알림 쌓임 방지
     data: { url: data.url || '/' },
   }
