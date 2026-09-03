@@ -63,8 +63,12 @@ export default function HomePage() {
     return <OnboardingFlow />
   }
 
-  // 예약일은 아이 행의 값 하나가 정본 — 검사 기록에서 골라내지 않는다
-  const appt = activeChild.nextAppointment
+  // 예약일은 아이 행의 값 하나가 정본 — 검사 기록에서 골라내지 않는다.
+  // 지난 예약은 없는 것으로 본다: 지난 날짜가 계속 떠 있으면 예약이 잡혀 있다고 착각한다.
+  // 값 자체는 지우지 않는다 — 원장 포털의 "재방문 필요"가 바로 그 지난 예약을 읽는다.
+  const appt = activeChild.nextAppointment && activeChild.nextAppointment >= todayStr
+    ? activeChild.nextAppointment
+    : null
   const dDays = appt
     ? Math.round((new Date(appt).getTime() - new Date(todayStr).getTime()) / 86400000)
     : null
@@ -73,14 +77,13 @@ export default function HomePage() {
   const newExam = reportLoaded && hasUnseenExam(exams, lastReportAt)
 
   // 예약일은 "임박했을 때만" 색으로 반응한다. 항상 빨간 표시면 금세 무뎌져서 정작 급할 때 안 보인다.
-  // 지난 예약(음수)도 near에 들어가 빨갛게 뜬다 — 부모가 새 날짜로 고쳐야 하는 상태라서.
   const apptUrgency = dDays == null ? 'far' : dDays <= 3 ? 'near' : dDays <= 7 ? 'soon' : 'far'
 
   // "9월 15일 (월)" — 부모가 달력을 떠올리기 쉬운 형태로
   const apptLabel = appt
     ? new Date(appt).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })
     : ''
-  const dDayLabel = dDays == null ? '' : dDays === 0 ? 'D-Day' : dDays > 0 ? `D-${dDays}` : `D+${-dDays}`
+  const dDayLabel = dDays == null ? '' : dDays === 0 ? 'D-Day' : `D-${dDays}`
 
   const saveAppt = async () => {
     if (!apptDate) return

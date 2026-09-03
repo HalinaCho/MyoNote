@@ -52,6 +52,24 @@ export async function GET(req: Request) {
 
   const childIds = children.map(c => c.id)
 
+  // 알림 제목에 쓸 병원명 — 부모 폰에는 "마이오노트"보다 다니는 병원 이름이 먼저 읽힌다.
+  // 연결이 끊긴(superseded) 건은 제외. 미연결 아이는 앱 이름으로 떨어진다.
+  const { data: links } = await sb
+    .from('eyebody_hospital_patients')
+    .select('child_id, hospital_id')
+    .in('child_id', childIds)
+    .is('superseded_at', null)
+  const hospitalIds = [...new Set((links ?? []).map(l => l.hospital_id))]
+  const { data: hospitals } = hospitalIds.length
+    ? await sb.from('eyebody_hospitals').select('id, name').in('id', hospitalIds)
+    : { data: [] }
+  const nameById = new Map((hospitals ?? []).map(h => [h.id, h.name as string]))
+  const hospitalByChild = new Map<string, string>()
+  for (const l of links ?? []) {
+    const name = nameById.get(l.hospital_id)
+    if (name) hospitalByChild.set(l.child_id, name)
+  }
+
   // ② 자녀별 보호자
   const { data: guardians } = await sb
     .from('eyebody_child_guardians')
@@ -96,8 +114,12 @@ export async function GET(req: Request) {
       if (alertDay == null) continue
       const hit = dDays === alertDay || dDays === 0
       if (!hit) continue
-      const title = dDays === 0 ? '오늘 병원 예약일이에요' : `병원 예약 D-${dDays}`
-      const body = child.next_appointment as string
+      // 제목은 병원명, 본문이 언제인지를 말한다. 며칠 전 알림(alertDay)이든 당일이든
+      // 같은 문장 틀이라 부모가 알림만 보고 바로 판단할 수 있다.
+      const title = hospitalByChild.get(child.id) ?? '마이오노트'
+      const body = dDays === 0 ? '오늘 병원 방문일이에요'
+        : dDays === 1 ? '내일 병원 방문일이에요'
+        : `${dDays}일 뒤 병원 방문일이에요`
       const payload = { title, body, url: '/dashboard', tag: `appt-${child.id}` }
       for (const sub of subsByUser.get(uid) ?? []) {
         const key = `${sub.endpoint}|${child.id}`

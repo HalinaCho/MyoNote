@@ -51,7 +51,8 @@ self.addEventListener('push', e => {
   const title = data.title || '마이오노트'
   const options = {
     body: data.body || '',
-    icon: '/icon-192.png',
+    // icon(오른쪽 큰 아이콘)은 두지 않는다 — badge와 같은 그림이 좌우로 두 번 떠서
+    // 제목·본문이 쓸 가로 폭을 잡아먹었다. 앱 이름 옆 작은 아이콘 하나면 충분하다.
     badge: '/icon-192.png',
     tag: data.tag || 'myonote',          // 같은 tag는 덮어써 알림 쌓임 방지
     data: { url: data.url || '/' },
