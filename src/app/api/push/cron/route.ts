@@ -11,7 +11,7 @@
 // 보안: 호출자(pg_cron)가 Authorization: Bearer <CRON_SECRET> 헤더를 붙여 호출한다.
 // web-push는 Node crypto 필요 → Node 런타임 고정.
 
-import { getServiceClient, configureWebPush, fetchSubscriptions, sendPushJobs, type SubRow } from '@/lib/server/push'
+import { getServiceClient, configureWebPush, fetchSubscriptions, sendPushJobs, type SubRow, type PushPayload } from '@/lib/server/push'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -61,13 +61,13 @@ export async function GET(req: Request) {
     .is('superseded_at', null)
   const hospitalIds = [...new Set((links ?? []).map(l => l.hospital_id))]
   const { data: hospitals } = hospitalIds.length
-    ? await sb.from('eyebody_hospitals').select('id, name').in('id', hospitalIds)
+    ? await sb.from('eyebody_hospitals').select('id, name, logo_url').in('id', hospitalIds)
     : { data: [] }
-  const nameById = new Map((hospitals ?? []).map(h => [h.id, h.name as string]))
-  const hospitalByChild = new Map<string, string>()
+  const byId = new Map((hospitals ?? []).map(h => [h.id, h as { name: string; logo_url: string | null }]))
+  const hospitalByChild = new Map<string, { name: string; logoUrl: string | null }>()
   for (const l of links ?? []) {
-    const name = nameById.get(l.hospital_id)
-    if (name) hospitalByChild.set(l.child_id, name)
+    const h = byId.get(l.hospital_id)
+    if (h?.name) hospitalByChild.set(l.child_id, { name: h.name, logoUrl: h.logo_url })
   }
 
   // ② 자녀별 보호자
@@ -103,7 +103,7 @@ export async function GET(req: Request) {
   }
 
   // ④ 발송 대상 구성 (같은 구독에 중복 발송 방지)
-  const jobs: { sub: SubRow; payload: { title: string; body: string; url: string; tag: string } }[] = []
+  const jobs: { sub: SubRow; payload: PushPayload }[] = []
   const seen = new Set<string>()   // `${endpoint}|${childId}`
 
   for (const child of children) {
@@ -116,11 +116,16 @@ export async function GET(req: Request) {
       if (!hit) continue
       // 제목은 병원명, 본문이 언제인지를 말한다. 며칠 전 알림(alertDay)이든 당일이든
       // 같은 문장 틀이라 부모가 알림만 보고 바로 판단할 수 있다.
-      const title = hospitalByChild.get(child.id) ?? '마이오노트'
+      const hos = hospitalByChild.get(child.id)
+      const title = hos?.name ?? '마이오노트'
       const body = dDays === 0 ? '오늘 병원 방문일이에요'
         : dDays === 1 ? '내일 병원 방문일이에요'
         : `${dDays}일 뒤 병원 방문일이에요`
-      const payload = { title, body, url: '/dashboard', tag: `appt-${child.id}` }
+      const payload: PushPayload = {
+        title, body, url: '/dashboard', tag: `appt-${child.id}`,
+        // 오른쪽 큰 아이콘을 병원 로고로 — 왼쪽 앱 아이콘과 겹쳐 보이지 않게
+        ...(hos?.logoUrl ? { icon: hos.logoUrl } : {}),
+      }
       for (const sub of subsByUser.get(uid) ?? []) {
         const key = `${sub.endpoint}|${child.id}`
         if (seen.has(key)) continue

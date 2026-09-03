@@ -21,7 +21,8 @@ export function configureWebPush() {
 }
 
 export interface SubRow { user_id: string; endpoint: string; p256dh: string; auth: string }
-export interface PushPayload { title: string; body: string; url: string; tag: string }
+// icon: 알림 오른쪽 큰 아이콘 URL(병원 로고). 없으면 서비스워커가 앱 아이콘으로 떨어진다.
+export interface PushPayload { title: string; body: string; url: string; tag: string; icon?: string }
 
 export async function fetchSubscriptions(
   sb: ReturnType<typeof getServiceClient>, userIds: string[]
