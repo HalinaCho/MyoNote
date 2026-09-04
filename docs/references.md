@@ -124,12 +124,12 @@
 
 같은 우한 코호트를 LMS 방법으로 재분석한 후속 논문이다. **연령·성별별 백분위가 숫자 표로 전부 실려 있어 그대로 구현할 수 있다.**
 
-> Sanz Diez P, Ohlendorf A, Schaeffel F, Wahl S. **LMS parameters, percentile, and Z-score growth curves for axial length in Chinese schoolchildren in Wuhan.** *Scientific Reports.* 2022;12:4898. DOI: 10.1038/s41598-022-08907-5
+> Sanz Diez P, Ohlendorf A, Schaeffel F, Wahl S. **LMS parameters, percentile, and Z-score growth curves for axial length in Chinese schoolchildren in Wuhan.** *Scientific Reports.* 2022;12:4850. DOI: 10.1038/s41598-022-08907-5
 
 - 대상: 중국 우한 **14,760명**, 6–15세 (2019년 논문의 12,554명보다 큼)
 - 라이선스: **CC BY 4.0** — 상업적 이용 포함 무제한 사용·재배포 허용, 조건은 출처 표기
 - Table 2에 2/5/10/25/50/75/90/95/98 백분위가 **성별 × 연령별로 수록**
-- 원문 확보: `docs/papers/wuhan-2022-lms-axial-length.europepmc.xml` (Europe PMC 전문 API)
+- 원문 확보: `docs/papers/Sanz Diez_Wuhan(2022) - LMS parameters, percentile, and Z-score growth curves for axial length in Chinese schoolchildren in Wuhan..pdf`
 
 #### LMS 파라미터 (Table 2 발췌)
 
@@ -155,6 +155,8 @@ AL(p) = M × (1 + S × Z_p)        (Z_p = 표준정규 분위수)
 | 15 | 24.49 | 0.0409 | 25.07 | 0.0406 |
 
 #### 논문 원문 백분위 (우리 차트가 쓰는 5개 구간, mm)
+
+아래 두 표는 **논문 Table 2(3쪽)를 그대로 옮긴 것**이다. 원문 Table 2는 2nd/5th/10th/25th/50th/75th/90th/95th/98th 아홉 개 백분위를 싣고 있고, 여기서는 우리 차트가 쓰는 다섯 개 열만 발췌했다. 원문에 없는 값을 계산해 넣은 것이 아니다. 100개 값(10연령 × 2성별 × 5백분위)을 PDF 원문과 기계 대조해 **불일치 0개**를 확인했다.
 
 **여아**
 
@@ -399,9 +401,11 @@ Ortho-K 단독 40%에서 출발해 28% 추가 억제를 적용하면 대략 0.40
 | 파일 | 라이선스 |
 |---|---|
 | `docs/papers/sanz-diez-2019-growth-curves-chinese-schoolchildren.pdf` | CC BY 4.0 (본문 명시) |
-| `docs/papers/wuhan-2022-lms-axial-length.europepmc.xml` | CC BY 4.0 (본문 명시) |
+| `docs/papers/Sanz Diez_Wuhan(2022) - LMS parameters, ….pdf` | CC BY 4.0 (본문 명시) |
 
 둘 다 CC BY 4.0이라 보관·재배포·상업적 이용에 제약이 없다. 조건은 출처 표기뿐이다.
+
+**Supplementary Table 1은 이 PDF에 없다.** 1st/3rd/97th/99th 백분위가 온라인 별도 파일로 제공된다. 다만 L=1(정규분포)이므로 M·S로 직접 계산할 수 있어 받을 필요는 없다 — 현재 코드가 P3/P97을 `P10−0.9`, `P90+0.9`로 임의 확장하던 것도 이 계산으로 대체된다.
 
 ### 확인 경로
 
@@ -409,7 +413,7 @@ Ortho-K 단독 40%에서 출발해 28% 추가 억제를 적용하면 대략 0.40
 |---|---|
 | Tideman 2018 | 서지·평균값 확인. 전문은 PMC/Wiley 접근 차단으로 백분위 원표 미확인 |
 | Sanz Diez 2019 | **PDF 원문 확보, 표 2·3 수치 직접 추출** |
-| Wuhan LMS 2022 | **Europe PMC 전문 API로 확보, Table 2 전체 추출.** L=1 정규분포 항등식을 논문 게재값과 대조 검증(최대오차 0.008mm) |
+| Wuhan LMS 2022 | **PDF 원문(사용자 제공) 확보, Table 2 전체 추출.** 문서에 실은 100개 값을 원문과 기계 대조(불일치 0). L=1 정규분포 항등식도 게재값과 대조 검증(최대오차 0.008mm) |
 | LAMP (Yam 2019/2020) | 안축장 증가량 및 농도별 감소율 확인 |
 | Kinoshita 2020 (병용) | 2년 안축장 증가량 및 28% 수치 확인 |
 | Lam 2020 (DIMS) | 서지 및 52%/62% 수치 확인 |
