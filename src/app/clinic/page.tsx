@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useHospital } from '@/context/HospitalContext'
 import * as q from '@/lib/supabase/queries'
 import { errMessage } from '@/lib/utils/error'
-import { calcAgeLabel } from '@/lib/utils/date'
+import { patientMeta } from '@/lib/utils/patient'
 import { axialGrowth } from '@/lib/axialGrowth'
 import { makeTreatmentsForDate } from '@/lib/treatments'
 import { Bar, Doughnut } from 'react-chartjs-2'
@@ -227,7 +227,7 @@ export default function ClinicDashboardPage() {
                     className="flex items-center justify-between py-2.5 hover:bg-gray-50 rounded px-1 -mx-1">
                     <div>
                       <div className="text-sm font-medium text-gray-800">{p.childName}</div>
-                      <div className="text-xs text-gray-400">{calcAgeLabel(p.birth)}</div>
+                      <div className="text-xs text-gray-400">{patientMeta(p.birth, p.gender)}</div>
                     </div>
                     <FontAwesomeIcon icon={faChevronRight} className="text-gray-300 text-xs" />
                   </Link>

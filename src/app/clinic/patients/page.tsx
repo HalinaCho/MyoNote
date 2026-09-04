@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useHospital } from '@/context/HospitalContext'
 import * as q from '@/lib/supabase/queries'
 import { errMessage } from '@/lib/utils/error'
-import { calcAgeLabel } from '@/lib/utils/date'
+import { patientMeta } from '@/lib/utils/patient'
 import { TrendView, PctView, GrowthRateCard } from '@/components/analytics/AxialTab'
 import { ForecastView } from '@/components/analytics/ForecastCard'
 import { makeTreatmentsForDate } from '@/lib/treatments'
@@ -21,10 +21,6 @@ const RECENT_KEY = 'mn_clinic_recent_patient_jump'
 const RECENT_MAX = 8
 
 interface RecentEntry { childId: string; childName: string }
-
-// RPC가 아직 gender를 안 싣는 동안(마이그레이션 전)에는 빈 문자열 — 모르는 값을 '남'으로 단정하지 않는다
-const genderText = (g: 'M' | 'F') => (g === 'F' ? '여' : g === 'M' ? '남' : '')
-const genderChild = (g: 'M' | 'F') => (g === 'F' ? '여아' : g === 'M' ? '남아' : '')
 
 const fmt2 = (v: number | null) => (v == null ? '—' : v.toFixed(2))
 const fmtDelta = (cur: number | null, prev: number | null) =>
@@ -92,7 +88,6 @@ function ClinicPatientsPageInner() {
     setDetail(null)
     setDetailError(null)
     router.push('/clinic/patients')
-    inputRef.current?.focus()
   }
 
   const selectPatient = (p: RecentEntry) => {
@@ -164,9 +159,7 @@ function ClinicPatientsPageInner() {
                   onClick={() => selectPatient({ childId: p.childId, childName: p.childName })}
                   className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-50">
                   <span className="text-sm text-gray-700">{p.childName}</span>
-                  <span className="text-xs text-gray-400">
-                    {genderText(p.gender) && `${genderText(p.gender)} · `}{calcAgeLabel(p.birth)}
-                  </span>
+                  <span className="text-xs text-gray-400 shrink-0 ml-3">{patientMeta(p.birth, p.gender)}</span>
                 </button>
               ))
             ) : (
@@ -229,7 +222,7 @@ function PatientPanel({
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h2 className="font-bold text-lg text-gray-800">{detail.childName}</h2>
         <p className="text-xs text-gray-400">
-          {genderChild(detail.gender) && `${genderChild(detail.gender)} · `}{calcAgeLabel(detail.birth)} · 다음 예약 {detail.nextAppointment ?? '-'}
+          {patientMeta(detail.birth, detail.gender)} · 다음 예약 {detail.nextAppointment ?? '-'}
         </p>
       </div>
 

@@ -5,10 +5,7 @@ import Link from 'next/link'
 import { useHospital } from '@/context/HospitalContext'
 import * as q from '@/lib/supabase/queries'
 import { errMessage } from '@/lib/utils/error'
-import { calcAgeLabel } from '@/lib/utils/date'
-
-// RPC가 아직 gender를 안 싣는 동안(마이그레이션 전)에는 빈 문자열 — 모르는 값을 '남'으로 단정하지 않는다
-const genderText = (g: 'M' | 'F') => (g === 'F' ? '여' : g === 'M' ? '남' : '')
+import { patientMeta } from '@/lib/utils/patient'
 import { calcRecentCompliance } from '@/lib/utils/compliance'
 import { makeTreatmentsForDate } from '@/lib/treatments'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -233,7 +230,7 @@ export default function ClinicPatientsAllPage() {
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-gray-800 truncate">{p.childName}</div>
                   <div className="text-xs text-gray-400">
-                    {genderText(p.gender) && `${genderText(p.gender)} · `}{p.birth} ({calcAgeLabel(p.birth)}) · 다음 예약 {p.nextAppointment ?? '-'}
+                    {patientMeta(p.birth, p.gender)} · 다음 예약 {p.nextAppointment ?? '-'}
                   </div>
                 </div>
                 <div className={`w-12 text-center text-sm font-semibold ${pctClass(pct7)}`}>{pctText(pct7)}</div>
