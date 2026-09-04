@@ -11,7 +11,7 @@
 //  2) 신뢰구간 콘 — 측정 산포(회귀 잔차)+문헌 기반 불확실성이 먼 미래로 갈수록 넓어짐
 
 import type { TreatmentDef } from '@/types'
-import { calcAgeYears, calcPercentile, normP50, normSlope } from '@/lib/axialPercentile'
+import { calcAgeYears, calcPercentile, normP50, normSlope, type Sex } from '@/lib/axialPercentile'
 
 // 예측에 실제로 필요한 검사 필드만 — 부모 앱(ExamRecord)과 원장 포털이 같은 함수를 쓰기 위해
 export interface ForecastExam { date: string; axOD: string; axOS: string }
@@ -79,7 +79,7 @@ export interface ScenarioPoint {
   year: number   // 0~horizon
   age: number    // 만 나이(소수)
   al: number     // 예상 안축장 mm
-  pct: number    // 또래 백분위
+  pct: number | null  // 또래 백분위 (참조범위 밖 나이면 null)
   lo: number     // 신뢰구간 하한 mm
   hi: number     // 신뢰구간 상한 mm
 }
@@ -117,6 +117,7 @@ function buildEye(
   eye: 'OD' | 'OS',
   exams: ForecastExam[],
   birth: string,
+  sex: Sex,
   defaultEff: number,   // 문헌 기본 효과 — 케어 중 아이의 자연속도 역산 기준(고정)
   appliedEff: number,   // 슬라이더 효과 — 케어 유지(treated) 선에 적용
   onCare: boolean,
@@ -156,12 +157,18 @@ function buildEye(
 
   // 나이별 감속: 또래 P50 곡선의 감속 비율로 미래 속도를 줄인다.
   // baseSlope가 너무 작으면(고연령) 선형으로 폴백.
-  const baseSlope = normSlope(current.age)
+  //
+  // ⚠️ 참조 곡선은 만 15세에서 끝난다(출처 논문 범위). normP50은 15세 이후를
+  //    15세 값으로 고정하므로, 예측이 15세를 넘어가는 구간은 성장이 0으로 평평해진다.
+  //    안축장 성장이 실제로 그 무렵 크게 둔화하긴 하지만 이 평탄화는 모델링 결과가
+  //    아니라 자료 범위의 끝일 뿐이다. 15세 이후를 제대로 다루려면 그 연령대를
+  //    포함하는 참조 자료가 먼저 필요하다(docs/references.md §2.5).
+  const baseSlope = normSlope(current.age, sex)
   const decel = baseSlope > 0.05
-  const refP50 = normP50(current.age)
+  const refP50 = normP50(current.age, sex)
   const projectAL = (rate: number, y: number): number => {
     if (!decel) return current.al + rate * y
-    return current.al + (rate / baseSlope) * (normP50(current.age + y) - refP50)
+    return current.al + (rate / baseSlope) * (normP50(current.age + y, sex) - refP50)
   }
   const halfWidth = (y: number): number =>
     Math.min(CONE_CAP, Math.sqrt(SIGMA0 ** 2 + (slopeSE * y) ** 2))
@@ -175,7 +182,7 @@ function buildEye(
         year: y,
         age: round(age, 2),
         al: round(al, 2),
-        pct: calcPercentile(al, age),
+        pct: calcPercentile(al, age, sex),
         lo: round(al - w, 2),
         hi: round(al + w, 2),
       }
@@ -205,6 +212,7 @@ function buildEye(
 
 export function buildForecast(opts: {
   birth: string
+  sex: Sex
   exams: ForecastExam[]
   activeTreatments: TreatmentDef[]
   efficacy?: number   // 슬라이더 오버라이드 (0~1)
@@ -213,10 +221,10 @@ export function buildForecast(opts: {
   const care = resolveCare(opts.activeTreatments)
   const efficacy = Math.min(0.95, Math.max(0, opts.efficacy ?? care.efficacy))
   const horizon = Math.min(5, Math.max(1, Math.round(opts.horizon ?? HORIZON_YEARS)))
-  const OD = buildEye('OD', opts.exams, opts.birth, care.efficacy, efficacy, care.onCare, horizon)
-  const OS = buildEye('OS', opts.exams, opts.birth, care.efficacy, efficacy, care.onCare, horizon)
+  const OD = buildEye('OD', opts.exams, opts.birth, opts.sex, care.efficacy, efficacy, care.onCare, horizon)
+  const OS = buildEye('OS', opts.exams, opts.birth, opts.sex, care.efficacy, efficacy, care.onCare, horizon)
   const fasterEye: 'OD' | 'OS' | null =
     OD && OS ? (OD.measuredRate >= OS.measuredRate ? 'OD' : 'OS') : OD ? 'OD' : OS ? 'OS' : null
-  const decelerated = (OD ?? OS) ? normSlope((OD ?? OS)!.currentAge) > 0.05 : false
+  const decelerated = (OD ?? OS) ? normSlope((OD ?? OS)!.currentAge, opts.sex) > 0.05 : false
   return { care, efficacy, horizon, decelerated, OD, OS, fasterEye }
 }

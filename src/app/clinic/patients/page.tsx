@@ -273,13 +273,14 @@ function PatientPanel({
 
         <div className="flex-1 min-w-0 w-full space-y-4">
           {chartExams.length >= 1 ? (
-            <PctView exams={chartExams} birth={detail.birth} />
+            <PctView exams={chartExams} birth={detail.birth} sex={detail.gender} />
           ) : (
             <EmptyState message="안축장 기록이 있어야 또래 비교를 볼 수 있습니다." />
           )}
           {chartExams.length >= 2 && (
             <ForecastView
               birth={detail.birth}
+              sex={detail.gender}
               exams={chartExams}
               activeTreatments={makeTreatmentsForDate(detail.treatments)(new Date().toISOString().slice(0, 10))}
             />

@@ -9,7 +9,7 @@ import {
   Chart as ChartJS, CategoryScale, LinearScale,
   PointElement, LineElement, Tooltip, Legend, Filler,
 } from 'chart.js'
-import { calcAgeYears, calcPercentile, pctLabel, normCurve } from '@/lib/axialPercentile'
+import { calcAgeYears, calcPercentile, pctLabel, normCurve, inRefRange, REF_MIN_AGE, REF_MAX_AGE, type Sex } from '@/lib/axialPercentile'
 import { axialGrowth, growthCaveatText } from '@/lib/axialGrowth'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleInfo, faChevronDown, faChevronUp, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
@@ -31,7 +31,7 @@ export default function AxialTab() {
   return (
     <div className="space-y-3">
       <TrendView exams={sorted} />
-      <PctView exams={sorted} birth={activeChild?.birth} />
+      <PctView exams={sorted} birth={activeChild?.birth} sex={activeChild?.gender} />
     </div>
   )
 }
@@ -60,7 +60,7 @@ export function AxialPctView() {
   if (sorted.length < 1) {
     return <EmptyState message="안축장 기록이 있어야 또래 비교를 볼 수 있습니다." />
   }
-  return <PctView exams={sorted} birth={activeChild?.birth} />
+  return <PctView exams={sorted} birth={activeChild?.birth} sex={activeChild?.gender} />
 }
 
 // ── 변화 추이 뷰 ──────────────────────────────────────────────────
@@ -263,13 +263,13 @@ export function TrendView({ exams, hideGrowth }: { exams: { date: string; axOD: 
 // ── 또래 비교 뷰 ──────────────────────────────────────────────────
 
 export function PctView({
-  exams, birth,
-}: { exams: { date: string; axOD: string; axOS: string }[]; birth?: string }) {
+  exams, birth, sex,
+}: { exams: { date: string; axOD: string; axOS: string }[]; birth?: string; sex?: Sex }) {
   const [showPctInfo, setShowPctInfo] = useState(false)
-  if (!birth) {
+  if (!birth || !sex) {
     return (
       <div className="bg-white rounded-2xl p-6 shadow-sm text-center text-gray-400 text-sm">
-        또래 비교를 사용하려면 설정에서 생년월일을 등록해주세요.
+        또래 비교를 사용하려면 설정에서 생년월일과 성별을 등록해주세요.
       </div>
     )
   }
@@ -278,17 +278,18 @@ export function PctView({
   const childOD = withBoth.map(e => ({ x: parseFloat(calcAgeYears(birth, e.date).toFixed(2)), y: parseFloat(e.axOD) }))
   const childOS = withBoth.map(e => ({ x: parseFloat(calcAgeYears(birth, e.date).toFixed(2)), y: parseFloat(e.axOS) }))
 
-  // X축: 오늘 기준 현재 나이 ±3세, 참조 데이터 범위(6–18) 내 클램프
+  // X축: 오늘 기준 현재 나이 ±3세, 참조 데이터 범위(만 6~15세) 내 클램프
   const today = new Date().toISOString().slice(0, 10)
-  const curAge = Math.floor(calcAgeYears(birth, today))
-  const xMin = Math.max(6,  curAge - 3)
-  const xMax = Math.min(18, curAge + 3)
+  const ageNow = calcAgeYears(birth, today)
+  const curAge = Math.floor(ageNow)
+  const xMin = Math.max(REF_MIN_AGE, curAge - 3)
+  const xMax = Math.min(REF_MAX_AGE, curAge + 3)
 
-  // 참조 데이터 범위(6~18세) 밖이면 차트 대신 안내
-  if (xMin >= xMax) {
+  // 참조 데이터 범위 밖이면 차트 대신 안내 — 없는 기준을 외삽하지 않는다
+  if (!inRefRange(ageNow) || xMin >= xMax) {
     return (
       <div className="bg-white rounded-2xl p-6 shadow-sm text-center space-y-1">
-        <p className="text-sm text-gray-500">또래 비교 기준 데이터는 만 6~18세까지 제공됩니다.</p>
+        <p className="text-sm text-gray-500">또래 비교 기준 자료는 만 6~15세까지 제공됩니다.</p>
         <p className="text-xs text-gray-400">현재 만 {curAge}세</p>
       </div>
     )
@@ -318,7 +319,7 @@ export function PctView({
             datasets: [
               // P25–P75 채움 밴드
               {
-                label: 'P25', data: normCurve('p25'),
+                label: 'P25', data: normCurve('p25', sex),
                 borderColor: 'rgba(13,148,136,0.25)', borderWidth: 1,
                 // @ts-ignore
                 borderDash: [4, 4], fill: '+1',
@@ -326,7 +327,7 @@ export function PctView({
                 pointRadius: 0, tension: 0.4,
               },
               {
-                label: 'P75', data: normCurve('p75'),
+                label: 'P75', data: normCurve('p75', sex),
                 borderColor: 'rgba(13,148,136,0.25)', borderWidth: 1,
                 // @ts-ignore
                 borderDash: [4, 4], fill: false,
@@ -334,7 +335,7 @@ export function PctView({
               },
               // P50 중앙값
               {
-                label: 'P50', data: normCurve('p50'),
+                label: 'P50', data: normCurve('p50', sex),
                 borderColor: 'rgba(13,148,136,0.55)', borderWidth: 1.5,
                 // @ts-ignore
                 borderDash: [6, 3], fill: false,
@@ -342,15 +343,15 @@ export function PctView({
               },
               // P90
               {
-                label: 'P90', data: normCurve('p90'),
-                borderColor: 'rgba(251,113,133,0.6)', borderWidth: 1.5,
+                label: 'P90', data: normCurve('p90', sex),
+                borderColor: 'rgba(156,163,175,0.45)', borderWidth: 1,
                 // @ts-ignore
                 borderDash: [4, 3], fill: false,
                 pointRadius: 0, tension: 0.4,
               },
               // P10
               {
-                label: 'P10', data: normCurve('p10'),
+                label: 'P10', data: normCurve('p10', sex),
                 borderColor: 'rgba(156,163,175,0.45)', borderWidth: 1,
                 // @ts-ignore
                 borderDash: [3, 3], fill: false,
@@ -412,15 +413,15 @@ export function PctView({
         <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 mt-2 text-xs text-gray-400">
           <span className="flex items-center gap-1">
             <span className="w-5 h-2 rounded" style={{ backgroundColor: 'rgba(13,148,136,0.15)', border: '1px dashed rgba(13,148,136,0.4)' }}/>
-            정상범위 (P25–P75)
+            중간 범위 (P25–P75)
           </span>
           <span className="flex items-center gap-1">
             <svg width="18" height="4"><line x1="0" y1="2" x2="18" y2="2" stroke="rgba(13,148,136,0.6)" strokeWidth="1.5" strokeDasharray="6,3"/></svg>
             P50 중앙값
           </span>
           <span className="flex items-center gap-1">
-            <svg width="18" height="4"><line x1="0" y1="2" x2="18" y2="2" stroke="rgba(251,113,133,0.7)" strokeWidth="1.5" strokeDasharray="4,3"/></svg>
-            P90
+            <svg width="18" height="4"><line x1="0" y1="2" x2="18" y2="2" stroke="rgba(156,163,175,0.6)" strokeWidth="1" strokeDasharray="4,3"/></svg>
+            P10 · P90
           </span>
         </div>
         <div className="mt-2 text-center">
@@ -440,11 +441,14 @@ export function PctView({
           )}
         </div>
 
-        <PctSummaryInline exams={withBoth} birth={birth} />
+        <PctSummaryInline exams={withBoth} birth={birth} sex={sex} />
       </div>
 
-      <p className="text-[10px] text-gray-400 px-1">
-        * 만 6~13세: 한국 소아 근시 코호트 기준값. 만 14~18세: 동아시아 코호트 추정값(SCORM 등). 정확한 평가는 전문의와 상담하세요.
+      <p className="text-[10px] text-gray-400 px-1 leading-relaxed">
+        * 또래 기준: Sanz Diez P 외. <span className="italic">Sci Rep</span>. 2022;12:4850 (중국 우한 학령기 아동 14,760명, CC BY 4.0).
+        만 6~15세 남녀 구분 기준입니다. 논문 저자들이 밝힌 대로 인구집단이 다르면 기준값에 차이가 있을 수 있습니다.
+        이 그래프는 병원에서 측정한 기록을 또래 참조범위와 나란히 보여주는 것으로, 진단이나 진행 예측이 아닙니다.
+        판단은 안과 전문의와 상담하세요.
       </p>
     </>
   )
@@ -472,8 +476,8 @@ function PctBar({ pct }: { pct: number }) {
 // ── 또래 비교 요약 (인라인) ───────────────────────────────────────
 
 function PctSummaryInline({
-  exams, birth,
-}: { exams: { date: string; axOD: string; axOS: string }[]; birth: string }) {
+  exams, birth, sex,
+}: { exams: { date: string; axOD: string; axOS: string }[]; birth: string; sex: Sex }) {
   const latest = [...exams].sort((a, b) => b.date.localeCompare(a.date))[0]
   if (!latest) return null
 
@@ -483,10 +487,9 @@ function PctSummaryInline({
   const osMm = parseFloat(latest.axOS)
   if (isNaN(odMm) || isNaN(osMm)) return null
 
-  const pOD = calcPercentile(odMm, ageYears)
-  const pOS = calcPercentile(osMm, ageYears)
-  const lOD = pctLabel(pOD)
-  const lOS = pctLabel(pOS)
+  // 참조범위 밖이면 null — 백분위를 지어내지 않고 값만 보여준다
+  const pOD = calcPercentile(odMm, ageYears, sex)
+  const pOS = calcPercentile(osMm, ageYears, sex)
 
   return (
     <div className="mt-4 pt-3 border-t border-gray-100">
@@ -497,20 +500,31 @@ function PctSummaryInline({
 
       <div className="flex gap-3">
         {[
-          { label: '우안 (OD)', mm: odMm, pct: pOD, l: lOD },
-          { label: '좌안 (OS)', mm: osMm, pct: pOS, l: lOS },
-        ].map(({ label, mm, pct, l }) => (
+          { label: '우안 (OD)', mm: odMm, pct: pOD },
+          { label: '좌안 (OS)', mm: osMm, pct: pOS },
+        ].map(({ label, mm, pct }) => {
+          const l = pct !== null ? pctLabel(pct) : null
+          return (
           <div key={label} className="flex-1 bg-[#edf7f6] rounded-xl p-3">
             <div className="text-xs text-gray-500 mb-2">{label}</div>
             <div className="text-xl font-black text-gray-800 leading-none">
               {mm.toFixed(2)}<span className="text-xs font-normal text-gray-400 ml-0.5">mm</span>
             </div>
-            <div className="mt-2 text-xl font-black text-teal-500 leading-none">
-              {l.prefix} {l.value}
-            </div>
-            <PctBar pct={pct} />
+            {l ? (
+              <>
+                <div className="mt-2 text-xl font-black text-teal-500 leading-none">
+                  {l.prefix} {l.value}
+                </div>
+                <PctBar pct={pct!} />
+              </>
+            ) : (
+              <div className="mt-2 text-xs text-gray-400 leading-relaxed">
+                또래 기준 자료<br />범위 밖
+              </div>
+            )}
           </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

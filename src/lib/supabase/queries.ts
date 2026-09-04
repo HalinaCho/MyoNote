@@ -571,6 +571,7 @@ export interface PatientDetail {
   childId: string
   childName: string
   birth: string
+  gender: 'M' | 'F'                // 또래 백분위가 성별로 갈리므로 상세에 필요
   nextAppointment: string | null   // 예약일은 검사가 아니라 아이에 붙는다
   treatments: TreatmentDef[]
   logs: TreatmentLogs
@@ -579,7 +580,7 @@ export interface PatientDetail {
 
 interface PatientDetailRow {
   child: {
-    id: string; name: string; birth_date: string
+    id: string; name: string; birth_date: string; gender: 'M' | 'F'
     treatments: TreatmentDef[]; next_appointment: string | null
   }
   logs: TreatmentLogs
@@ -599,6 +600,7 @@ export async function fetchPatientDetail(hospitalId: string, childId: string): P
   const row = data as PatientDetailRow
   return {
     childId: row.child.id, childName: row.child.name, birth: row.child.birth_date,
+    gender: row.child.gender,
     nextAppointment: row.child.next_appointment ?? null,
     treatments: row.child.treatments ?? [],
     logs: row.logs ?? {},

@@ -374,7 +374,15 @@ Ortho-K 단독 40%에서 출발해 28% 추가 억제를 적용하면 대략 0.40
 | A3 | **아트로핀 농도 구분 추가.** 0.05%=50%, 0.025%=29%, 0.01%=12%. 농도 미상이면 보수적으로 낮은 값 적용 (§3.1) | `forecast.ts:22-27`, `treatments.ts:13` |
 | A4 | `axialPercentile.ts` 주석의 **"Korean pediatric myopia research cohort" 표현 수정.** 대응 문헌을 확인하지 못했다 (§2.3) | `axialPercentile.ts:1-4` |
 
-### B. 기준표 정비 — 정확도
+### B. 기준표 정비 — 정확도  ✅ 2026-09-05 적용 완료
+
+`src/lib/axialPercentile.ts`를 M·S 기반으로 교체하고 성별을 분리했다. 자체검사
+`src/lib/axialPercentile.check.mts`가 논문 Table 2의 180개 값을 박아두고 대조한다
+(`node src/lib/axialPercentile.check.mts`). 원장 포털은 `hospital_patient_detail`
+RPC가 gender를 반환해야 하므로 `docs/sql/2026-09-05-patient-detail-gender.sql`을
+**배포 전에** 실행해야 한다.
+
+남은 것: A(사실오류 — 아트로핀 농도 등)와 C(규제)는 그대로다.
 
 | # | 내용 |
 |---|---|

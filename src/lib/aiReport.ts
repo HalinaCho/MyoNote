@@ -106,8 +106,8 @@ export function buildReportContext(opts: {
     const od = num(latest.axOD), os = num(latest.axOS)
     axial = {
       latestDate: latest.date,
-      od: { value: od, pct: od != null ? calcPercentile(od, ageAtLatest) : null },
-      os: { value: os, pct: os != null ? calcPercentile(os, ageAtLatest) : null },
+      od: { value: od, pct: od != null ? calcPercentile(od, ageAtLatest, child.gender) : null },
+      os: { value: os, pct: os != null ? calcPercentile(os, ageAtLatest, child.gender) : null },
       delta: null,
       annualized: null,
       annualizedNote: null,

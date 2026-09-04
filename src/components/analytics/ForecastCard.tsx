@@ -11,7 +11,7 @@ import {
 } from 'chart.js'
 import { buildForecast, type EyeForecast, type ForecastExam } from '@/lib/forecast'
 import type { TreatmentDef } from '@/types'
-import { normCurve } from '@/lib/axialPercentile'
+import { normCurve, type Sex } from '@/lib/axialPercentile'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChartLine, faTriangleExclamation, faRotateLeft } from '@fortawesome/free-solid-svg-icons'
 
@@ -36,19 +36,19 @@ export default function ForecastCard() {
       </div>
     )
   }
-  return <ForecastView birth={activeChild.birth} exams={exams} activeTreatments={activeTreatments} />
+  return <ForecastView birth={activeChild.birth} sex={activeChild.gender} exams={exams} activeTreatments={activeTreatments} />
 }
 
 // 컨텍스트 없이 데이터만 받는 본체 — 원장 포털(환자 상세)에서도 같은 카드를 그대로 쓴다
 export function ForecastView({
-  birth, exams, activeTreatments,
-}: { birth: string; exams: ForecastExam[]; activeTreatments: TreatmentDef[] }) {
+  birth, sex, exams, activeTreatments,
+}: { birth: string; sex: Sex; exams: ForecastExam[]; activeTreatments: TreatmentDef[] }) {
   const [eye, setEye] = useState<'OD' | 'OS'>('OD')
   const [effOverride, setEffOverride] = useState<number | null>(null)  // 0~1
   const [horizon, setHorizon] = useState(3)
 
   const forecast = buildForecast({
-    birth, exams, activeTreatments,
+    birth, sex, exams, activeTreatments,
     efficacy: effOverride ?? undefined, horizon,
   })
   if (!forecast.OD && !forecast.OS) {
@@ -109,7 +109,7 @@ export function ForecastView({
       ) : (
         <>
           <Hero f={active} care={forecast.care} horizon={forecast.horizon} />
-          <ForecastChart f={active} />
+          <ForecastChart f={active} sex={sex} />
           <ProjectionTable f={active} horizon={forecast.horizon} />
 
           {/* 가정값 슬라이더 */}
@@ -179,7 +179,7 @@ function Hero({ f, care, horizon }: { f: EyeForecast; care: { onCare: boolean; l
 }
 
 // ── 예측 곡선 ────────────────────────────────────────────────────
-function ForecastChart({ f }: { f: EyeForecast }) {
+function ForecastChart({ f, sex }: { f: EyeForecast; sex: Sex }) {
   const isOD = f.eye === 'OD'
   const childColor = isOD ? '#14b8a6' : '#9CA3AF'
 
@@ -208,9 +208,9 @@ function ForecastChart({ f }: { f: EyeForecast }) {
           data={{
             datasets: [
               // 또래 정상범위 밴드 (P25–P75) — 중립 회색(또래 기준). teal/rose는 케어 시나리오 전용.
-              { label: 'P25', data: normCurve('p25'), borderColor: 'rgba(148,163,184,0.35)', borderWidth: 1, borderDash: [4, 4], fill: '+1', backgroundColor: 'rgba(148,163,184,0.08)', pointRadius: 0, tension: 0.4 },
-              { label: 'P75', data: normCurve('p75'), borderColor: 'rgba(148,163,184,0.35)', borderWidth: 1, borderDash: [4, 4], fill: false, pointRadius: 0, tension: 0.4 },
-              { label: 'P50', data: normCurve('p50'), borderColor: 'rgba(148,163,184,0.6)', borderWidth: 1.5, borderDash: [6, 3], fill: false, pointRadius: 0, tension: 0.4 },
+              { label: 'P25', data: normCurve('p25', sex), borderColor: 'rgba(148,163,184,0.35)', borderWidth: 1, borderDash: [4, 4], fill: '+1', backgroundColor: 'rgba(148,163,184,0.08)', pointRadius: 0, tension: 0.4 },
+              { label: 'P75', data: normCurve('p75', sex), borderColor: 'rgba(148,163,184,0.35)', borderWidth: 1, borderDash: [4, 4], fill: false, pointRadius: 0, tension: 0.4 },
+              { label: 'P50', data: normCurve('p50', sex), borderColor: 'rgba(148,163,184,0.6)', borderWidth: 1.5, borderDash: [6, 3], fill: false, pointRadius: 0, tension: 0.4 },
 
               // 신뢰구간 콘 — 케어 유지 (teal)만 표시 (겹침 방지)
               { label: '_careHi', data: f.withCare.map(p => pt(p, p.hi)), borderWidth: 0, pointRadius: 0, fill: '+1', backgroundColor: 'rgba(16,188,173,0.12)', tension: 0 },
@@ -298,8 +298,8 @@ function ProjectionTable({ f, horizon }: { f: EyeForecast; horizon: number }) {
             return (
               <tr key={y} className="border-b border-gray-50 last:border-0">
                 <td className="text-left py-2 text-gray-600">{y}년 후 (만 {Math.round(c.age)}세)</td>
-                <td className="text-right py-2 font-bold text-teal-600">{c.al.toFixed(2)} <span className="text-[10px] font-normal text-gray-400">P{c.pct}</span></td>
-                <td className="text-right py-2 font-bold text-rose-500">{n.al.toFixed(2)} <span className="text-[10px] font-normal text-gray-400">P{n.pct}</span></td>
+                <td className="text-right py-2 font-bold text-teal-600">{c.al.toFixed(2)} {c.pct !== null && <span className="text-[10px] font-normal text-gray-400">P{c.pct}</span>}</td>
+                <td className="text-right py-2 font-bold text-rose-500">{n.al.toFixed(2)} {n.pct !== null && <span className="text-[10px] font-normal text-gray-400">P{n.pct}</span>}</td>
               </tr>
             )
           })}
