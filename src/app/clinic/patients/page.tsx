@@ -6,7 +6,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useHospital } from '@/context/HospitalContext'
 import * as q from '@/lib/supabase/queries'
 import { errMessage } from '@/lib/utils/error'
-import { patientMeta } from '@/lib/utils/patient'
+import { patientMeta, dueClass } from '@/lib/utils/patient'
+import { dueLabel } from '@/lib/utils/date'
 import { TrendView, PctView, GrowthRateCard } from '@/components/analytics/AxialTab'
 import { ForecastView } from '@/components/analytics/ForecastCard'
 import { makeTreatmentsForDate } from '@/lib/treatments'
@@ -221,8 +222,12 @@ function PatientPanel({
     <div className="space-y-4">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h2 className="font-bold text-lg text-gray-800">{detail.childName}</h2>
+        {/* 상세는 환자가 한 명뿐이라 정확한 날짜를 남기고, 목록과 같은 상대 표현을 괄호로 덧붙인다 */}
         <p className="text-xs text-gray-400">
           {patientMeta(detail.birth, detail.gender)} · 다음 예약 {detail.nextAppointment ?? '-'}
+          {detail.nextAppointment && (
+            <span className={`ml-1 ${dueClass(detail.nextAppointment)}`}>({dueLabel(detail.nextAppointment)})</span>
+          )}
         </p>
       </div>
 

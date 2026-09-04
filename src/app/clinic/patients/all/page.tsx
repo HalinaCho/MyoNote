@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { useHospital } from '@/context/HospitalContext'
 import * as q from '@/lib/supabase/queries'
 import { errMessage } from '@/lib/utils/error'
-import { patientMeta } from '@/lib/utils/patient'
+import { patientMeta, dueClass } from '@/lib/utils/patient'
+import { pastLabel, dueLabel } from '@/lib/utils/date'
 import { calcRecentCompliance } from '@/lib/utils/compliance'
 import { makeTreatmentsForDate } from '@/lib/treatments'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -129,7 +130,11 @@ export default function ClinicPatientsAllPage() {
           ) : overdueList.map(p => (
             <div key={p.childId} className="flex items-center justify-between px-4 py-3">
               <span className="text-sm font-medium text-gray-800">{p.childName}</span>
-              <span className="text-sm text-rose-500 font-semibold">{p.nextAppointment} · D+{p.daysOverdue}</span>
+              {/* 아래 목록과 같은 말로 — 같은 화면에서 "D+8"과 "8일 지남"이 섞이면 읽는 규칙이 둘이 된다.
+                  일수는 서버가 센 daysOverdue를 그대로 쓴다(클라이언트 날짜로 다시 세지 않는다). */}
+              <span className="text-sm text-rose-600 font-semibold" title={p.nextAppointment ?? ''}>
+                {p.daysOverdue}일 지남
+              </span>
             </div>
           ))}
         </div>
@@ -141,7 +146,9 @@ export default function ClinicPatientsAllPage() {
           ) : churnedList.map(p => (
             <div key={p.childId} className="flex items-center justify-between px-4 py-3">
               <span className="text-sm font-medium text-gray-800">{p.childName}</span>
-              <span className="text-xs text-gray-400">{p.churnedAt} 연결 종료</span>
+              <span className="text-xs text-gray-400" title={p.churnedAt ?? ''}>
+                {pastLabel(p.churnedAt) || p.churnedAt} 연결 종료
+              </span>
             </div>
           ))}
         </div>
@@ -214,7 +221,8 @@ export default function ClinicPatientsAllPage() {
             <div className="flex-1">환자</div>
             <div className="w-12 text-center">7일</div>
             <div className="w-12 text-center">30일</div>
-            <div className="w-24 text-right">최근 검사</div>
+            <div className="w-20 text-right">다음 예약</div>
+            <div className="w-20 text-right">최근 검사</div>
             <div className="w-4" />
           </div>
           {filtered.map(p => {
@@ -229,13 +237,19 @@ export default function ClinicPatientsAllPage() {
                 className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-gray-800 truncate">{p.childName}</div>
-                  <div className="text-xs text-gray-400">
-                    {patientMeta(p.birth, p.gender)} · 다음 예약 {p.nextAppointment ?? '-'}
-                  </div>
+                  {/* 아랫줄은 인적사항만 — 예약·검사 날짜는 각자 열로 나갔다 */}
+                  <div className="text-xs text-gray-400">{patientMeta(p.birth, p.gender)}</div>
                 </div>
                 <div className={`w-12 text-center text-sm font-semibold ${pctClass(pct7)}`}>{pctText(pct7)}</div>
                 <div className={`w-12 text-center text-sm font-semibold ${pctClass(pct30)}`}>{pctText(pct30)}</div>
-                <div className="w-24 text-right text-xs text-gray-400">{p.lastExamDate ?? '-'}</div>
+                {/* 절대 날짜는 마우스를 올렸을 때 — 평소엔 "얼마나 남았나"만 읽으면 된다 */}
+                <div className={`w-20 text-right text-xs ${dueClass(p.nextAppointment)}`}
+                  title={p.nextAppointment ?? ''}>
+                  {dueLabel(p.nextAppointment) || '-'}
+                </div>
+                <div className="w-20 text-right text-xs text-gray-400" title={p.lastExamDate ?? ''}>
+                  {pastLabel(p.lastExamDate) || '-'}
+                </div>
                 <FontAwesomeIcon icon={faChevronRight} className="w-4 text-gray-300 text-xs" />
               </Link>
             )
