@@ -189,13 +189,15 @@ export default function ClinicDashboardPage() {
                 <div className="text-[11px] font-medium text-gray-400 mb-1">진행이 빠른 환자</div>
                 {fastest.map(({ p, rate }) => (
                   <Link key={p.childId} href={`/clinic/patients?child=${p.childId}`}
-                    className="flex items-center justify-between py-1.5 hover:bg-gray-50 rounded px-1 -mx-1">
+                    className="group flex items-center justify-between py-1.5 hover:bg-gray-50 rounded px-1 -mx-1">
                     <span className="text-sm text-gray-700">{p.childName}</span>
                     <span className="flex items-center gap-2">
                       <span className="text-sm font-semibold" style={{ color: RISK[riskOf(rate)].color }}>
                         +{(rate ?? 0).toFixed(2)} mm/yr
                       </span>
-                      <FontAwesomeIcon icon={faChevronRight} className="text-gray-300 text-[10px]" />
+                      <FontAwesomeIcon icon={faChevronRight}
+                        className="text-gray-300 text-[10px] transition-colors
+                                   group-hover:text-teal-500 group-focus-visible:text-teal-500" />
                     </span>
                   </Link>
                 ))}
@@ -224,12 +226,14 @@ export default function ClinicDashboardPage() {
               <div className="divide-y divide-gray-50">
                 {todayVisits.map(p => (
                   <Link key={p.childId} href={`/clinic/patients?child=${p.childId}`}
-                    className="flex items-center justify-between py-2.5 hover:bg-gray-50 rounded px-1 -mx-1">
+                    className="group flex items-center justify-between py-2.5 hover:bg-gray-50 rounded px-1 -mx-1">
                     <div>
                       <div className="text-sm font-medium text-gray-800">{p.childName}</div>
                       <div className="text-xs text-gray-400">{patientMeta(p.birth, p.gender)}</div>
                     </div>
-                    <FontAwesomeIcon icon={faChevronRight} className="text-gray-300 text-xs" />
+                    <FontAwesomeIcon icon={faChevronRight}
+                      className="text-gray-300 text-xs transition-colors
+                                 group-hover:text-teal-500 group-focus-visible:text-teal-500" />
                   </Link>
                 ))}
               </div>

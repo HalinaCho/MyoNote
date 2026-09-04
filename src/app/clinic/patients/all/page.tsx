@@ -214,7 +214,7 @@ export default function ClinicPatientsAllPage() {
           {filtered.map(p => (
             <Link key={p.childId} href={`/clinic/patients?child=${p.childId}`}
               onClick={() => addRecent(query)}
-              className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
+              className="group flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-gray-800 truncate">{p.childName}</div>
                 {/* 아랫줄은 인적사항만 — 검사·예약 날짜는 각자 열로 나갔다 */}
@@ -228,7 +228,10 @@ export default function ClinicPatientsAllPage() {
                 title={p.nextAppointment ?? ''}>
                 {dueLabel(p.nextAppointment) || '-'}
               </div>
-              <FontAwesomeIcon icon={faChevronRight} className="w-4 text-gray-300 text-xs" />
+              {/* 행 전체가 클릭 영역이라는 신호 — 행에 마우스가 올라가면(키보드 포커스도) 화살표가 teal로 */}
+              <FontAwesomeIcon icon={faChevronRight}
+                className="w-4 text-gray-300 text-xs transition-colors
+                           group-hover:text-teal-500 group-focus-visible:text-teal-500" />
             </Link>
           ))}
         </div>
