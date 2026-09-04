@@ -13,7 +13,7 @@ import { makeTreatmentsForDate } from '@/lib/treatments'
 import EmptyState from '@/components/ui/EmptyState'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
-  faMagnifyingGlass, faXmark, faHospital, faChartLine, faListUl,
+  faMagnifyingGlass, faXmark, faHospital, faChartLine, faListUl, faRotateLeft,
 } from '@fortawesome/free-solid-svg-icons'
 
 // 최근 검색은 {이름, id} 쌍으로 저장 — 클릭 한 번에 바로 그 환자로 점프하기 위해서(진료 중 클릭 최소화가 목적)
@@ -21,6 +21,10 @@ const RECENT_KEY = 'mn_clinic_recent_patient_jump'
 const RECENT_MAX = 8
 
 interface RecentEntry { childId: string; childName: string }
+
+// RPC가 아직 gender를 안 싣는 동안(마이그레이션 전)에는 빈 문자열 — 모르는 값을 '남'으로 단정하지 않는다
+const genderText = (g: 'M' | 'F') => (g === 'F' ? '여' : g === 'M' ? '남' : '')
+const genderChild = (g: 'M' | 'F') => (g === 'F' ? '여아' : g === 'M' ? '남아' : '')
 
 const fmt2 = (v: number | null) => (v == null ? '—' : v.toFixed(2))
 const fmtDelta = (cur: number | null, prev: number | null) =>
@@ -82,6 +86,15 @@ function ClinicPatientsPageInner() {
     try { localStorage.setItem(RECENT_KEY, JSON.stringify(list)) } catch { /* 저장 실패해도 이동은 동작 */ }
   }
 
+  // 진료가 끝나면 화면에 남은 이전 환자 정보를 지우고 새 검색으로 돌아간다
+  const clearPatient = () => {
+    setQuery('')
+    setDetail(null)
+    setDetailError(null)
+    router.push('/clinic/patients')
+    inputRef.current?.focus()
+  }
+
   const selectPatient = (p: RecentEntry) => {
     saveRecent([p, ...recent.filter(r => r.childId !== p.childId)].slice(0, RECENT_MAX))
     setQuery('')
@@ -116,7 +129,8 @@ function ClinicPatientsPageInner() {
       </div>
 
       {/* 넓은 화면에서 검색창까지 늘어나면 허전해 보인다 — 입력 폭만 따로 제한 */}
-      <div className="relative max-w-md">
+      <div className="flex items-start gap-2">
+      <div className="relative flex-1 max-w-md">
         <FontAwesomeIcon icon={faMagnifyingGlass}
           className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-300" />
         <input
@@ -150,7 +164,9 @@ function ClinicPatientsPageInner() {
                   onClick={() => selectPatient({ childId: p.childId, childName: p.childName })}
                   className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-50">
                   <span className="text-sm text-gray-700">{p.childName}</span>
-                  <span className="text-xs text-gray-400">{calcAgeLabel(p.birth)}</span>
+                  <span className="text-xs text-gray-400">
+                    {genderText(p.gender) && `${genderText(p.gender)} · `}{calcAgeLabel(p.birth)}
+                  </span>
                 </button>
               ))
             ) : (
@@ -166,6 +182,16 @@ function ClinicPatientsPageInner() {
             )}
           </div>
         )}
+      </div>
+
+      {childId && (
+        <button type="button" onClick={clearPatient}
+          className="h-11 shrink-0 px-3 rounded-xl border border-gray-200 bg-white text-xs font-medium
+                     text-gray-500 hover:text-gray-700 hover:bg-gray-50 inline-flex items-center gap-1.5">
+          <FontAwesomeIcon icon={faRotateLeft} className="text-[11px]" />
+          환자 초기화
+        </button>
+      )}
       </div>
 
       <PatientPanel childId={childId} detail={shownDetail} error={shownError} />
@@ -203,7 +229,7 @@ function PatientPanel({
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h2 className="font-bold text-lg text-gray-800">{detail.childName}</h2>
         <p className="text-xs text-gray-400">
-          {calcAgeLabel(detail.birth)} · 다음 예약 {detail.nextAppointment ?? '-'}
+          {genderChild(detail.gender) && `${genderChild(detail.gender)} · `}{calcAgeLabel(detail.birth)} · 다음 예약 {detail.nextAppointment ?? '-'}
         </p>
       </div>
 

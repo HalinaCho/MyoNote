@@ -512,12 +512,13 @@ export interface RosterPatient {
   childId: string
   childName: string
   birth: string
+  gender: 'M' | 'F'
   lastExamDate: string | null
   nextAppointment: string | null
 }
 
 interface RosterPatientRow {
-  child_id: string; child_name: string; birth_date: string
+  child_id: string; child_name: string; birth_date: string; gender: 'M' | 'F'
   last_exam_date: string | null; next_appointment: string | null
 }
 
@@ -526,7 +527,7 @@ export async function fetchPatientRoster(hospitalId: string): Promise<RosterPati
   const { data, error } = await sb.rpc('hospital_patient_roster', { p_hospital_id: hospitalId })
   if (error) throw error
   return ((data ?? []) as RosterPatientRow[]).map(r => ({
-    childId: r.child_id, childName: r.child_name, birth: r.birth_date,
+    childId: r.child_id, childName: r.child_name, birth: r.birth_date, gender: r.gender,
     lastExamDate: r.last_exam_date, nextAppointment: r.next_appointment,
   }))
 }
